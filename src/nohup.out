@@ -1,0 +1,18 @@
+
+> drreddy@0.1.0 start /var/www/html/text2insure/dev/drreddydemo
+> react-scripts start
+
+Starting the development server...
+
+Compiled successfully!
+
+You can now view drreddy in the browser.
+
+  Local:            http://localhost:3500/
+  On Your Network:  http://10.0.10.222:3500/
+
+Note that the development build is not optimized.
+To create a production build, use npm run build.
+
+Compiling...
+Compiled successfully!
