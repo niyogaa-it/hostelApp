@@ -1,0 +1,96 @@
+table,
+th,
+td {
+  border: 0.5px solid rgb(241, 238, 238);
+  border-collapse: collapse;
+}
+th {
+  padding: 10px 5px;
+  align-items: center;
+  width: 250px;
+  text-transform: uppercase;
+  font-weight: 550;
+  border-collapse: collapse;
+}
+table {
+  border-bottom: 3px solid rgb(221, 220, 220);
+}
+.table-container {
+  overflow: auto;
+  white-space: nowrap;
+}
+.active-btn {
+  padding: "0.5rem";
+  border-radius: "5px";
+  font-weight: "bold";
+  border: "none";
+}
+.activeCol {
+  width: 110%;
+}
+.list-head {
+  width: 140%;
+}
+.search-container {
+  margin-top: 1%;
+  margin-left: 50%;
+  margin-right: -40%;
+}
+.form {
+  position: relative;
+}
+.fa-search {
+  position: relative;
+}
+.form .fa-search {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  color: #9ca3af;
+}
+
+.form span {
+  position: absolute;
+  right: 17px;
+  top: 13px;
+  padding: 1px;
+  border-left: 1px solid #d1d5db;
+}
+
+.left-pan {
+  padding-left: 7px;
+}
+
+.left-pan i {
+  padding-left: 10px;
+}
+
+.form-input {
+  height: 55px;
+  text-indent: 33px;
+}
+
+.form-input:focus {
+  box-shadow: none;
+  border: none;
+}
+
+.arrow-icons {
+  width: 60%;
+  height: 60%;
+  cursor: pointer;
+}
+.sort-icon {
+  margin-left: 10%;
+}
+.dropdown-box {
+  width: 45%;
+  float: right;
+  margin-top:2%;
+}
+.dropdown-main{
+border: 0.5px solid grey;
+padding:1%;
+min-width: 130px;
+min-height: 40px;
+}
