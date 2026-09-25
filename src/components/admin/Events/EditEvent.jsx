@@ -258,6 +258,7 @@ class EditEvent extends Component {
                                   }}
                                 >
                                   (Image Size must be less than 5 mb)
+                                  (For batter resolution, please upload image with 1600px width and 900px height)
                                 </span>
                               </label>
                             </div>

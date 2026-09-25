@@ -134,6 +134,15 @@ class SidebarAdmin extends Component {
     ) {
       this.setState({ shown: "15" });
     }
+    if (
+      path === "/admin/services/dashboard" ||
+      path === "/admin/services/requests" ||
+      path === "/admin/services/staff" ||
+      path === "/admin/services/categories" ||
+      path === "/admin/services/reports"
+    ) {
+      this.setState({ shown: "16" });
+    }
   };
 
   logout = () => {
@@ -509,6 +518,23 @@ class SidebarAdmin extends Component {
                     </Link>{" "}
                   </li>
                 )} */}
+
+                  <li className="active">
+                    {" "}
+                    <Link to="/admin/announcement/edit">
+                      {" "}
+                      <span>Announcement</span>
+                    </Link>{" "}
+                  </li>
+
+
+                  <li className="active">
+                    {" "}
+                    <Link to="/admin/individual_meal">
+                      {" "}
+                      <span>Individual Meal</span>
+                    </Link>{" "}
+                  </li>
 
                 {this.props.path_name === "/admin/laundry_managment" ? (
                   <li className="active">
@@ -981,6 +1007,69 @@ class SidebarAdmin extends Component {
           ) : null}
 
           {/* Emergency end */}
+
+          {/* services */}
+          {/* {this.state.user_permmision.emergency_management == 0 ||
+          this.state.user_role == "admin" ? (
+            <li className={rotate == "16" ? "treeview active" : "treeview"}>
+              <Link to="#" data-id="16" onClick={this.handleClick}>
+                <i data-id="16" onClick={this.handleClick}></i>{" "}
+                <span data-id="16" onClick={this.handleClick}>
+                  Services{" "}
+                </span>
+                <span className="pull-right-container">
+                  <i
+                    data-id="16"
+                    onClick={this.handleClick}
+                    className={
+                      rotate == "16"
+                        ? "fa pull-right fa-minus"
+                        : "fa pull-right fa-plus"
+                    }
+                  ></i>
+                </span>
+              </Link>
+
+              <ul className="treeview-menu">
+                <li className={this.props.path_name === "/admin/services/dashboard" ? "active" : ""}>
+                  {" "}
+                  <Link to="/admin/services/dashboard">
+                    {" "}
+                    <span>Dashboard</span>
+                  </Link>{" "}
+                </li>
+                <li className={this.props.path_name === "/admin/services/requests" ? "active" : ""}>
+                  {" "}
+                  <Link to="/admin/services/requests">
+                    {" "}
+                    <span>Requests</span>
+                  </Link>{" "}
+                </li>
+                <li className={this.props.path_name === "/admin/services/staff" ? "active" : ""}>
+                  {" "}
+                  <Link to="/admin/services/staff">
+                    {" "}
+                    <span>Staff</span>
+                  </Link>{" "}
+                </li>
+                <li className={this.props.path_name === "/admin/services/categories" ? "active" : ""}>
+                  {" "}
+                  <Link to="/admin/services/categories">
+                    {" "}
+                    <span>Categories</span>
+                  </Link>{" "}
+                </li>
+                <li className={this.props.path_name === "/admin/services/reports" ? "active" : ""}>
+                  {" "}
+                  <Link to="/admin/services/reports">
+                    {" "}
+                    <span>Reports</span>
+                  </Link>{" "}
+                </li>
+              </ul>
+            </li>
+          ) : null} */}
+          {/* services end */}
 
           {/* laundry process */}
           {this.state.user_permmision.laundary_management == 0 ||

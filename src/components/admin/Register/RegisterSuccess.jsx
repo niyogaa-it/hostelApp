@@ -152,7 +152,7 @@ class Regsuccess extends Component {
           <div className="reg-content">
             <div className="cont-header">
               <div className="container-fluid">
-              <center><h1> Payment Successful</h1></center>
+              <center><h1> Registration Successful</h1></center>
              
               </div>
             </div>

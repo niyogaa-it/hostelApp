@@ -18,7 +18,7 @@ import {
 import { Link } from "react-router-dom";
 import swal from "sweetalert";
 
-class Meals extends Component {
+class IndividualMeal extends Component {
     constructor(props) {
         super(props);
         this.state = {
@@ -38,7 +38,7 @@ class Meals extends Component {
             this.props.auth.userToken.permissions.warden_management == 0 ||
             this.props.auth.userToken.user_details.role == "admin"
         ) {
-            API.get(`/admin/secure/meal_plan`)
+            API.get(`/admin/secure/individualmeal/list`)
                 .then((res) => {
                     this.setState({
                         usermangment: res.data.result_data
@@ -54,44 +54,9 @@ class Meals extends Component {
         }
     }
 
-    confirmDelete = (event, id) => {
-        event.preventDefault();
-        // swal delete api
-        swal({
-            closeOnClickOutside: false,
-            title: "Are you sure?",
-            text: "Once deleted, you will not be able to recover this record!",
-            icon: "warning",
-            buttons: true,
-            dangerMode: true,
-        }).then((willDelete) => {
-            if (willDelete) {
-            API.post(`/admin/secure/meal/delete/${id}`).then((res) => {
-                if (res.data && res.data.status === 200) {
-                swal({
-                    closeOnClickOutside: false,
-                    title: "Success",
-                    text: "Meal deleted successfully.",
-                    icon: "success",
-                });
-                this.componentDidMount()
-                } else {
-                swal({
-                    closeOnClickOutside: false,
-                    // title: "Error",
-                    text: res.data.message,
-                    icon: "warning",
-                });
-                this.componentDidMount()
-                }
-            });
-            //
-            }
-        });
-    };
-
+  
     handleEditMeal = (event, id) => {
-        window.location.href = `/admin/meal/edit/${id}`;
+        window.location.href = `/admin/individual_meal/edit/${id}`;
     };
 
     render() {
@@ -100,19 +65,7 @@ class Meals extends Component {
         };
         const actionFormatter = (refObj) => (cell, id) => {
             return (
-                <><button
-                onClick={(e) => this.confirmDelete(e, cell)}
-                style={{
-                padding: "0.5rem",
-                borderRadius: "5px",
-                backgroundColor: "#ffe0db",
-                color: "#ff3e1d",
-                fontWeight: "bold",
-                border: "none",
-                }}
-                >
-                DELETE
-                </button>
+                <>
                 <button
                 onClick={(e) => this.handleEditMeal(e, cell)}
                 style={{
@@ -145,7 +98,7 @@ class Meals extends Component {
                                 <div className="col-lg-12 col-sm-12 col-xs-12">
                                     <h1 style={{ color: "#a1acb8" }}>
                                         Home / Warden /{" "}
-                                        <b style={{ color: "#566a7f" }}>Meal List</b>
+                                        <b style={{ color: "#566a7f" }}>Individual Meal List</b>
                                         <small />
                                     </h1>
                                 </div>
@@ -154,7 +107,7 @@ class Meals extends Component {
                         <section className="content">
                             <div style={{ display:'flex',justifyContent: 'end' }}>
                                 
-                                <Link className="btn btn-primary" to="/admin/meal/add">Add Meal</Link>
+                                <Link className="btn btn-primary" to="/admin/individual_meal/add">Add Meal</Link>
                             </div>
                             <div
                                 className="box"
@@ -180,26 +133,8 @@ class Meals extends Component {
                                         >
                                             Id
                                         </TableHeaderColumn>
-                                        <TableHeaderColumn
-                                            dataField="meal_type"
-                                            dataSort={true}
-                                            className={"text-uppercase"}
-                                            width="16.66%"
-                                            dataAlign="center"
-                                            tdStyle={{ textTransform:'capitalize' }}
-                                        >
-                                            Meal Type
-                                        </TableHeaderColumn>
-                                        <TableHeaderColumn
-                                            dataField="food_preference"
-                                            dataSort={true}
-                                            className={"text-uppercase"}
-                                            width="28%"
-                                            dataAlign="center"
-                                            tdStyle={{ textTransform:'capitalize' }}
-                                        >
-                                            Food Preference
-                                        </TableHeaderColumn>
+                                        
+                                       
                                         <TableHeaderColumn
                                             dataField="meal_name"
                                             dataSort={true}
@@ -208,6 +143,28 @@ class Meals extends Component {
                                             dataAlign="center"
                                         >
                                             Food Name
+                                        </TableHeaderColumn>
+
+
+                                        <TableHeaderColumn
+                                            dataField="quantity"
+                                            dataSort={true}
+                                            className={"text-uppercase text-secondary"}
+                                            width="16.66%"
+                                            dataAlign="center"
+                                        >
+                                           Quantity
+                                        </TableHeaderColumn>
+
+
+                                        <TableHeaderColumn
+                                            dataField="unit_price"
+                                            dataSort={true}
+                                            className={"text-uppercase text-secondary"}
+                                            width="16.66%"
+                                            dataAlign="center"
+                                        >
+                                           Price
                                         </TableHeaderColumn>
 
 
@@ -236,4 +193,4 @@ const mapStateToProps = (state) => {
         ...state,
     };
 };
-export default withRouter(connect(mapStateToProps)(Meals));
+export default withRouter(connect(mapStateToProps)(IndividualMeal));

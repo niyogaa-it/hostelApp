@@ -310,7 +310,7 @@ class MarkAsPaid extends Component {
                                 min="1"
                                 name="offline_payment_amout"
                                 className={"form-control"}
-                                value={this.state.planDetail.to_pay}
+                               
                             
                               />
                               {errors.offline_payment_amout && touched.offline_payment_amout ? (

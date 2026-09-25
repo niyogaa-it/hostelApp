@@ -542,18 +542,13 @@ class SetPlan extends Component {
         }
 
         if(this.state.monthly_type === "postpaid"){
-
+         
           this.setState({
             monthlyFormValues: {
               monthly_other_fees: 0,
               monthly_electricity_bill:0,
               monthly_water_bill:0,
-              monthly_month_name: "",
-              monthly_other_fees_remark: "",
-              no_of_can: 0,
-              opening_unit: 0,
-              closing_unit: 0,
-              no_of_occupied : 1,
+              //no_of_occupied : this.state.monthlyFormValues.no_of_occupied,
               monthly_transportation_fee: 0,
               monthly_parking_fee: 0,
               monthly_admission_fee: this.state.monthlyFormValues.monthly_admission_fee,
@@ -566,7 +561,7 @@ class SetPlan extends Component {
             }
           });
 
-
+          
         }
 
         if(this.state.monthly_type === "lateral"){
@@ -722,7 +717,6 @@ class SetPlan extends Component {
         meal_t2: adjustedFees.termII.meal_price_t2,
         laundry_t1: adjustedFees.termI.laundry_t1,
         laundry_t2: adjustedFees.termII.laundry_t2,
-        gstIncluded: 'yes',
         total: adjustedFees.total_price,
         to_pay: adjustedFees.total_price,
         total_one_time: adjustedFees.oneTimeTotal
@@ -739,7 +733,6 @@ class SetPlan extends Component {
       plan_id: this.state.formValues.term,
       plan_type: this.state.formValues.plan_type,
       term: values.term,
-      gstIncluded: 'yes',
       bed_type:  values.bed_type == "Lower Berth" ? "lb" : "ub",
       room_no: this.state.studentDetails.room_id,
       parking_type: this.state.studentDetails.parking_type,
@@ -767,7 +760,6 @@ class SetPlan extends Component {
         plan_id: this.state.formValues.term,
         plan_type: this.state.formValues.plan_type,
         term: values.term,
-        gstIncluded: 'yes',
         bed_type: values.bed_type == "Lower Berth" ? "lb" : "ub",
         room_no: this.state.studentDetails.room_id,
         parking_type: this.state.studentDetails.parking_type,
@@ -793,7 +785,6 @@ class SetPlan extends Component {
         SFname: this.state.studentDetails.SFname,
         student_type: values.student_type,
         plan_id: this.state.formValues.term,
-        gstIncluded: 'yes',
         plan_type: this.state.formValues.plan_type,
         term: values.term,
         bed_type: values.bed_type == "Lower Berth" ? "lb" : "ub",
@@ -869,7 +860,6 @@ class SetPlan extends Component {
             parking_type: this.state.studentDetails.parking_type,
             meal_type: this.state.studentDetails.food_preference,
             monthly: 0,
-            gstIncluded: 'yes',
             parking_start_date: (this.state.monthlyFormValues.parking_start_date != undefined) ? this.state.monthlyFormValues.parking_start_date : "",
             parking_end_date: (this.state.monthlyFormValues.parking_end_date != undefined) ? this.state.monthlyFormValues.parking_end_date : "",
             transport_start_date: (this.state.monthlyFormValues.transport_start_date != undefined) ? this.state.monthlyFormValues.transport_start_date : "",
@@ -905,7 +895,6 @@ class SetPlan extends Component {
             monthly_electricity_bill: (this.state.monthlyFormValues.monthly_electricity_bill > 0) ? this.state.monthlyFormValues.monthly_electricity_bill: 0,
             monthly_other_fees: (this.state.monthlyFormValues.monthly_other_fees > 0) ? this.state.monthlyFormValues.monthly_other_fees: 0,
             monthly_other_fees_remark: (this.state.monthlyFormValues.monthly_other_fees_remark != null) ? this.state.monthlyFormValues.monthly_other_fees_remark: "",
-            gstIncluded: 'yes',
             total: this.state.total_price,
             to_pay: this.state.total_price,
             total_one_time: this.state.total_price,
@@ -928,7 +917,7 @@ class SetPlan extends Component {
             parking_type: this.state.studentDetails.parking_type,
             meal_type: this.state.studentDetails.food_preference,
             monthly: 0,
-            gstIncluded: 'yes',
+  
             addmission_fee: (this.getDiscountAmount("addmission_fee", this.state.monthlyFormValues.monthly_admission_fee) > 0) ? this.getDiscountAmount("addmission_fee", this.state.monthlyFormValues.monthly_admission_fee): 0,
             admisson_kit: (this.getDiscountAmount("admisson_kit", this.state.monthlyFormValues.monthly_admission_kit) > 0) ? this.getDiscountAmount("admisson_kit", this.state.monthlyFormValues.monthly_admission_kit): 0,
             cultural_fees : (this.getDiscountAmount("cultural_fees", this.state.monthlyFormValues.monthly_cultural_fee) > 0) ? this.getDiscountAmount("cultural_fees", this.state.monthlyFormValues.monthly_cultural_fee): 0,
@@ -2446,21 +2435,24 @@ render() {
                   </td>
                   </tr>
 
-                 
-
                   <tr>
-                  <td>Cost Per Can (Rs)</td>
+                  <td>No of Occupied</td>
                   <td>
                   <Field
-                  name="per_can_cost"
+                  name="no_of_occupied"
                   autoComplete="off"
-                  readOnly
                   className="form-control"
                   type="number"
-                  value={this.state.per_can_cost}
+                  min={1}
+                  value={this.state.monthlyFormValues.no_of_occupied}
+                  onChange={(e) => {
+                    this.handlePostpaidChange("no_of_occupied", e.target.value);
+                    setFieldValue("no_of_occupied", e.target.value);
+                  }}
                   ></Field>
                   </td>
                   </tr>
+
                   <tr>
                   <td>No of Water Cans</td>
                   <td>
@@ -2479,7 +2471,7 @@ render() {
                   </td>
                   </tr>
                   <tr>
-                  <td><strong>Water Bill</strong></td>
+                  <td>Water Bill</td>
                   <td>
                   <Field
                   name="monthly_water_bill"
@@ -2492,19 +2484,6 @@ render() {
                   </td>
                   </tr>
 
-                  <tr>
-                  <td>Unit Cost (Rs)</td>
-                  <td>
-                  <Field
-                  name="per_unit_cost"
-                  autoComplete="off"
-                  readOnly
-                  className="form-control"
-                  type="number"
-                  value={this.state.per_unit_cost}
-                  ></Field>
-                  </td>
-                  </tr>
                   <tr>
                   <td>Opening Unit</td>
                   <td>
@@ -2539,28 +2518,8 @@ render() {
                   ></Field>
                   </td>
                   </tr>
-
-
-                   <tr>
-                  <td>No of Students</td>
-                  <td>
-                  <Field
-                  name="no_of_occupied"
-                  autoComplete="off"
-                  className="form-control"
-                  type="number"
-                  min={1}
-                  value={this.state.monthlyFormValues.no_of_occupied}
-                  onChange={(e) => {
-                    this.handlePostpaidChange("no_of_occupied", e.target.value);
-                    setFieldValue("no_of_occupied", e.target.value);
-                  }}
-                  ></Field>
-                  </td>
-                  </tr>
-
                   <tr>
-                  <td><strong>Electricity Bill (AC)</strong></td>
+                  <td>Electricity Bill</td>
                   <td>
                   <Field
                   name="monthly_electricity_bill"
@@ -2641,6 +2600,7 @@ render() {
                   <div style={{ textAlign: "center" }}>
                   <button
                   type="submit"
+                  disabled={this.state.total_price < 0}
                   style={{
                     padding: "8px 18px 8px 18px",
                     borderRadius: "0.375rem",

@@ -126,11 +126,12 @@ class RegMarkAsPaid extends Component {
     let postData = {
       plan_id: decodeURIComponent(this.props.match.params.id),
       offline_payment_type: values.offline_payment_type,
-      offline_payment_type: values.offline_payment_type,
+      offline_payment_date: values.offline_payment_date,
       offline_payment_ref_dtl: values.offline_payment_ref_dtl,
       offline_payment_amout: values.offline_payment_amout,
       offline_payment_document: this.state.offline_payment_document,
     };
+    
 
     if (this.state.offline_payment_document) {
       if (this.state.offline_payment_document.size > 1000) {
@@ -304,12 +305,12 @@ class RegMarkAsPaid extends Component {
 
                             <div className="col-lg-8">
                               <Field
-                                readOnly
+                               
                                 type="number"
                                 min="1"
                                 name="offline_payment_amout"
                                 className={"form-control"}
-                                value={this.state.planDetail.to_pay || 0}
+                                //value={this.state.planDetail.to_pay || 0}
                             
                               />
                               {errors.offline_payment_amout && touched.offline_payment_amout ? (

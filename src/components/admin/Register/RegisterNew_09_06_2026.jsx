@@ -142,7 +142,7 @@ class Reg extends Component {
       .then((res) => {
         this.setState({
           academicList: res.data.result_data,
-          //planDetail: res.data.register_plan_data,
+          planDetail: res.data.register_plan_data,
           residentialtypeList: res.data.selectedResidanceType,
         });
 
@@ -249,7 +249,7 @@ handleMobileNumberChange = (event, values) => {
             });
     }
 };
-handleOtpVerification = (values, setFieldValue) => {
+  handleOtpVerification = (values, setFieldValue) => {
     const otp = this.state.otpInput.trim();
     const residentialType = this.getSelectedResidentialType(values.residentialType);
 
@@ -285,7 +285,7 @@ handleOtpVerification = (values, setFieldValue) => {
             otpInput: "",
             mobileVerified: true,
             otpError: "",
-            planDetail: res.data.register_plan_data || null,
+            planDetail: res.data.planDetail || res.data.register_plan_data || this.state.planDetail
           });
 
 
@@ -306,17 +306,6 @@ handleOtpVerification = (values, setFieldValue) => {
               const formattedDOB = moment(studentData.StudDOB, "MM/DD/YYYY").format("YYYY-MM-DD");
               setFieldValue("StudDOB", formattedDOB);
             }
-
-            if (studentData && studentData.studentType) {
-              setFieldValue(
-                "studentType",
-                String(studentData.studentType).trim().toLowerCase()
-              );
-            }
-            
-
-
-   
 
             if (studentData) {
               // List of all fields to populate from student data
@@ -361,11 +350,7 @@ handleOtpVerification = (values, setFieldValue) => {
               });
             }
 
-            if (studentData) {
-              swal("Success", "Mobile number verified successfully! Form populated with saved data.", "success");
-            } else {
-              swal("Success", res.data.message || "No student data found. User may continue to fill up the form.", "success");
-            }
+            swal("Success", "Mobile number verified successfully! Form populated with saved data.", "success");
           } else if (residentialType === "New Hosteller") {
             this.setState({
               savedPhotoData: {},
@@ -376,10 +361,7 @@ handleOtpVerification = (values, setFieldValue) => {
             swal("Success", "Mobile number verified successfully!", "success");
           }
         } else {
-          this.setState({
-            otpError: res.data.message || "Invalid OTP",
-            planDetail: res.data.register_plan_data || this.state.planDetail,
-          });
+          this.setState({ otpError: res.data.message || "Invalid OTP" });
           swal("Error", res.data.message || "OTP verification failed", "error");
         }
       })
@@ -434,37 +416,32 @@ handleOtpVerification = (values, setFieldValue) => {
         return;
       }
 
-
+      // Success! Show message and redirect
+      this.setState({ isLoading: false });
        // Save student details to state
       this.setState({ studentDetail: profileRes.data.student_dtl[0] });
       this.setState({ allocateDetail: profileRes.data.student_dtl[1] });
 
-      // 3. Initiate payment via Orange PG (ICICI)
+      // 3. Call easebuzz for payment
       const planDetail = this.state.planDetail;
       const studentDetail = this.state.studentDetail;
       const allocatedetail = this.state.allocateDetail;
 
-      const paymentRes = await API.post("/admin/un/secure/orangepg", {
+      
+
+      const paymentRes = await API.post("/admin/un/secure/easebuzz", {
         amount: planDetail[0] && planDetail[0].plan_price,
         productinfo: allocatedetail.id,
         firstname: studentDetail.SFname,
         phone: studentDetail.SmobNo,
         email: studentDetail.StudEmail,
+        user_id: studentDetail.id,
       });
 
-      this.setState({ isLoading: false });
 
-      if (
-        paymentRes.data.status !== 200 ||
-        !paymentRes.data.data ||
-        !paymentRes.data.data.payment_url
-      ) {
-        swal("Warning", paymentRes.data.message || "Unable to initiate payment", "warning");
-        return;
-      }
-
-      // Redirect to the ICICI PG hosted payment page
-      window.location.href = paymentRes.data.data.payment_url;
+      const paymentKey = paymentRes.data.data;
+      const paymentLink = `${process.env.REACT_APP_EASEBUZZ_URL}/pay/${paymentKey}`;
+      window.location.href = paymentLink; // Redirect to payment page
 
     } catch (error) {
       this.setState({ isLoading: false });
@@ -1215,8 +1192,6 @@ handleOtpVerification = (values, setFieldValue) => {
                                         type="radio"
                                         value="student"
                                         className="mr-1"
-
-                                        checked={values.studentType === "student"}
                                       /> College Student
                                     </label>
 
@@ -1226,7 +1201,6 @@ handleOtpVerification = (values, setFieldValue) => {
                                         type="radio"
                                         value="internship"
                                         className="mr-1"
-                                         checked={values.studentType === "internship"}
                                       /> Internship
                                     </label>
 
@@ -1235,7 +1209,6 @@ handleOtpVerification = (values, setFieldValue) => {
                                         name="studentType"
                                         type="radio"
                                         value="working_women"
-                                        checked={values.studentType === "working_women"}
                                         className="mr-1"
                                       /> Working Women
                                     </label>

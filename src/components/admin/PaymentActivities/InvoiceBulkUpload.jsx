@@ -4,9 +4,12 @@ import { Formik, Form, Field, ErrorMessage } from "formik";
 import API from "../../../shared/admin-axios";
 import swal from "sweetalert";
 // import sampleexcel from "../../../assets/images/postpaid.xlsx";
-import sampleexcel from "../../../assets/images/invoice_template.xlsx";
+//import sampleexcel from "../../../assets/images/invoice_template.xlsx";
 import * as Yup from "yup";
 import userLog from "../Utils/Logadd";
+
+
+const sampleexcel = `${process.env.PUBLIC_URL}/invoice_template.xlsx`;
 
 let initialValues = {
   bulkuploadDoc: "",

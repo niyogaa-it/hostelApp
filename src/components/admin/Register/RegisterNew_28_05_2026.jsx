@@ -72,7 +72,6 @@ const initialValues = {
   check: "",
   parking_type: "",
   blood_grp:"",
-  residentialType: "",
   // image
   StudimagepathBase: "",
   FatherimagepathBase: "",
@@ -119,16 +118,8 @@ class Reg extends Component {
       academicList: [],
       paymentResponse: [],
       studentDetail: [],
-      savedPhotoData: {},
       planDetail: [],
-      allocateDetail: [],
-      residentialtypeList: [],
-      isLoading: false,
-      showOtpModal: false,
-      otpInput: "",
-      mobileForOtp: "",
-      otpError: "",
-      mobileVerified: false,
+      allocateDetail: []
     };
     this.fileChangedHandler = this.fileChangedHandler.bind(this);
     this.fileCheckImageType = this.fileCheckImageType.bind(this);
@@ -142,8 +133,7 @@ class Reg extends Component {
       .then((res) => {
         this.setState({
           academicList: res.data.result_data,
-          //planDetail: res.data.register_plan_data,
-          residentialtypeList: res.data.selectedResidanceType,
+          planDetail: res.data.register_plan_data,
         });
 
       })
@@ -163,265 +153,81 @@ class Reg extends Component {
     }
   };
 
-handleMobileNumberChange = (event, values) => {
+  // handleSubmitEvent =  async (values, { resetForm }) => {
 
-    const mobileNumber = event.target.value;
-    const academicYear = values && values.AcademicYear;
+  //     try {
 
-    if (!academicYear) {
-        swal("Info", "Please select Admission For before verifying the mobile number.", "info");
-        return;
-    }
-    
+  //       API.post("/admin/un/secure/create/profile/check_validation", values)
+  //       .then((res) => {
+  //         if(res.data.status === 200) {
 
-    this.setState({
-        mobile_number: mobileNumber
-    });
+  //             API.post("/admin/un/secure/create/profile", values)
+  //             .then((res) => {
 
-    if (mobileNumber.length === 10 && /^\d{10}$/.test(mobileNumber)) {
+  //               if (res.data.status === 200) {
 
-        this.setState({
-            mobileForOtp: mobileNumber,
-            isLoading: true
-        });
+  //                 this.setState({
+  //                   studentDetail: res.data.student_dtl,
+  //                 });
 
-        API.get(`/admin/un/secure/create/profile/get_otp_mobileno/${mobileNumber}`)
-            .then((res) => {
+  //                 API.post("/admin/un/secure/easebuzz", {
+  //                   amount: this.state.planDetail[0].plan_price,
+  //                   productinfo: this.state.studentDetail[0].id,
+  //                   firstname: this.state.studentDetail[0].SFname,
+  //                   phone :this.state.studentDetail[0].SmobNo,
+  //                   email: this.state.studentDetail[0].StudEmail,
+  //                 })
+  //                 .then((res) => {
 
-                this.setState({
-                    isLoading: false
-                });
+  //                   window.location.href = process.env.REACT_APP_EASEBUZZ_URL+res.data.data;
+  //                 })
+  //                 .catch((err) => {
+  //                   console.log("Error", err.message);     
+  //                 });
+  //               } else {
 
-                // OTP sent
-                if (res.data.status === 201) {
+  //                 swal("Warning", res.data.message, "warning");
+  //               }
+  //             })
+  //             .catch((err) => {
+  //               swal("Error", err.message, "error");
+  //             });
 
-                    this.setState({
-                        showOtpModal: true,
-                        otpError: "",
-                        otpInput: "",
-                        isMobileVerified: false
-                    });
+  //         }else{
+  //           swal({
+  //             title: "Warning",
+  //             text: res.data.message,
+  //             icon: "warning",
+  //             button: "Ok",
+  //           });
+  //         }
 
-                    swal("Success", "OTP sent to your mobile number", "success");
-                }
-
-                
-            })
-            .catch((err) => {
-
-                this.setState({
-                    isLoading: false
-                });
-
-                console.log('err',err);
-
-                // User does not exist -> skip OTP verification
-                if (
-                   
-                    err.data.status === 404
-                ) {
-
-                    this.setState({
-                        showOtpModal: false,
-                        isMobileVerified: true
-                    });
-
-                    swal(
-                        "Info",
-                        "User does not exist. You may continue filling the form.",
-                        "info"
-                    );
-
-                    return;
-                }
-
-                var errorMsg = "Error sending OTP";
-
-                if (
-                    err.response &&
-                    err.response.data &&
-                    err.response.data.message
-                ) {
-                    errorMsg = err.response.data.message;
-                }
-
-                swal("Error", errorMsg, "error");
-            });
-    }
-};
-handleOtpVerification = (values, setFieldValue) => {
-    const otp = this.state.otpInput.trim();
-    const residentialType = this.getSelectedResidentialType(values.residentialType);
-
-    if (!otp) {
-      this.setState({ otpError: "Please enter OTP" });
-      return;
-    }
-
-
-   const AcademicYear = values.AcademicYear;
-
-     // Check Academic Year before calling API
-  if (!values.AcademicYear) {
-    swal("Error", "Please select Academic Year first", "error");
-    return;
-  }
-
-    this.setState({ isLoading: true });
-
-    // Call API to verify OTP
-    API.post(`/admin/un/secure/create/profile/matchotp`, {
-      mobile: this.state.mobileForOtp,
-      otp: otp,
-      AcademicYear: AcademicYear
-    })
-      .then((res) => {
-        this.setState({ isLoading: false });
-        
-        if (res.data.status === 200) {
-          // OTP verified successfully
-          this.setState({ 
-            showOtpModal: false,
-            otpInput: "",
-            mobileVerified: true,
-            otpError: "",
-            planDetail: res.data.register_plan_data || null,
-          });
-
-
-          if (residentialType === "Old Hosteller") {
-            // Extract student details and photo data
-            const studentData = res.data.details && res.data.details;
-            const photoData = Array.isArray(res.data.photo)
-              ? res.data.photo[0]
-              : res.data.photo || {};
-
-            this.setState({
-              savedPhotoData: photoData,
-            });
-
-            // Set StudDOB field explicitly with proper date conversion
-            if (studentData && studentData.StudDOB) {
-              // Convert from MM/DD/YYYY format to YYYY-MM-DD
-              const formattedDOB = moment(studentData.StudDOB, "MM/DD/YYYY").format("YYYY-MM-DD");
-              setFieldValue("StudDOB", formattedDOB);
-            }
-
-            if (studentData && studentData.studentType) {
-              setFieldValue(
-                "studentType",
-                String(studentData.studentType).trim().toLowerCase()
-              );
-            }
-            
-
-
-   
-
-            if (studentData) {
-              // List of all fields to populate from student data
-              const fieldsToPopulate = [
-               "SFname", "studentType", "SRaddress", "SmobNo",
-                "blood_grp", "StudEmail", "NamofInstitute", "AdrsodInstitute",
-                "CourEnrolled", "FatherName", "MothersName", "FatherOccu", "MathersOccu",
-                "FatherConNo", "MothersConNo", "FatherEmail", "MothersEmail", "FatherAnnInc",
-                "MotherAnnInc", "BankAccHolder", "BanckName", "BankBranch", "BrankAcctNo",
-                "BankIFSC", "LocGuardName", "RelWithLocGurd", "LocGurdConNo", "LocGurdAdres",
-                "NameVistMale1", "RelVistMaleApp1", "NameVistMale2", "RelVistMaleApp2",
-                "NameVistMale3", "RelVistMaleApp3", "NameVistFeMale1", "RelVistFeMaleApp1",
-                "NameVistFeMale2", "RelVistFeMaleApp2", "NameVistFeMale3", "RelVistFeMaleApp3",
-                "StayPersonName", "StayRelWithApp", "StayAddress", "StayConNo",
-                "StayPersonName1", "StayRelWithApp1", "StayAddress1", "StayConNo1",
-                "food_preference", "room_type", "occupancy", "bed_type", "toilet_type",
-                "parking", "parking_type", "transportation"
-              ];
-
-              // Populate student profile fields
-              fieldsToPopulate.forEach((field) => {
-                if (studentData.hasOwnProperty(field) && studentData[field] !== null) {
-                  setFieldValue(field, studentData[field]);
-                }
-              });
-            }
-
-            if (photoData && Object.keys(photoData).length > 0) {
-              // List of image fields to populate
-              const imageFields = [
-                "StudimagepathBase", "LocalimagepathBase", "FatherimagepathBase",
-                "MotherimagepathBase", "ImgMaleApp1Base", "ImgMaleApp2Base", 
-                "ImgMaleApp3Base", "ImgFeMaleApp1Base", "ImgFeMaleApp2Base", 
-                "ImgFeMaleApp3Base"
-              ];
-
-              // Populate image fields
-              imageFields.forEach((field) => {
-                if (photoData.hasOwnProperty(field) && photoData[field]) {
-                  setFieldValue(field, photoData[field]);
-                }
-              });
-            }
-
-            if (studentData) {
-              swal("Success", "Mobile number verified successfully! Form populated with saved data.", "success");
-            } else {
-              swal("Success", res.data.message || "No student data found. User may continue to fill up the form.", "success");
-            }
-          } else if (residentialType === "New Hosteller") {
-            this.setState({
-              savedPhotoData: {},
-            });
-
-            swal("Success", "Mobile number verified successfully!", "success");
-          } else {
-            swal("Success", "Mobile number verified successfully!", "success");
-          }
-        } else {
-          this.setState({
-            otpError: res.data.message || "Invalid OTP",
-            planDetail: res.data.register_plan_data || this.state.planDetail,
-          });
-          swal("Error", res.data.message || "OTP verification failed", "error");
-        }
-      })
-      .catch((err) => {
-        this.setState({ isLoading: false });
-        const errorMsg = (err.response && err.response.data && err.response.data.message) || "Error verifying OTP";
-        this.setState({ otpError: errorMsg });
-        swal("Error", errorMsg, "error");
-        console.log("Error:", err);
-      });
-  };
-
-  handleCloseOtpModal = () => {
-    this.setState({ 
-      showOtpModal: false,
-      otpInput: "",
-      otpError: ""
-    });
-  };
-
-  getSelectedResidentialType = (residentialTypeValue) => {
-    const selectedResidentialType = this.state.residentialtypeList.find(
-      (residentialType) =>
-        String(residentialType.id) === String(residentialTypeValue) ||
-        residentialType.resident_type === residentialTypeValue
-    );
-
-    return selectedResidentialType
-      ? selectedResidentialType.resident_type
-      : residentialTypeValue;
-  };
+  //       })
+  //       .catch((err) => {
+  //         console.log("err", err);
+  //         swal({
+  //           title: "Error",
+  //           text: err,
+  //           icon: "error",
+  //           button: "Ok",
+  //         });
+  //       });
+  //     } catch (error) {
+  //       swal({
+  //         title: "Error",
+  //         text: error,
+  //         icon: "error",
+  //         button: "Ok",
+  //       });
+  //     }
+  // };
 
 
   handleSubmitEvent = async (values, { resetForm }) => {
     try {
-      // Show loader
-      this.setState({ isLoading: true });
-
       // 1. Validate the profile
       const validationRes = await API.post("/admin/un/secure/create/profile/check_validation", values);
       if (validationRes.data.status !== 200) {
-        this.setState({ isLoading: false });
         swal("Warning", validationRes.data.message, "warning");
         return;
       }
@@ -429,45 +235,38 @@ handleOtpVerification = (values, setFieldValue) => {
       // 2. Create the profile
       const profileRes = await API.post("/admin/un/secure/create/profile", values);
       if (profileRes.data.status !== 200) {
-        this.setState({ isLoading: false });
         swal("Warning", profileRes.data.message, "warning");
         return;
       }
 
-
-       // Save student details to state
+      // Save student details to state
       this.setState({ studentDetail: profileRes.data.student_dtl[0] });
       this.setState({ allocateDetail: profileRes.data.student_dtl[1] });
 
-      // 3. Initiate payment via Orange PG (ICICI)
+      // 3. Call easebuzz for payment
       const planDetail = this.state.planDetail;
       const studentDetail = this.state.studentDetail;
       const allocatedetail = this.state.allocateDetail;
 
-      const paymentRes = await API.post("/admin/un/secure/orangepg", {
+      const paymentRes = await API.post("/admin/un/secure/easebuzz", {
         amount: planDetail[0] && planDetail[0].plan_price,
         productinfo: allocatedetail.id,
         firstname: studentDetail.SFname,
         phone: studentDetail.SmobNo,
         email: studentDetail.StudEmail,
+        user_id: studentDetail.id,
       });
 
-      this.setState({ isLoading: false });
+      // Redirect to payment gateway
+      //window.location.href = process.env.REACT_APP_EASEBUZZ_URL + paymentRes.data.data;
 
-      if (
-        paymentRes.data.status !== 200 ||
-        !paymentRes.data.data ||
-        !paymentRes.data.data.payment_url
-      ) {
-        swal("Warning", paymentRes.data.message || "Unable to initiate payment", "warning");
-        return;
-      }
+      console.log('paymentRes', paymentRes);
+      const paymentKey = paymentRes.data.data;
+      const paymentLink = `${process.env.REACT_APP_EASEBUZZ_URL}/pay/${paymentKey}`;
+      window.location.href = paymentLink; // Redirect to payment page
 
-      // Redirect to the ICICI PG hosted payment page
-      window.location.href = paymentRes.data.data.payment_url;
 
     } catch (error) {
-      this.setState({ isLoading: false });
       swal(
         "Error",
         (error && error.response && error.response.data && error.response.data.message) ||
@@ -790,7 +589,6 @@ handleOtpVerification = (values, setFieldValue) => {
     const onlyNumberRegex = /^[0-9\b]+$/;
     const validationReg = Yup.object().shape({
       AcademicYear: Yup.string().required("Academic Year is required"),
-      residentialType: Yup.string().required("Residential Type is required"),
       SFname: Yup.string().required("Student Name is required"),
       SmobNo: Yup.string()
         .phone("IN", "Please enter a valid phone number")
@@ -864,36 +662,6 @@ handleOtpVerification = (values, setFieldValue) => {
 
     return (
       <>
-        {this.state.isLoading && (
-          <div className="loader-overlay" style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.5)',
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            zIndex: 9999
-          }}>
-            <div className="spinner" style={{
-              border: '4px solid #f3f3f3',
-              borderTop: '4px solid #3498db',
-              borderRadius: '50%',
-              width: '50px',
-              height: '50px',
-              animation: 'spin 1s linear infinite'
-            }}></div>
-            <style>{`
-              @keyframes spin {
-                0% { transform: rotate(0deg); }
-                100% { transform: rotate(360deg); }
-              }
-            `}</style>
-          </div>
-        )}
-        
         <section className="register-panel">
           <div className="reg-header">
             <a href="https://www.ranimeyyammaihostel.org/" target="_blank">
@@ -946,7 +714,7 @@ handleOtpVerification = (values, setFieldValue) => {
                                 autoComplete="off"
                               >
                                 <option value="" >
-                                  Academic Year
+                                  Default Academic Year
                                 </option>
                                 {this.state.academicList &&
                                   this.state.academicList.map((academicYear, i) => (
@@ -966,39 +734,6 @@ handleOtpVerification = (values, setFieldValue) => {
                           </div>
                         </div>
 
-                        <div className="form-group">
-                          <div className="row">
-                            <div className="col-lg-2">
-                              <label htmlFor="residentialType">
-                                Residential Type *
-                              </label>
-                            </div>
-                            <div className="col-lg-4">
-                              <Field
-                                name="residentialType"
-                                component="select"
-                                className={"form-control"}
-                                autoComplete="off"
-                              >
-                                <option value="">
-                                  Select Residential Type
-                                </option>
-                                {this.state.residentialtypeList &&
-                                  this.state.residentialtypeList.map((residentialType, i) => (
-                                    <option value={residentialType.id} key={i}>
-                                      {residentialType.resident_type}
-                                    </option>
-                                  ))}
-                              </Field>
-                              {errors.residentialType &&
-                                touched.residentialType ? (
-                                <div className="error error text-left text-danger">
-                                  {errors.residentialType}
-                                </div>
-                              ) : null}
-                            </div>
-                          </div>
-                        </div>
 
                         <div className="row">
                           {/* Student's Details */}
@@ -1012,36 +747,6 @@ handleOtpVerification = (values, setFieldValue) => {
 
 
                           <div className="col-lg-6 col-md-6 txt-position">
-                           <div className="form-group">
-                              <div className="row">
-                                <div className="col-lg-4">
-                                  <label htmlFor="SmobNo">
-                                    Student's Mobile No. *
-                                  </label>
-                                </div>
-                                <div className="col-lg-8">
-                                  <Field
-                                    type="text"
-                                    name="SmobNo"
-                                    className={"form-control"}
-                                    onBlur={(e) => this.handleMobileNumberChange(e, values)}
-                                    disabled={this.state.mobileVerified}
-                                    readOnly={this.state.mobileVerified}
-                                  />
-                                  {errors.SmobNo && touched.SmobNo ? (
-                                    <div className="error text-left text-danger">
-                                      {errors.SmobNo}
-                                    </div>
-                                  ) : null}
-                                  {this.state.mobileVerified ? (
-                                    <div style={{ color: "green", marginTop: "5px" }}>
-                                      ✓ Mobile number verified
-                                    </div>
-                                  ) : null}
-                                </div>
-                              </div>
-                            </div>   
-
                             <div className="form-group">
                               <div className="row">
                                 <div className="col-lg-4">
@@ -1064,7 +769,35 @@ handleOtpVerification = (values, setFieldValue) => {
                               </div>
                             </div>
 
-                            
+                            <div className="form-group">
+                              <div className="row">
+                                <div className="col-lg-4">
+                                  <label htmlFor="SmobNo">
+                                    Student's Mobile No. *
+                                  </label>
+                                </div>
+                                <div className="col-lg-8">
+                                  <Field
+                                    type="text"
+                                    name="SmobNo"
+                                    className={"form-control"}
+                                  // onChange={(e) => {
+                                  //   this.checkNumberValidetion(
+                                  //     e,
+                                  //     setFieldTouched,
+                                  //     setFieldValue,
+                                  //     setErrors
+                                  //   );
+                                  // }}
+                                  />
+                                  {errors.SmobNo && touched.SmobNo ? (
+                                    <div className="error text-left text-danger">
+                                      {errors.SmobNo}
+                                    </div>
+                                  ) : null}
+                                </div>
+                              </div>
+                            </div>
 
                             <div className="form-group">
                               <div className="row">
@@ -1138,21 +871,6 @@ handleOtpVerification = (values, setFieldValue) => {
                                       {this.state.StudimagepathBaseError}
                                     </div>
                                   ) : null}
-                                  {(
-                                    values.StudimagepathBase ||
-                                    this.state.savedPhotoData.StudimagepathBase
-                                  ) ? (
-                                    <div style={{ marginTop: "10px" }}>
-                                      <img
-                                        src={
-                                          values.StudimagepathBase ||
-                                          this.state.savedPhotoData.StudimagepathBase
-                                        }
-                                        alt="Student preview"
-                                        width="100px"
-                                      />
-                                    </div>
-                                  ) : null}
                                 </div>
                               </div>
                             </div>
@@ -1215,8 +933,6 @@ handleOtpVerification = (values, setFieldValue) => {
                                         type="radio"
                                         value="student"
                                         className="mr-1"
-
-                                        checked={values.studentType === "student"}
                                       /> College Student
                                     </label>
 
@@ -1226,7 +942,6 @@ handleOtpVerification = (values, setFieldValue) => {
                                         type="radio"
                                         value="internship"
                                         className="mr-1"
-                                         checked={values.studentType === "internship"}
                                       /> Internship
                                     </label>
 
@@ -1235,7 +950,6 @@ handleOtpVerification = (values, setFieldValue) => {
                                         name="studentType"
                                         type="radio"
                                         value="working_women"
-                                        checked={values.studentType === "working_women"}
                                         className="mr-1"
                                       /> Working Women
                                     </label>
@@ -1393,21 +1107,6 @@ handleOtpVerification = (values, setFieldValue) => {
                                       {this.state.FatherimagepathBaseError}
                                     </div>
                                   ) : null}
-                                  {(
-                                    values.FatherimagepathBase ||
-                                    this.state.savedPhotoData.FatherimagepathBase
-                                  ) ? (
-                                    <div style={{ marginTop: "10px" }}>
-                                      <img
-                                        src={
-                                          values.FatherimagepathBase ||
-                                          this.state.savedPhotoData.FatherimagepathBase
-                                        }
-                                        alt="Father preview"
-                                        width="100px"
-                                      />
-                                    </div>
-                                  ) : null}
                                 </div>
                               </div>
                             </div>
@@ -1558,21 +1257,6 @@ handleOtpVerification = (values, setFieldValue) => {
                                     touched.MotherimagepathBase ? (
                                     <div className="error text-left text-danger">
                                       {errors.MotherimagepathBase}
-                                    </div>
-                                  ) : null}
-                                  {(
-                                    values.MotherimagepathBase ||
-                                    this.state.savedPhotoData.MotherimagepathBase
-                                  ) ? (
-                                    <div style={{ marginTop: "10px" }}>
-                                      <img
-                                        src={
-                                          values.MotherimagepathBase ||
-                                          this.state.savedPhotoData.MotherimagepathBase
-                                        }
-                                        alt="Mother preview"
-                                        width="100px"
-                                      />
                                     </div>
                                   ) : null}
                                 </div>
@@ -1883,21 +1567,6 @@ handleOtpVerification = (values, setFieldValue) => {
                                     "" ? (
                                     <div className="error text-left text-danger">
                                       {this.state.LocalimagepathBaseError}
-                                    </div>
-                                  ) : null}
-                                  {(
-                                    values.LocalimagepathBase ||
-                                    this.state.savedPhotoData.LocalimagepathBase
-                                  ) ? (
-                                    <div style={{ marginTop: "10px" }}>
-                                      <img
-                                        src={
-                                          values.LocalimagepathBase ||
-                                          this.state.savedPhotoData.LocalimagepathBase
-                                        }
-                                        alt="Local guardian preview"
-                                        width="100px"
-                                      />
                                     </div>
                                   ) : null}
                                 </div>
@@ -2886,99 +2555,6 @@ handleOtpVerification = (values, setFieldValue) => {
                         </div>
                       </div>
                     </div>
-
-                    {this.state.showOtpModal && (
-                      <div style={{
-                        position: 'fixed',
-                        top: 0,
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
-                        backgroundColor: 'rgba(0, 0, 0, 0.5)',
-                        display: 'flex',
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                        zIndex: 10000
-                      }}>
-                        <div style={{
-                          backgroundColor: 'white',
-                          padding: '30px',
-                          borderRadius: '8px',
-                          maxWidth: '400px',
-                          width: '90%',
-                          boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
-                        }}>
-                          <h4 style={{ marginBottom: '20px', textAlign: 'center' }}>Verify OTP</h4>
-                          <p style={{ marginBottom: '15px', textAlign: 'center', color: '#666' }}>
-                            OTP has been sent to {this.state.mobileForOtp}
-                          </p>
-                          <div style={{ marginBottom: '15px' }}>
-                            <input
-                              type="text"
-                              placeholder="Enter OTP"
-                              value={this.state.otpInput}
-                              onChange={(e) => {
-                                this.setState({ 
-                                  otpInput: e.target.value,
-                                  otpError: "" 
-                                });
-                              }}
-                              maxLength="6"
-                              style={{
-                                width: '100%',
-                                padding: '10px',
-                                borderRadius: '4px',
-                                border: '1px solid #ccc',
-                                fontSize: '16px',
-                                textAlign: 'center',
-                                letterSpacing: '2px',
-                                boxSizing: 'border-box'
-                              }}
-                            />
-                          </div>
-                          {this.state.otpError && (
-                            <div style={{ color: 'red', marginBottom: '15px', fontSize: '14px' }}>
-                              {this.state.otpError}
-                            </div>
-                          )}
-                          <div style={{ display: 'flex', gap: '10px' }}>
-                            <button
-                              type="button"
-                              onClick={() => this.handleOtpVerification(values, setFieldValue)}
-                              style={{
-                                flex: 1,
-                                padding: '10px',
-                                backgroundColor: '#883495',
-                                color: 'white',
-                                border: 'none',
-                                borderRadius: '4px',
-                                cursor: 'pointer',
-                                fontSize: '14px',
-                                fontWeight: 'bold'
-                              }}
-                            >
-                              Verify
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => this.handleCloseOtpModal()}
-                              style={{
-                                flex: 1,
-                                padding: '10px',
-                                backgroundColor: '#999',
-                                color: 'white',
-                                border: 'none',
-                                borderRadius: '4px',
-                                cursor: 'pointer',
-                                fontSize: '14px'
-                              }}
-                            >
-                              Cancel
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    )}
                   </Form>
                 )}
               </Formik>

@@ -542,18 +542,13 @@ class SetPlan extends Component {
         }
 
         if(this.state.monthly_type === "postpaid"){
-
+         
           this.setState({
             monthlyFormValues: {
               monthly_other_fees: 0,
               monthly_electricity_bill:0,
               monthly_water_bill:0,
-              monthly_month_name: "",
-              monthly_other_fees_remark: "",
-              no_of_can: 0,
-              opening_unit: 0,
-              closing_unit: 0,
-              no_of_occupied : 1,
+              //no_of_occupied : this.state.monthlyFormValues.no_of_occupied,
               monthly_transportation_fee: 0,
               monthly_parking_fee: 0,
               monthly_admission_fee: this.state.monthlyFormValues.monthly_admission_fee,
@@ -566,7 +561,7 @@ class SetPlan extends Component {
             }
           });
 
-
+          
         }
 
         if(this.state.monthly_type === "lateral"){
@@ -722,7 +717,6 @@ class SetPlan extends Component {
         meal_t2: adjustedFees.termII.meal_price_t2,
         laundry_t1: adjustedFees.termI.laundry_t1,
         laundry_t2: adjustedFees.termII.laundry_t2,
-        gstIncluded: 'yes',
         total: adjustedFees.total_price,
         to_pay: adjustedFees.total_price,
         total_one_time: adjustedFees.oneTimeTotal
@@ -739,7 +733,6 @@ class SetPlan extends Component {
       plan_id: this.state.formValues.term,
       plan_type: this.state.formValues.plan_type,
       term: values.term,
-      gstIncluded: 'yes',
       bed_type:  values.bed_type == "Lower Berth" ? "lb" : "ub",
       room_no: this.state.studentDetails.room_id,
       parking_type: this.state.studentDetails.parking_type,
@@ -767,7 +760,6 @@ class SetPlan extends Component {
         plan_id: this.state.formValues.term,
         plan_type: this.state.formValues.plan_type,
         term: values.term,
-        gstIncluded: 'yes',
         bed_type: values.bed_type == "Lower Berth" ? "lb" : "ub",
         room_no: this.state.studentDetails.room_id,
         parking_type: this.state.studentDetails.parking_type,
@@ -793,7 +785,6 @@ class SetPlan extends Component {
         SFname: this.state.studentDetails.SFname,
         student_type: values.student_type,
         plan_id: this.state.formValues.term,
-        gstIncluded: 'yes',
         plan_type: this.state.formValues.plan_type,
         term: values.term,
         bed_type: values.bed_type == "Lower Berth" ? "lb" : "ub",
@@ -828,11 +819,6 @@ class SetPlan extends Component {
   };
 
   handleSubmitEvent = (e) => {
-    if (this.state.monthly_type === "postpaid" && Number(this.state.total_price) < 0) {
-      swal("Warning", "Total amount cannot be negative", "warning");
-      return;
-    }
-
     swal({
       closeOnClickOutside: false,
       title: "Are you sure?",
@@ -869,7 +855,6 @@ class SetPlan extends Component {
             parking_type: this.state.studentDetails.parking_type,
             meal_type: this.state.studentDetails.food_preference,
             monthly: 0,
-            gstIncluded: 'yes',
             parking_start_date: (this.state.monthlyFormValues.parking_start_date != undefined) ? this.state.monthlyFormValues.parking_start_date : "",
             parking_end_date: (this.state.monthlyFormValues.parking_end_date != undefined) ? this.state.monthlyFormValues.parking_end_date : "",
             transport_start_date: (this.state.monthlyFormValues.transport_start_date != undefined) ? this.state.monthlyFormValues.transport_start_date : "",
@@ -905,7 +890,6 @@ class SetPlan extends Component {
             monthly_electricity_bill: (this.state.monthlyFormValues.monthly_electricity_bill > 0) ? this.state.monthlyFormValues.monthly_electricity_bill: 0,
             monthly_other_fees: (this.state.monthlyFormValues.monthly_other_fees > 0) ? this.state.monthlyFormValues.monthly_other_fees: 0,
             monthly_other_fees_remark: (this.state.monthlyFormValues.monthly_other_fees_remark != null) ? this.state.monthlyFormValues.monthly_other_fees_remark: "",
-            gstIncluded: 'yes',
             total: this.state.total_price,
             to_pay: this.state.total_price,
             total_one_time: this.state.total_price,
@@ -928,38 +912,20 @@ class SetPlan extends Component {
             parking_type: this.state.studentDetails.parking_type,
             meal_type: this.state.studentDetails.food_preference,
             monthly: 0,
-            gstIncluded: 'yes',
-            addmission_fee: (this.getDiscountAmount("addmission_fee", this.state.monthlyFormValues.monthly_admission_fee) > 0) ? this.getDiscountAmount("addmission_fee", this.state.monthlyFormValues.monthly_admission_fee): 0,
-            admisson_kit: (this.getDiscountAmount("admisson_kit", this.state.monthlyFormValues.monthly_admission_kit) > 0) ? this.getDiscountAmount("admisson_kit", this.state.monthlyFormValues.monthly_admission_kit): 0,
-            cultural_fees : (this.getDiscountAmount("cultural_fees", this.state.monthlyFormValues.monthly_cultural_fee) > 0) ? this.getDiscountAmount("cultural_fees", this.state.monthlyFormValues.monthly_cultural_fee): 0,
-            caution_deposit : (this.getDiscountAmount("caution_deposit", this.state.monthlyFormValues.monthly_caution_deposit) > 0) ? this.getDiscountAmount("caution_deposit", this.state.monthlyFormValues.monthly_caution_deposit): 0, 
+  
+            addmission_fee: (this.state.monthlyFormValues.monthly_admission_fee > 0) ? this.state.monthlyFormValues.monthly_admission_fee: 0,
+            admisson_kit: (this.state.monthlyFormValues.monthly_admission_kit > 0) ? this.state.monthlyFormValues.monthly_admission_kit: 0,
+            cultural_fees : (this.state.monthlyFormValues.monthly_cultural_fee > 0) ? this.state.monthlyFormValues.monthly_cultural_fee: 0,
+            caution_deposit : (this.state.monthlyFormValues.monthly_caution_deposit > 0) ? this.state.monthlyFormValues.monthly_caution_deposit: 0, 
             lateral_start_date: (this.state.monthlyFormValues.lateral_start_date) ? this.state.monthlyFormValues.lateral_start_date : "",
             lateral_end_date: (this.state.monthlyFormValues.lateral_end_date) ? this.state.monthlyFormValues.lateral_end_date : "",
-            room_rent : (this.getDiscountAmount("room_rent", this.state.monthly_room_rent) > 0) ? this.getDiscountAmount("room_rent", this.state.monthly_room_rent): 0, 
-            monthly_laundry_fee : (this.getDiscountAmount("laundry_t1", this.state.monthly_laundry_fee) > 0) ? this.getDiscountAmount("laundry_t1", this.state.monthly_laundry_fee): 0, 
-            monthly_mess_fee : (this.getDiscountAmount("meal_price_t1", this.state.monthly_mess_fee) > 0) ? this.getDiscountAmount("meal_price_t1", this.state.monthly_mess_fee): 0, 
+            room_rent : (this.state.monthly_room_rent > 0) ? this.state.monthly_room_rent: 0, 
+            monthly_laundry_fee : (this.state.monthly_laundry_fee > 0) ? this.state.monthly_laundry_fee: 0, 
+            monthly_mess_fee : (this.state.monthly_mess_fee > 0) ? this.state.monthly_mess_fee: 0, 
             monthly_other_fees_remark: (this.state.monthlyFormValues.monthly_other_fees_remark != null) ? this.state.monthlyFormValues.monthly_other_fees_remark: "",
-            total: this.getDiscountAmount("addmission_fee", this.state.monthlyFormValues.monthly_admission_fee) +
-                   this.getDiscountAmount("admisson_kit", this.state.monthlyFormValues.monthly_admission_kit) +
-                   this.getDiscountAmount("cultural_fees", this.state.monthlyFormValues.monthly_cultural_fee) +
-                   this.getDiscountAmount("caution_deposit", this.state.monthlyFormValues.monthly_caution_deposit) +
-                   this.getDiscountAmount("room_rent", this.state.monthly_room_rent) +
-                   this.getDiscountAmount("meal_price_t1", this.state.monthly_mess_fee) +
-                   this.getDiscountAmount("laundry_t1", this.state.monthly_laundry_fee),
-            to_pay: this.getDiscountAmount("addmission_fee", this.state.monthlyFormValues.monthly_admission_fee) +
-                   this.getDiscountAmount("admisson_kit", this.state.monthlyFormValues.monthly_admission_kit) +
-                   this.getDiscountAmount("cultural_fees", this.state.monthlyFormValues.monthly_cultural_fee) +
-                   this.getDiscountAmount("caution_deposit", this.state.monthlyFormValues.monthly_caution_deposit) +
-                   this.getDiscountAmount("room_rent", this.state.monthly_room_rent) +
-                   this.getDiscountAmount("meal_price_t1", this.state.monthly_mess_fee) +
-                   this.getDiscountAmount("laundry_t1", this.state.monthly_laundry_fee),
-            total_one_time: this.getDiscountAmount("addmission_fee", this.state.monthlyFormValues.monthly_admission_fee) +
-                   this.getDiscountAmount("admisson_kit", this.state.monthlyFormValues.monthly_admission_kit) +
-                   this.getDiscountAmount("cultural_fees", this.state.monthlyFormValues.monthly_cultural_fee) +
-                   this.getDiscountAmount("caution_deposit", this.state.monthlyFormValues.monthly_caution_deposit) +
-                   this.getDiscountAmount("room_rent", this.state.monthly_room_rent) +
-                   this.getDiscountAmount("meal_price_t1", this.state.monthly_mess_fee) +
-                   this.getDiscountAmount("laundry_t1", this.state.monthly_laundry_fee),
+            total: this.state.total_price,
+            to_pay: this.state.total_price,
+            total_one_time: this.state.total_price,
           };
 
 
@@ -1128,42 +1094,13 @@ class SetPlan extends Component {
 
   calculatePostPaidTotalPrice = (values) => {
     const waterBill = Number(values.no_of_can || 0) * Number(this.state.per_can_cost || 0);
-    const electricityBill =
+    const electricityBill = 
       ((Number(values.closing_unit || 0) - Number(values.opening_unit || 0)) * Number(this.state.per_unit_cost || 0)) /
       Number(values.no_of_occupied || 1);
     const otherFees = Number(values.monthly_other_fees || 0);
 
     const total = waterBill + electricityBill + otherFees;
     return total;
-  }
-
-  handlePostpaidChange = (field, value) => {
-    const round2 = (n) => Math.round(Number(n) * 100) / 100;
-
-    this.setState((prevState) => {
-      const monthlyFormValues = {
-        ...prevState.monthlyFormValues,
-        [field]: value,
-      };
-
-      const waterBill = round2(Number(monthlyFormValues.no_of_can || 0) * Number(prevState.per_can_cost || 0));
-      const electricityBill = round2(
-        ((Number(monthlyFormValues.closing_unit || 0) - Number(monthlyFormValues.opening_unit || 0)) *
-          Number(prevState.per_unit_cost || 0)) /
-        Number(monthlyFormValues.no_of_occupied || 1)
-      );
-      const total = round2(waterBill + electricityBill + Number(monthlyFormValues.monthly_other_fees || 0));
-
-      return {
-        monthlyFormValues: {
-          ...monthlyFormValues,
-          monthly_water_bill: waterBill,
-          monthly_electricity_bill: electricityBill,
-        },
-        total_price: total,
-        to_pay: total,
-      };
-    });
   }
 
   onValueChangeLateral = (name, value) => {
@@ -1615,7 +1552,10 @@ render() {
           ),
          
     });
+    const discountedFees = this.getAdjustedFeeDetails(this.state.oneTime && this.state.oneTime.length > 0 ? this.state.oneTime[0] : {});
 
+
+    
     return (
       <Layout {...this.props}>
         <div className="content-wrapper">
@@ -2196,107 +2136,169 @@ render() {
                 <td>{this.state.studentDetails.toilet_type}</td>
                 </tr>
 
-                {this.state.studentDetails.transportation == "Yes" ? (
+                {this.state.formValues.term == "1" || this.state.formValues.term == "2" || this.state.formValues.term == "3" ? (
                   <>
+                  <td
+                  colSpan={2}
+                  style={{
+                    fontWeight: "bold",
+                    textAlign: "center",
+                  }}>
+                  One Time Payment
+                  </td>
                   <tr>
-                  <td>No of Months (Transportation)</td>
+                  <td>Room Rent (including gst)</td>
                   <td>
-                  <DatePicker
-                  selected={values.transport_start_date}
-                  dateFormat="dd/MM/yyyy"
-                  placeholder="Start Date"
-                  className="form-control"
-                  name="transport_start_date"
-                  onChange={(transport_start_date) => {
-                    this.onValueChangeTransport("transport_start_date", transport_start_date);
-                    setFieldValue("transport_start_date", transport_start_date);
-                  }}
-                  filterDate={(date) => date >= startDate && date <= endDate}
-                  />
-                  <DatePicker
-                  selected={values.transport_end_date}
-                  dateFormat="dd/MM/yyyy"
-                  placeholder="End Date"
-                  className="form-control"
-                  name="transport_end_date"
-                  onChange={(transport_end_date) => {
-                    this.onValueChangeTransport("transport_end_date", transport_end_date);
-                    setFieldValue("transport_end_date", transport_end_date);
-                  }}
-                  filterDate={(date) => date >= startDate && date <= endDate}
-                  />
-                  {errors.transport_start_date && touched.transport_start_date ? (
-                    <div className="text-danger">{errors.transport_start_date}</div>
-                  ) : null}
-                  {errors.transport_end_date && touched.transport_end_date ? (
-                    <div className="text-danger">{errors.transport_end_date}</div>
-                  ) : null}
+                  {discountedFees.oneTime.room_rent.toLocaleString("en-IN", {
+                    maximumFractionDigits: 0,
+                    style: "currency",
+                    currency: "INR",
+                  })}
+                  {this.renderDiscountToggle("room_rent")}
                   </td>
                   </tr>
                   <tr>
-                  <td>Transportation Fee</td>
+                  <td>Cultural Fee (including gst)</td>
                   <td>
-                  <Field
-                  name="monthly_transportation_fee"
-                  autoComplete="off"
-                  readOnly
-                  className="form-control"
-                  type="number"
-                  value={this.state.monthlyFormValues.monthly_transportation_fee}
-                  ></Field>
+                  {discountedFees.oneTime.cultural_fees.toLocaleString("en-IN", {
+                    maximumFractionDigits: 0,
+                    style: "currency",
+                    currency: "INR",
+                  })}
+                  {this.renderDiscountToggle("cultural_fees")}
+                  </td>
+                  </tr>
+                  <tr>
+                  <td>Caution Deposit </td>
+                  <td>
+                  {discountedFees.oneTime.caution_deposit.toLocaleString("en-IN", {
+                    maximumFractionDigits: 0,
+                    style: "currency",
+                    currency: "INR",
+                  })}
+                  {this.renderDiscountToggle("caution_deposit")}
+                  </td>
+                  </tr>
+                  <tr>
+                  <td>Admission Fee (including gst)</td>
+                  <td>
+                  {discountedFees.oneTime.addmission_fee.toLocaleString("en-IN", {
+                    maximumFractionDigits: 0,
+                    style: "currency",
+                    currency: "INR",
+                  })}
+                  {this.renderDiscountToggle("addmission_fee")}
+                  </td>
+                  </tr>
+                  <tr>
+                  <td>Admission Kit (including gst)</td>
+                  <td>
+                  {discountedFees.oneTime.admisson_kit.toLocaleString("en-IN", {
+                    maximumFractionDigits: 0,
+                    style: "currency",
+                    currency: "INR",
+                  })}
+                  {this.renderDiscountToggle("admisson_kit")}
                   </td>
                   </tr>
                   </>
                   ) : null}
 
-                {this.state.studentDetails.parking == "Yes" ? (
+                {this.state.formValues.term == "1" || this.state.formValues.term == "2" ? (
                   <>
+                  <td
+                  colSpan={2}
+                  style={{
+                    fontWeight: "bold",
+                    textAlign: "center",
+                  }}
+                  >
+                  Term I
+                  </td>
                   <tr>
-                  <td>No of Months (Parking)</td>
                   <td>
-                  <DatePicker
-                  selected={values.parking_start_date}
-                  dateFormat="dd/MM/yyyy"
-                  placeholder="Start Date"
-                  className="form-control"
-                  name="parking_start_date"
-                  onChange={(parking_start_date) => {
-                    this.onValueChangeParking("parking_start_date", parking_start_date);
-                    setFieldValue("parking_start_date", parking_start_date);
-                  }}
-                  filterDate={(date) => date >= startDate && date <= endDate}
-                  />
-                  <DatePicker
-                  selected={values.parking_end_date}
-                  dateFormat="dd/MM/yyyy"
-                  placeholder="End Date"
-                  className="form-control"
-                  name="parking_end_date"
-                  onChange={(parking_end_date) => {
-                    this.onValueChangeParking("parking_end_date", parking_end_date);
-                    setFieldValue("parking_end_date", parking_end_date);
-                  }}
-                  filterDate={(date) => date >= startDate && date <= endDate}
-                  />
-                  {errors.parking_start_date && touched.parking_start_date ? (
-                    <div className="text-danger">{errors.parking_start_date}</div>
-                  ) : null}
-                  {errors.parking_end_date && touched.parking_end_date ? (
-                    <div className="text-danger">{errors.parking_end_date}</div>
-                  ) : null}
+                  Meal Fees (
+                    {this.state.studentDetails.food_preference})
+                  (including gst)
+                  </td>
+                  <td>
+                  {discountedFees.termI && discountedFees.termI.meal_price_t1 !== undefined
+                    ? Number(discountedFees.termI.meal_price_t1).toLocaleString(
+                        "en-IN",
+                        {
+                          maximumFractionDigits: 0,
+                          style: "currency",
+                          currency: "INR",
+                        }
+                      )
+                    : 0}
+                  {this.renderDiscountToggle("meal_price_t1")}
                   </td>
                   </tr>
                   <tr>
-                  <td>Parking Fee</td>
+                  <td>Laundry (including gst)</td>
                   <td>
-                  <Field
-                  name="monthly_parking_fee"
-                  autoComplete="off"
-                  readOnly
-                  className="form-control"
-                  type="number"
-                  value={this.state.monthlyFormValues.monthly_parking_fee}
-                  ></Field>
+                    {discountedFees.termI && discountedFees.termI.laundry_t1 !== undefined
+                      ? Number(discountedFees.termI.laundry_t1).toLocaleString(
+                          "en-IN",
+                          {
+                            maximumFractionDigits: 0,
+                            style: "currency",
+                            currency: "INR",
+                          }
+                        )
+                      : 0}
+                    {this.renderDiscountToggle("laundry_t1")}
+                  </td>
+                  </tr>
+                  </>
+                  ) : null}
+
+                {this.state.formValues.term == "1" || this.state.formValues.term == "3"|| this.state.formValues.term == "4" ? (
+                  <>
+                  <td
+                  colSpan={2}
+                  style={{
+                    fontWeight: "bold",
+                    textAlign: "center",
+                  }}
+                  >
+                  Term II
+                  </td>
+                  <tr>
+                  <td>
+                  Meal Fees (
+                    {this.state.studentDetails.food_preference})
+                  (including gst)
+                  </td>
+                  <td>
+                    {discountedFees.termII && discountedFees.termII.meal_price_t2 !== undefined
+                      ? Number(discountedFees.termII.meal_price_t2).toLocaleString(
+                          "en-IN",
+                          {
+                            maximumFractionDigits: 0,
+                            style: "currency",
+                            currency: "INR",
+                          }
+                        )
+                      : 0}
+                    {this.renderDiscountToggle("meal_price_t2")}
+                  </td>
+                  </tr>
+                  <tr>
+                  <td>Laundry (including gst)</td>
+                  <td>
+                    {discountedFees.termII && discountedFees.termII.laundry_t2 !== undefined
+                      ? Number(discountedFees.termII.laundry_t2).toLocaleString(
+                          "en-IN",
+                          {
+                            maximumFractionDigits: 0,
+                            style: "currency",
+                            currency: "INR",
+                          }
+                        )
+                      : 0}
+                    {this.renderDiscountToggle("laundry_t2")}
                   </td>
                   </tr>
                   </>
@@ -2304,10 +2306,14 @@ render() {
 
                   <tr>
                     <td>
-                      <b>Total</b>
+                      <b>Total (including gst)</b>
                     </td>
                     <td>
                     <b>
+
+                       
+
+
                         {(this.state.total_price).toLocaleString(
                             "en-IN",
                             {
@@ -2316,6 +2322,14 @@ render() {
                               currency: "INR",
                             }
                           )}
+
+
+
+                          {errors.monthly_parking_fee && touched.monthly_parking_fee ? (
+                            <div className="text-danger">
+                            {errors.monthly_parking_fee}
+                            </div>
+                            ) : null}
                   </b>
                   </td>
                   </tr>
@@ -2413,226 +2427,189 @@ render() {
                 <td>{this.state.studentDetails.toilet_type}</td>
                 </tr>
 
+                {this.state.formValues.term == "1" || this.state.formValues.term == "2" || this.state.formValues.term == "3" ? (
+                  <>
+                  <td
+                  colSpan={2}
+                  style={{
+                    fontWeight: "bold",
+                    textAlign: "center",
+                  }}>
+                  One Time Payment
+                  </td>
                   <tr>
-                  <td>Month</td>
+                  <td>Room Rent (including gst)</td>
                   <td>
-                  <Field
-                  component="select"
-                  autoComplete="off"
-                  name="monthly_month_name"
-                  className="form-control"
-                  onChange={(e) => {
-                    this.handlePostpaidChange("monthly_month_name", e.target.value);
-                    setFieldValue("monthly_month_name", e.target.value);
+                  {discountedFees.oneTime.room_rent.toLocaleString("en-IN", {
+                    maximumFractionDigits: 0,
+                    style: "currency",
+                    currency: "INR",
+                  })}
+                  {this.renderDiscountToggle("room_rent")}
+                  </td>
+                  </tr>
+                  <tr>
+                  <td>Cultural Fee (including gst)</td>
+                  <td>
+                  {discountedFees.oneTime.cultural_fees.toLocaleString("en-IN", {
+                    maximumFractionDigits: 0,
+                    style: "currency",
+                    currency: "INR",
+                  })}
+                  {this.renderDiscountToggle("cultural_fees")}
+                  </td>
+                  </tr>
+                  <tr>
+                  <td>Caution Deposit </td>
+                  <td>
+                  {discountedFees.oneTime.caution_deposit.toLocaleString("en-IN", {
+                    maximumFractionDigits: 0,
+                    style: "currency",
+                    currency: "INR",
+                  })}
+                  {this.renderDiscountToggle("caution_deposit")}
+                  </td>
+                  </tr>
+                  <tr>
+                  <td>Admission Fee (including gst)</td>
+                  <td>
+                  {discountedFees.oneTime.addmission_fee.toLocaleString("en-IN", {
+                    maximumFractionDigits: 0,
+                    style: "currency",
+                    currency: "INR",
+                  })}
+                  {this.renderDiscountToggle("addmission_fee")}
+                  </td>
+                  </tr>
+                  <tr>
+                  <td>Admission Kit (including gst)</td>
+                  <td>
+                  {discountedFees.oneTime.admisson_kit.toLocaleString("en-IN", {
+                    maximumFractionDigits: 0,
+                    style: "currency",
+                    currency: "INR",
+                  })}
+                  {this.renderDiscountToggle("admisson_kit")}
+                  </td>
+                  </tr>
+                  </>
+                  ) : null}
+
+                {this.state.formValues.term == "1" || this.state.formValues.term == "2" ? (
+                  <>
+                  <td
+                  colSpan={2}
+                  style={{
+                    fontWeight: "bold",
+                    textAlign: "center",
                   }}
                   >
-                  <option value="">Select Month</option>
-                  <option value="January">January</option>
-                  <option value="February">February</option>
-                  <option value="March">March</option>
-                  <option value="April">April</option>
-                  <option value="May">May</option>
-                  <option value="June">June</option>
-                  <option value="July">July</option>
-                  <option value="August">August</option>
-                  <option value="September">September</option>
-                  <option value="October">October</option>
-                  <option value="November">November</option>
-                  <option value="December">December</option>
-                  </Field>
-                  {errors.monthly_month_name && touched.monthly_month_name ? (
-                    <div className="text-danger">{errors.monthly_month_name}</div>
+                  Term I
+                  </td>
+                  <tr>
+                  <td>
+                  Meal Fees (
+                    {this.state.studentDetails.food_preference})
+                  (including gst)
+                  </td>
+                  <td>
+                  {discountedFees.termI && discountedFees.termI.meal_price_t1 !== undefined
+                    ? Number(discountedFees.termI.meal_price_t1).toLocaleString(
+                        "en-IN",
+                        {
+                          maximumFractionDigits: 0,
+                          style: "currency",
+                          currency: "INR",
+                        }
+                      )
+                    : 0}
+                  {this.renderDiscountToggle("meal_price_t1")}
+                  </td>
+                  </tr>
+                  <tr>
+                  <td>Laundry (including gst)</td>
+                  <td>
+                    {discountedFees.termI && discountedFees.termI.laundry_t1 !== undefined
+                      ? Number(discountedFees.termI.laundry_t1).toLocaleString(
+                          "en-IN",
+                          {
+                            maximumFractionDigits: 0,
+                            style: "currency",
+                            currency: "INR",
+                          }
+                        )
+                      : 0}
+                    {this.renderDiscountToggle("laundry_t1")}
+                  </td>
+                  </tr>
+                  </>
                   ) : null}
-                  </td>
-                  </tr>
 
-                 
-
-                  <tr>
-                  <td>Cost Per Can (Rs)</td>
-                  <td>
-                  <Field
-                  name="per_can_cost"
-                  autoComplete="off"
-                  readOnly
-                  className="form-control"
-                  type="number"
-                  value={this.state.per_can_cost}
-                  ></Field>
-                  </td>
-                  </tr>
-                  <tr>
-                  <td>No of Water Cans</td>
-                  <td>
-                  <Field
-                  name="no_of_can"
-                  autoComplete="off"
-                  className="form-control"
-                  type="number"
-                  min={0}
-                  value={this.state.monthlyFormValues.no_of_can}
-                  onChange={(e) => {
-                    this.handlePostpaidChange("no_of_can", e.target.value);
-                    setFieldValue("no_of_can", e.target.value);
+                {this.state.formValues.term == "1" || this.state.formValues.term == "3"|| this.state.formValues.term == "4" ? (
+                  <>
+                  <td
+                  colSpan={2}
+                  style={{
+                    fontWeight: "bold",
+                    textAlign: "center",
                   }}
-                  ></Field>
+                  >
+                  Term II
+                  </td>
+                  <tr>
+                  <td>
+                  Meal Fees (
+                    {this.state.studentDetails.food_preference})
+                  (including gst)
+                  </td>
+                  <td>
+                    {discountedFees.termII && discountedFees.termII.meal_price_t2 !== undefined
+                      ? Number(discountedFees.termII.meal_price_t2).toLocaleString(
+                          "en-IN",
+                          {
+                            maximumFractionDigits: 0,
+                            style: "currency",
+                            currency: "INR",
+                          }
+                        )
+                      : 0}
+                    {this.renderDiscountToggle("meal_price_t2")}
                   </td>
                   </tr>
                   <tr>
-                  <td><strong>Water Bill</strong></td>
+                  <td>Laundry (including gst)</td>
                   <td>
-                  <Field
-                  name="monthly_water_bill"
-                  autoComplete="off"
-                  readOnly
-                  className="form-control"
-                  type="number"
-                  value={this.state.monthlyFormValues.monthly_water_bill}
-                  ></Field>
+                    {discountedFees.termII && discountedFees.termII.laundry_t2 !== undefined
+                      ? Number(discountedFees.termII.laundry_t2).toLocaleString(
+                          "en-IN",
+                          {
+                            maximumFractionDigits: 0,
+                            style: "currency",
+                            currency: "INR",
+                          }
+                        )
+                      : 0}
+                    {this.renderDiscountToggle("laundry_t2")}
                   </td>
                   </tr>
-
-                  <tr>
-                  <td>Unit Cost (Rs)</td>
-                  <td>
-                  <Field
-                  name="per_unit_cost"
-                  autoComplete="off"
-                  readOnly
-                  className="form-control"
-                  type="number"
-                  value={this.state.per_unit_cost}
-                  ></Field>
-                  </td>
-                  </tr>
-                  <tr>
-                  <td>Opening Unit</td>
-                  <td>
-                  <Field
-                  name="opening_unit"
-                  autoComplete="off"
-                  className="form-control"
-                  type="number"
-                  min={0}
-                  value={this.state.monthlyFormValues.opening_unit}
-                  onChange={(e) => {
-                    this.handlePostpaidChange("opening_unit", e.target.value);
-                    setFieldValue("opening_unit", e.target.value);
-                  }}
-                  ></Field>
-                  </td>
-                  </tr>
-                  <tr>
-                  <td>Closing Unit</td>
-                  <td>
-                  <Field
-                  name="closing_unit"
-                  autoComplete="off"
-                  className="form-control"
-                  type="number"
-                  min={0}
-                  value={this.state.monthlyFormValues.closing_unit}
-                  onChange={(e) => {
-                    this.handlePostpaidChange("closing_unit", e.target.value);
-                    setFieldValue("closing_unit", e.target.value);
-                  }}
-                  ></Field>
-                  </td>
-                  </tr>
-
-
-                   <tr>
-                  <td>No of Students</td>
-                  <td>
-                  <Field
-                  name="no_of_occupied"
-                  autoComplete="off"
-                  className="form-control"
-                  type="number"
-                  min={1}
-                  value={this.state.monthlyFormValues.no_of_occupied}
-                  onChange={(e) => {
-                    this.handlePostpaidChange("no_of_occupied", e.target.value);
-                    setFieldValue("no_of_occupied", e.target.value);
-                  }}
-                  ></Field>
-                  </td>
-                  </tr>
-
-                  <tr>
-                  <td><strong>Electricity Bill (AC)</strong></td>
-                  <td>
-                  <Field
-                  name="monthly_electricity_bill"
-                  autoComplete="off"
-                  readOnly
-                  className="form-control"
-                  type="number"
-                  value={this.state.monthlyFormValues.monthly_electricity_bill}
-                  ></Field>
-                  </td>
-                  </tr>
-
-                  <tr>
-                  <td>Other Fees</td>
-                  <td>
-                  <Field
-                  name="monthly_other_fees"
-                  autoComplete="off"
-                  className="form-control"
-                  type="number"
-                  min={0}
-                  value={this.state.monthlyFormValues.monthly_other_fees}
-                  onChange={(e) => {
-                    this.handlePostpaidChange("monthly_other_fees", e.target.value);
-                    setFieldValue("monthly_other_fees", e.target.value);
-                  }}
-                  ></Field>
-                  </td>
-                  </tr>
-                  <tr>
-                  <td>Other Fees Remark</td>
-                  <td>
-                  <Field
-                  name="monthly_other_fees_remark"
-                  autoComplete="off"
-                  className="form-control"
-                  type="textarea"
-                  onChange={(e) => {
-                    this.setState({
-                      monthlyFormValues: {
-                        ...this.state.monthlyFormValues,
-                        monthly_other_fees_remark: e.target.value,
-                      },
-                    });
-                    setFieldValue("monthly_other_fees_remark", e.target.value);
-                  }}
-                  ></Field>
-                  {errors.monthly_other_fees_remark && touched.monthly_other_fees_remark ? (
-                    <div className="text-danger">{errors.monthly_other_fees_remark}</div>
+                  </>
                   ) : null}
-                  </td>
-                  </tr>
 
                   <tr>
                       <td>
-                        <b>Total</b>
+                        <b>Total (including gst)</b>
                       </td>
                       <td>
                         <b>
                           {this.state.total_price.toLocaleString(
                             "en-IN",
                             {
-                              minimumFractionDigits: 2,
-                              maximumFractionDigits: 2,
+                              maximumFractionDigits: 0,
                               style: "currency",
                               currency: "INR",
                             }
                             )}
                         </b>
-                        {this.state.total_price < 0 ? (
-                          <div className="text-danger">Total amount cannot be negative</div>
-                        ) : null}
                       </td>
                   </tr>
 
@@ -2737,9 +2714,8 @@ render() {
                                      readOnly
                                      className="form-control"
                                      type="number"
-                                     value={this.getDiscountAmount("addmission_fee", this.state.monthlyFormValues.monthly_admission_fee)}
+                                     value={this.state.monthlyFormValues.monthly_admission_fee}
                                      ></Field>
-                                     {this.renderDiscountToggle("addmission_fee")}
                                      {errors.monthly_admission_fee &&
                                      touched.monthly_admission_fee ? (
                                        <div className="text-danger">
@@ -2758,9 +2734,8 @@ render() {
                                      className="form-control"
                                      type="number"
                                      readOnly
-                                     value={this.getDiscountAmount("admisson_kit", this.state.monthlyFormValues.monthly_admission_kit)}
+                                     value={this.state.monthlyFormValues.monthly_admission_kit}
                                      ></Field>
-                                     {this.renderDiscountToggle("admisson_kit")}
                                      {errors.monthly_admission_kit &&
                                      touched.monthly_admission_kit ? (
                                        <div className="text-danger">
@@ -2781,9 +2756,8 @@ render() {
                                      readOnly
                                      className="form-control"
                                      type="number"
-                                     value={this.getDiscountAmount("cultural_fees", this.state.monthlyFormValues.monthly_cultural_fee)}
+                                     value={this.state.monthlyFormValues.monthly_cultural_fee}
                                      ></Field>
-                                     {this.renderDiscountToggle("cultural_fees")}
                                      {errors.monthly_cultural_fee &&
                                      touched.monthly_cultural_fee ? (
                                        <div className="text-danger">
@@ -2802,9 +2776,8 @@ render() {
                                      readOnly
                                      className="form-control"
                                      type="number"
-                                     value={this.getDiscountAmount("caution_deposit", this.state.monthlyFormValues.monthly_caution_deposit)}
+                                     value={this.state.monthlyFormValues.monthly_caution_deposit}
                                      ></Field>
-                                     {this.renderDiscountToggle("caution_deposit")}
                                      {errors.monthly_caution_deposit &&
                                      touched.monthly_caution_deposit ? (
                                        <div className="text-danger">
@@ -2877,9 +2850,8 @@ render() {
                                      readOnly
                                      className="form-control"
                                      type="number"
-                                     value={this.getDiscountAmount("room_rent", this.state.monthly_room_rent)}
+                                     value={this.state.monthly_room_rent}
                                      ></Field>
-                                     {this.renderDiscountToggle("room_rent")}
                                      {errors.monthly_room_rent &&
                                      touched.monthly_room_rent ? (
                                        <div className="text-danger">
@@ -2898,9 +2870,8 @@ render() {
                                        readOnly
                                        className="form-control"
                                        type="number"
-                                       value={this.getDiscountAmount("meal_price_t1", this.state.monthly_mess_fee)}
+                                       value={this.state.monthly_mess_fee}
                                        ></Field>
-                                       {this.renderDiscountToggle("meal_price_t1")}
                                        {errors.monthly_mess_fee &&
                                        touched.monthly_mess_fee ? (
                                          <div className="text-danger">
@@ -2919,9 +2890,8 @@ render() {
                                      readOnly
                                      className="form-control"
                                      type="number"
-                                     value={this.getDiscountAmount("laundry_t1", this.state.monthly_laundry_fee)}
+                                     value={this.state.monthly_laundry_fee}
                                      ></Field>
-                                     {this.renderDiscountToggle("laundry_t1")}
                                      {errors.monthly_laundry_fee &&
                                      touched.monthly_laundry_fee ? (
                                        <div className="text-danger">
@@ -2971,15 +2941,7 @@ render() {
                                      </td>
                                      <td>
                                      <b>
-                                     {(
-                                       this.getDiscountAmount("addmission_fee", this.state.monthlyFormValues.monthly_admission_fee) +
-                                       this.getDiscountAmount("admisson_kit", this.state.monthlyFormValues.monthly_admission_kit) +
-                                       this.getDiscountAmount("cultural_fees", this.state.monthlyFormValues.monthly_cultural_fee) +
-                                       this.getDiscountAmount("caution_deposit", this.state.monthlyFormValues.monthly_caution_deposit) +
-                                       this.getDiscountAmount("room_rent", this.state.monthly_room_rent) +
-                                       this.getDiscountAmount("meal_price_t1", this.state.monthly_mess_fee) +
-                                       this.getDiscountAmount("laundry_t1", this.state.monthly_laundry_fee)
-                                     ).toLocaleString(
+                                     {( this.state.total_price).toLocaleString(
                                        "en-IN",
                                        {
                                          maximumFractionDigits: 0,

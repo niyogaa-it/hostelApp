@@ -160,6 +160,13 @@ class MonthlyMarkAsPaid extends Component {
 
   render() {
 
+
+    const { planDetail } = this.state;
+    const newInitialValues = Object.assign(initialValues, {
+      offline_payment_amout: this.state.planDetail.total ? this.state.planDetail.total : 0,
+    });
+
+
     const validateRoom = Yup.object().shape({
       offline_payment_type: Yup.string().required("Payment Type is required"),
       offline_payment_date: Yup.string().required("Payment Date is required"),
@@ -176,7 +183,7 @@ class MonthlyMarkAsPaid extends Component {
         <div className="content-wrapper">
           <section className="content-header">
             <Formik
-                initialValues={initialValues}
+                initialValues={newInitialValues}
                 validationSchema={validateRoom}
                 onSubmit={this.submitOffline}
             >
@@ -306,7 +313,7 @@ class MonthlyMarkAsPaid extends Component {
                                  min="1"
                                  name="offline_payment_amout"
                                  className={"form-control"}
-                                 value={this.state.planDetail.to_pay}
+                                
                               />
                               {errors.offline_payment_amout && touched.offline_payment_amout ? (
                                 <div className="error text-left text-danger">

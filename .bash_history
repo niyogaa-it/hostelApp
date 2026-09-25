@@ -1,166 +1,3 @@
-pm2 restart 3
-pm2 restart 0
-pm2 list
-pm2 restart 0
-pm2 restart 3
-pm2 restart 3
-pm2 restart 0
-pm2 restart 0
-pm2 restart 3
-pm2 restart 3
-pm2 restart 0
-pm2 restart 0
-pm2 restart 3
-pm2 restart 3
-pm2 restart 0
-pm2 list
-ls
-npm run build
-npm run build
-npm run build2
-npm run build
-pm2 list
-pm2 restart 0
-pm2 restart 3
-npm run env-cmd .env.production react-scripts build
-ls
-cd /application/rani_meyyammai_hostel
-ls
-npm run build
-ls -l
-n
-pm2 list
-pm2 list
-pm2 restart 0
-pm2 restart 3
-pm2 restart 3
-pm2 restart 0
-pm2 list
-pm2 restart 0
-pm2 restart 3
-pm2 restart 0
-pm2 restart 0
-pm2 restart 3
-pm2 restart 3
-pm2 restart 0
-pm2 restart 0
-pm2 restart 3
-pm2 list
-pm2 restart 0
-pm2 restart 3
-pm2 list
-pm2 restart 3
-pm2 restart 0
-pm2 restart 0
-pm2 restart 3
-pm2 list
-pm2 list
-pm2 restart 3
-pm2 restart 0
-pm2 list
-pm2 restart 0
-pm2 restart 3
-pm2 restart 3
-pm2 restart 0
-pwd
-npm run build
-npm run build:prod
-pm2 list
-ls
-pm2 list
-pm2 restart 0
-pm2 restart 3
-pm2 restart 0
-pm2 restart all
-pm2 list
-pm2 restart all
-pwd
-ng build:prod
-npm nuild:prod
-pwd
-ng build:prod
-ng build
-npm run build:prod
-pwd
-npm run build:prod
-npm run build:prod
-pm2 list
-pwd
-npm run build:prod
-npm run build
-pwd
-npm run build:prod
-pm2 list
-pm2 flush
-pm2 list
-pm2 restat 0
-pm2 restart 0
-pm2 restart 3
-pm2 log 0
-pm2 log 3
-pm2 list
-pm2 restart 3
-pm2 restart 0
-pm2 list
-clear
-pwd
-npm build:prod
-ls -l
-npm run build:prod
-npm run build:prod
-pm2 list
-pm2 list
-pwd
-npm run build:prod
-pm2 list
-pm2 restart 3
-npm run build:prod
-pwd
-npm run build:prod
-pwd
-npm run build:prod
-pwd
-npm run build:prod
-npm run build:prod
-pm2 list
-pm2 restart all
-exit
-npm run build:prod
-pm2 restart all
-exit
-pm2 list
-pm2 restart 0
-pm2 restart 3
-pm2 restart 3
-pm2 restart 0
-pwd
-npm run build:prod
-exit
-pm2 list
-pm2 restart 0
-pm2 restart 3
-pwd
-npm run build:prod
-pm2 list
-ls
-cd src
-ls
-cd ..
-npm i date-fns
-pm2 list
-ls -l
-npm run build:prod
-npm run build:prod
-npm run build:prod
-npm run build:prod
-npm run build:prod
-npm run build:prod
-pm2 list
-pm2 start 0
-pm2 restart 0
-pm2 restart 3
-pm2 list
-pm2 restart 3
 pm2 restart 0
 pm2 restart 0
 pm2 restart 3
@@ -498,3 +335,166 @@ pm2 start "npm run start:dev" --name "hostel_frontend"
 pm2 log 0
 pm2 ls
 pm2 start "npm run start:dev" --name "hostel_frontend"
+pm2 start "npm run start:dev" --name "hostel_frontend"
+pm2 ls
+pm2 start "npm run start:dev" --name "hostel_frontend"
+pm2 log 0
+pm2 start "npm run start:dev" --name "hostel_frontend"
+ls
+pm2 start "npm run start" --name "hostel_frontend"
+delete pid 1
+pm2 ls
+pm2 delete 1
+npm run build:prod
+pm2 start "npm run start:dev" --name "hostel_frontend"
+pm2 ls
+pm2 ls
+pm2 start "npm run start:dev" --name "hostel_frontend"
+pm2 ls
+pm2 start "npm run start:dev" --name "hostel_frontend"
+pm2 ls
+pm2 start "npm run start:dev" --name "hostel_frontend"
+pm2 ls
+pm2 start "npm run start:dev" --name "hostel_frontend"
+pm2 ls
+pm2 start "npm run start:dev" --name "hostel_frontend"
+pm2 start "npm run start:dev" --name "hostel_frontend"
+pm2 start "npm run start:dev" --name "hostel_frontend"
+pm2 list
+npm run build
+npm run build:prod
+npm run build:prod
+exit
+npm run build:prod
+pm2 ls
+pm2 start "npm run start:dev" --name "hostel_frontend"
+pm2 ls
+pm2 start "npm run start:dev" --name "hostel_frontend"
+pm2 start "npm run start:dev" --name "hostel_frontend"
+pm2 list
+pm2 start "npm run start:dev" --name "hostel_frontend"
+pwd
+npm run build
+npm run build:prod
+pm2 ls
+pm2 ls
+pm2 start "npm run start:dev" --name "hostel_frontend"
+npm run build:prod
+exit
+pm2 list
+pm2 resurrect
+pm2 ls
+pm2 ls
+nove -v
+node -v
+npm run build:prod
+npm run build:prod
+pm2 reload 
+pm2 start "npm run start:dev" --name "hostel_frontend"
+pm2 ls
+pm2 start "npm run start:dev" --name "hostel_frontend"
+pm2 ls
+pm2 start "npm run start:dev" --name "hostel_frontend"
+pm2 start "npm run start:dev" --name "hostel_frontend"
+pm2 start "npm run start:dev" --name "hostel_frontend"
+ls
+npm run build:prod
+pm2 start "npm run start:dev" --name "hostel_frontend"
+pm2 ls
+pm2 reload 0
+pm2 reload 0
+pm2 reload 0
+npm run build:prod
+exit
+pm2 ls
+pm2 start "npm run start:dev" --name "hostel_frontend"
+ssh admin_ranimey_sftp_user@3.6.16.166 -p 9822
+pm2 list
+pm2 start "npm run start:dev" --name "hostel_frontend"
+pm2 start "npm run start:dev" --name "hostel_frontend"
+pm2 ls
+pm2 start "npm run start:dev" --name "hostel_frontend"
+pm2 start "npm run start:dev" --name "hostel_frontend"
+pm2 start "npm run start:dev" --name "hostel_frontend"
+pm2 ls
+pm2 ls
+pm2 start "npm run start:dev" --name "hostel_frontend"
+pm2 start "npm run start:dev" --name "hostel_frontend"
+pm2 start "npm run start:dev" --name "hostel_frontend"
+pm2 start "npm run start:dev" --name "hostel_frontend"
+pm2 start "npm run start:dev" --name "hostel_frontend"
+ssh sftpuser@65.0.2.34 -p 9822
+pm2 start "npm run start:dev" --name "hostel_frontend"
+pm2 start "npm run start:dev" --name "hostel_frontend"
+ssh sftpuser@65.0.2.34 -p 9822
+pm2 start "npm run start:dev" --name "hostel_frontend"
+pm2 start "npm run start:dev" --name "hostel_frontend"
+pm2 start "npm run start:dev" --name "hostel_frontend"
+pm2 start "npm run start:dev" --name "hostel_frontend"
+pm2 start "npm run start:dev" --name "hostel_frontend"
+pm2 start "npm run start:dev" --name "hostel_frontend"
+pm2 start "npm run start:dev" --name "hostel_frontend"
+pm2 start "npm run start:dev" --name "hostel_frontend"
+pm2 ls
+npm run build:prod
+npm run build:prod
+pm2 ls
+pm2 resurrect
+ssh sftpuser@65.0.2.34 -p 9822
+pm2 list
+pm2 log 0
+pm2 reload 
+pm2 start "npm run start:dev" --name "hostel_frontend"
+pm2 start "npm run start:dev" --name "hostel_frontend"
+pm2 start "npm run start:dev" --name "hostel_frontend"
+pm2 start "npm run start:dev" --name "hostel_frontend"
+pm2 start "npm run start:dev" --name "hostel_frontend"
+pm2 ls
+pm2 log 0
+pm2 start "npm run start:dev" --name "hostel_frontend"
+pm2 start "npm run start:dev" --name "hostel_frontend"
+npm run build:prod
+pm2 start "npm run start:dev" --name "hostel_frontend"
+ssh admin_ranimey_sftp_user@3.6.16.166 -p 9822
+npm run build:prod
+pm2 start "npm run start:dev" --name "hostel_frontend"
+npm run build:prod
+pm2 start "npm run start:dev" --name "hostel_frontend"
+pm2 start "npm run start:dev" --name "hostel_frontend"
+pm2 start "npm run start:dev" --name "hostel_frontend"
+npm -v
+node -v
+npm list react-scripts
+npm run build:prod
+pm2 ls
+pm2 resurrect
+pm2 ls
+pm2 resurrect
+pm2 resurrect
+pm2 reload 0
+pm2 resurrect
+pm2 ls
+pm2 resurrect
+pm2 resurrect
+pm2 resurrect
+pm2 resurrect
+pm2 resurrect
+pm2 resurrect
+pm2 resurrect
+pm2 ls
+pm2 resurrect
+ssh sftpuser@65.0.2.34 -p 9822
+pm2 resurrect
+pm2 resurrect
+pm2 resurrect
+ls
+pm2 ls
+ls
+npm run build:prod
+pm2 ls
+pm2 resurrect
+ls
+git status
+ls
+pm2 resurrect
+pm2 resurrect

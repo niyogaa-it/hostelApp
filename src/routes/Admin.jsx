@@ -39,6 +39,11 @@ import MealSchedule from "../components/admin/Warden/MealSchedule";
 import MealScheduleAdd from "../components/admin/Warden/MealScheduleAdd";
 import MealScheduleEdit from "../components/admin/Warden/MealScheduleEdit";
 
+import IndividualMeal from "../components/admin/Warden/IndividualMeal";
+import IndividualMealAdd from "../components/admin/Warden/IndividualMealAdd";
+import IndividualMealEdit from "../components/admin/Warden/IndividualMealEdit";
+import AnnouncementEdit from "../components/admin/Warden/AnnouncementEdit";
+
 import LaundryManagment from "../components/admin/Warden/LaundryManagment";
 import LeaveApplication from "../components/admin/Warden/LeaveApplication";
 import StudentApproval from "../components/admin/studentApproval/StudentApproval";
@@ -105,6 +110,16 @@ import MonthlyPlan from "../components/admin/Plan/MonthlyPlan";
 
 import Xceldownload from "../components/admin/xceldownload/xceldownload";
 
+import ServicesDashboard from "../components/admin/Services/ServicesDashboard";
+import ServiceRequestsList from "../components/admin/Services/ServiceRequestsList";
+import ServiceRequestDetails from "../components/admin/Services/ServiceRequestDetails";
+import AssignStaff from "../components/admin/Services/AssignStaff";
+import UpdateStatus from "../components/admin/Services/UpdateStatus";
+import RequestHistory from "../components/admin/Services/RequestHistory";
+import StaffList from "../components/admin/Services/StaffList";
+import CategoriesList from "../components/admin/Services/CategoriesList";
+import ServiceReports from "../components/admin/Services/ServiceReports";
+
 import "../assets/css/all.css";
 import "../assets/css/admin-style.css";
 import "../assets/css/admin-skin-blue.css";
@@ -149,6 +164,15 @@ class Admin extends Component {
 
         <PrivateRoute exact path="/admin/profile" component={Profile} />
 
+        <PrivateRoute
+          exact
+          path="/admin/individual_meal"
+          component={IndividualMeal}
+        />
+
+                <PrivateRoute exact path="/admin/individual_meal/add" component={IndividualMealAdd} />
+        <PrivateRoute exact path="/admin/individual_meal/edit/:id" component={IndividualMealEdit} />
+        <PrivateRoute exact path="/admin/announcement/edit" component={AnnouncementEdit} />
         <PrivateRoute
           exact
           path="/admin/laundry_managment"
@@ -376,6 +400,16 @@ class Admin extends Component {
         <Route exact path="/register" component={RegisterComponent} />
         <Route exact path="/registerSuccess" component={RegisterSuccessComponent} />
         <Route exact path="/registerFailure" component={RegisterFailureComponent} />
+
+        <PrivateRoute exact path="/admin/services/dashboard" component={ServicesDashboard} />
+        <PrivateRoute exact path="/admin/services/requests" component={ServiceRequestsList} />
+        <PrivateRoute exact path="/admin/services/requests/view/:id" component={ServiceRequestDetails} />
+        <PrivateRoute exact path="/admin/services/requests/assign/:id" component={AssignStaff} />
+        <PrivateRoute exact path="/admin/services/requests/status/:id" component={UpdateStatus} />
+        <PrivateRoute exact path="/admin/services/requests/history/:id" component={RequestHistory} />
+        <PrivateRoute exact path="/admin/services/staff" component={StaffList} />
+        <PrivateRoute exact path="/admin/services/categories" component={CategoriesList} />
+        <PrivateRoute exact path="/admin/services/reports" component={ServiceReports} />
 
 
         <Route exact path="/" component={Login} />
