@@ -8,6 +8,7 @@ import swal from "sweetalert";
 import { Redirect } from "react-router-dom";
 import { connect } from "react-redux";
 import { withRouter } from "react-router-dom";
+import userLog from "../Utils/Logadd";
 
 function LinkWithTooltip({ id, children, href, tooltip, clicked }) {
   return (
@@ -71,9 +72,11 @@ class CheckRoom extends Component {
         API.post(`/admin/secure/room/delete/${id}`)
           .then((res) => {
             if (res.data && res.data.status === 200) {
+              
               swal("Room deleted succesfully", {
                 icon: "success",
               });
+              userLog('Room Delete','Room Delete');
               this.componentDidMount();
             } else {
               swal("Something went wrong!", {
@@ -98,19 +101,21 @@ class CheckRoom extends Component {
   };
 
   CellFormatter(cell, row) {
+    console.log('cell',cell);
+    console.log('row',row);
     let bgColor = "#FFFFFF";
     if (row.total_occupancy == row.vaccancy) {
       // Green color
-      bgColor = "#008000";
-    } else if (row.vaccancy == 1) {
-      // Orange color
-      bgColor = "#FFA500";
+      bgColor = "#BDFFBD";
     } else if (row.vaccancy == 0) {
       // RED color
-      bgColor = "#ff0000";
-    } else if (Math.round(row.total_occupancy / 2) == row.vaccancy) {
+      bgColor = "#FF6767";
+    } else if (row.vaccancy == 1) {
+      // Orange color
+      bgColor = "#FFCB6D";
+    } else if (cell >= 2) {
       // Yellow Color
-      bgColor = "#FFFF00";
+      bgColor = "#FFFF81";
     }
 
     return { backgroundColor: bgColor };
@@ -120,7 +125,7 @@ class CheckRoom extends Component {
     const actionFormatter = () => (cell) => {
       return (
         <>
-          <button
+          {/* <button
             onClick={(e) => this.confirmDelete(e, cell)}
             style={{
               padding: "0.5rem",
@@ -132,7 +137,7 @@ class CheckRoom extends Component {
             }}
           >
             DELETE
-          </button>
+          </button> */}
           <button
             onClick={(e) => this.handleEditRoom(e, cell)}
             style={{
@@ -193,7 +198,7 @@ class CheckRoom extends Component {
                       Room number
                     </TableHeaderColumn>
                     <TableHeaderColumn
-                      dataField="building_name"
+                      dataField="masterbuilding_name"
                       dataAlign="center"
                       dataSort
                       width="150"

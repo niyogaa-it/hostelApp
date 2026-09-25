@@ -7,10 +7,13 @@ import * as Yup from "yup";
 import { Redirect } from "react-router-dom";
 import { connect } from "react-redux";
 import { withRouter } from "react-router-dom";
+import userLog from "../Utils/Logadd";
 
 let initialValues = {
   building_name: "",
   parking_slot: "",
+  no_of_slot_two: "",
+  no_of_slot_four: "",
 };
 
 class AddParking extends Component {
@@ -28,6 +31,7 @@ class AddParking extends Component {
       .then((response) => {
         if (response.data.status === 201) {
           swal("Success", response.data.message, "success");
+          //userLog('Add Parking','Add Parking');
           resetForm(initialValues);
         }
         if (response.data.status === 401) {
@@ -59,7 +63,9 @@ class AddParking extends Component {
   render() {
     const parkingSchema = Yup.object().shape({
       building_name: Yup.string().required("Building Name is required"),
-      parking_slot: Yup.number().required("Parking slot is required"),
+      //parking_slot: Yup.number().required("Parking slot is required"),
+      no_of_slot_two: Yup.number().required("Parking slot is required"),
+      no_of_slot_four: Yup.number().required("Parking slot is required"),
     });
     if (
       this.props.auth.userToken.permissions.master_data_management == 0 ||
@@ -124,28 +130,54 @@ class AddParking extends Component {
                               </div>
                             </div>
                           </div>
+
                           <div className="row form-m-t">
                             <div className="form-group">
                               <div className="col-lg-2">
-                                <label htmlFor="parking_slot">
-                                  Parking Slot
+                                <label htmlFor="no_of_slot_two">
+                                  Parking Slot Two wheeler
                                 </label>
                               </div>
                               <div className="col-lg-5">
                                 <Field
                                   type="number"
-                                  name="parking_slot"
+                                  name="no_of_slot_two"
                                   className="form-control"
                                   placeholder="Enter Parking Slot"
                                 />
-                                {errors.parking_slot && touched.parking_slot ? (
+                                {errors.no_of_slot_two && touched.no_of_slot_two ? (
                                   <div className="text-danger">
-                                    {errors.parking_slot}
+                                    {errors.no_of_slot_two}
                                   </div>
                                 ) : null}
                               </div>
                             </div>
                           </div>
+
+                          <div className="row form-m-t">
+                            <div className="form-group">
+                              <div className="col-lg-2">
+                                <label htmlFor="no_of_slot_four">
+                                  Parking Slot Four wheeler
+                                </label>
+                              </div>
+                              <div className="col-lg-5">
+                                <Field
+                                  type="number"
+                                  name="no_of_slot_four"
+                                  className="form-control"
+                                  placeholder="Enter Parking Slot"
+                                />
+                                {errors.no_of_slot_four && touched.no_of_slot_four ? (
+                                  <div className="text-danger">
+                                    {errors.no_of_slot_four}
+                                  </div>
+                                ) : null}
+                              </div>
+                            </div>
+                          </div>
+
+
                           <div className="row form-m-t form-p-b">
                             <div className="form-group">
                               <div className="col-lg-2"></div>

@@ -4,6 +4,7 @@ import { Formik, Form, Field, ErrorMessage } from "formik";
 import API from "../../../shared/admin-axios";
 import swal from "sweetalert";
 import * as Yup from "yup";
+import userLog from "../Utils/Logadd";
 
 let initialValues = {
   room_no: "",
@@ -63,10 +64,13 @@ class AssignRoom extends Component {
       room_no: values.room_no
     };
 
+
+
     API.post("/admin/secure/create/student/assign_room", postData)
       .then((response) => {
         if (response.data.status === 201) {
           swal("Success", response.data.message, "success");
+          userLog('Student Approval','Approve student Manually');
           this.props.history.push("/admin/view_student/");
         }
         if (response.data.status === 401) {
@@ -136,7 +140,7 @@ class AssignRoom extends Component {
                                       Default Select
                                     </option>
                                     {this.state.roomData.map((item, i) => (
-                                      <option value={item.room_number} key={i}>
+                                      <option value={item.id} key={i}>
                                         Room No: {item.room_number} (Building:{" "}
                                         {item.building_name}, Toilet Type:{" "}
                                         {item.toilet_type}, Occupancy:{" "}

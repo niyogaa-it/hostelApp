@@ -1,8 +1,8 @@
 import React, { Component } from "react";
 import { Formik, Field, Form } from "formik";
 import * as Yup from "yup";
+import moment from "moment";
 import API from "../../../shared/admin-axios";
-
 import logo from "../../../assets/images/hostel-logo.png";
 import swal from "sweetalert";
 import "yup-phone-lite";
@@ -12,6 +12,7 @@ import { connect } from "react-redux";
 import { withRouter } from "react-router-dom";
 
 const initialValues = {
+  AcademicYear: "",
   SFname: "",
   SmobNo: "",
   SRaddress: "",
@@ -19,6 +20,8 @@ const initialValues = {
   StudDOB: "",
   NamofInstitute: "",
   AdrsodInstitute: "",
+  studentType: "",
+  //CourEnrolled: moment().year()+"-"+ (moment().year() + 1),
   CourEnrolled: "",
   FatherName: "",
   MothersName: "",
@@ -68,6 +71,8 @@ const initialValues = {
   academic_year: "",
   check: "",
   parking_type: "",
+  blood_grp:"",
+  residentialType: "",
   // image
   StudimagepathBase: "",
   FatherimagepathBase: "",
@@ -82,6 +87,8 @@ const initialValues = {
   ImgFeMaleApp3Base: "",
 };
 class Reg extends Component {
+
+
   constructor(props) {
     super(props);
     this.state = {
@@ -109,10 +116,42 @@ class Reg extends Component {
       download_mode: false,
       student_id: "",
       showTransaction: false,
+      academicList: [],
+      paymentResponse: [],
+      studentDetail: [],
+      savedPhotoData: {},
+      planDetail: [],
+      allocateDetail: [],
+      residentialtypeList: [],
+      isLoading: false,
+      showOtpModal: false,
+      otpInput: "",
+      mobileForOtp: "",
+      otpError: "",
+      mobileVerified: false,
     };
     this.fileChangedHandler = this.fileChangedHandler.bind(this);
     this.fileCheckImageType = this.fileCheckImageType.bind(this);
     this.checkDate = this.checkDate.bind(this);
+  }
+
+
+  componentDidMount() {
+
+    API.get(`/admin/un/secure/create/profile/academic_year_list`)
+      .then((res) => {
+        this.setState({
+          academicList: res.data.result_data,
+          //planDetail: res.data.register_plan_data,
+          residentialtypeList: res.data.selectedResidanceType,
+        });
+
+      })
+      .catch((err) => {
+        console.log("err:", err);
+
+      });
+
   }
 
   changePaymentOption = (e) => {
@@ -124,88 +163,319 @@ class Reg extends Component {
     }
   };
 
-  handleSubmitEvent = (values, { resetForm }) => {
-    API.post("/admin/un/secure/create/profile/check_validation", values)
+handleMobileNumberChange = (event, values) => {
+
+    const mobileNumber = event.target.value;
+    const academicYear = values && values.AcademicYear;
+
+    if (!academicYear) {
+        swal("Info", "Please select Admission For before verifying the mobile number.", "info");
+        return;
+    }
+    
+
+    this.setState({
+        mobile_number: mobileNumber
+    });
+
+    if (mobileNumber.length === 10 && /^\d{10}$/.test(mobileNumber)) {
+
+        this.setState({
+            mobileForOtp: mobileNumber,
+            isLoading: true
+        });
+
+        API.get(`/admin/un/secure/create/profile/get_otp_mobileno/${mobileNumber}`)
+            .then((res) => {
+
+                this.setState({
+                    isLoading: false
+                });
+
+                // OTP sent
+                if (res.data.status === 201) {
+
+                    this.setState({
+                        showOtpModal: true,
+                        otpError: "",
+                        otpInput: "",
+                        isMobileVerified: false
+                    });
+
+                    swal("Success", "OTP sent to your mobile number", "success");
+                }
+
+                
+            })
+            .catch((err) => {
+
+                this.setState({
+                    isLoading: false
+                });
+
+                console.log('err',err);
+
+                // User does not exist -> skip OTP verification
+                if (
+                   
+                    err.data.status === 404
+                ) {
+
+                    this.setState({
+                        showOtpModal: false,
+                        isMobileVerified: true
+                    });
+
+                    swal(
+                        "Info",
+                        "User does not exist. You may continue filling the form.",
+                        "info"
+                    );
+
+                    return;
+                }
+
+                var errorMsg = "Error sending OTP";
+
+                if (
+                    err.response &&
+                    err.response.data &&
+                    err.response.data.message
+                ) {
+                    errorMsg = err.response.data.message;
+                }
+
+                swal("Error", errorMsg, "error");
+            });
+    }
+};
+handleOtpVerification = (values, setFieldValue) => {
+    const otp = this.state.otpInput.trim();
+    const residentialType = this.getSelectedResidentialType(values.residentialType);
+
+    if (!otp) {
+      this.setState({ otpError: "Please enter OTP" });
+      return;
+    }
+
+
+   const AcademicYear = values.AcademicYear;
+
+     // Check Academic Year before calling API
+  if (!values.AcademicYear) {
+    swal("Error", "Please select Academic Year first", "error");
+    return;
+  }
+
+    this.setState({ isLoading: true });
+
+    // Call API to verify OTP
+    API.post(`/admin/un/secure/create/profile/matchotp`, {
+      mobile: this.state.mobileForOtp,
+      otp: otp,
+      AcademicYear: AcademicYear
+    })
       .then((res) => {
+        this.setState({ isLoading: false });
+        
         if (res.data.status === 200) {
-          const options = {
-            // key: "rzp_test_IiaBJ6oP1Bzq1h", // Enter the Key ID generated from the Dashboard //TEST KEY
-            key: "rzp_live_btcHlfmCQZz7pq", // Enter the Key ID generated from the Dashboard
-
-            amount: "89600", // Amount is in currency subunits. Default currency is INR. Hence, 50000 refers to 50000 paise
-            // amount: "100", // Amount is in currency subunits. Default currency is INR. Hence, 50000 refers to 50000 paise
-            currency: "INR",
-            name: "Rani Meyyammai",
-            description: "Transaction",
-            image: "http://3.110.86.116:3000/assets/img/favicon/favicon.ico",
-            handler: function (response) {
-              values.payment_id = response.razorpay_payment_id;
-              values.payment_response = JSON.stringify(response);
-              values.payment_amount = 896;
-              // ---- Move Authorized to Captured
-              API.post("/admin/un/secure/move_authorized_captured", {
-                payment_id: response.razorpay_payment_id,
-                amount: 89600,
-              })
-                .then((res) => {
-                  console.log("res", res);
-                })
-                .catch((err) => {
-                  console.log("Error", err.message);
-                });
-
-              API.post("/admin/un/secure/create/profile", values)
-                .then((res) => {
-                  console.log("res", res);
-                  if (res.data.status === 200) {
-                    swal("Success", res.data.message, "success");
-                    // reload page
-                    window.location.reload();
-                  } else {
-                    // swal warning
-
-                    swal("Warning", res.data.message, "warning");
-                  }
-                })
-                .catch((err) => {
-                  swal("Error", err.message, "error");
-                });
-              //alert(response.razorpay_payment_id);
-              // alert(response.razorpay_order_id);
-              //alert(response.razorpay_signature)
-            },
-            prefill: {},
-            notes: {
-              address: "Razorpay Corporate Office",
-            },
-            theme: {
-              color: "#3399cc",
-            },
-          };
-          const rzp1 = new window.Razorpay(options);
-          rzp1.on("payment.failed", function (response) {
-            alert(response.error.code);
+          // OTP verified successfully
+          this.setState({ 
+            showOtpModal: false,
+            otpInput: "",
+            mobileVerified: true,
+            otpError: "",
+            planDetail: res.data.register_plan_data || null,
           });
-          rzp1.open();
-          // integartion of razorpay
+
+
+          if (residentialType === "Old Hosteller") {
+            // Extract student details and photo data
+            const studentData = res.data.details && res.data.details;
+            const photoData = Array.isArray(res.data.photo)
+              ? res.data.photo[0]
+              : res.data.photo || {};
+
+            this.setState({
+              savedPhotoData: photoData,
+            });
+
+            // Set StudDOB field explicitly with proper date conversion
+            if (studentData && studentData.StudDOB) {
+              // Convert from MM/DD/YYYY format to YYYY-MM-DD
+              const formattedDOB = moment(studentData.StudDOB, "MM/DD/YYYY").format("YYYY-MM-DD");
+              setFieldValue("StudDOB", formattedDOB);
+            }
+
+            if (studentData && studentData.studentType) {
+              setFieldValue(
+                "studentType",
+                String(studentData.studentType).trim().toLowerCase()
+              );
+            }
+            
+
+
+   
+
+            if (studentData) {
+              // List of all fields to populate from student data
+              const fieldsToPopulate = [
+               "SFname", "studentType", "SRaddress", "SmobNo",
+                "blood_grp", "StudEmail", "NamofInstitute", "AdrsodInstitute",
+                "CourEnrolled", "FatherName", "MothersName", "FatherOccu", "MathersOccu",
+                "FatherConNo", "MothersConNo", "FatherEmail", "MothersEmail", "FatherAnnInc",
+                "MotherAnnInc", "BankAccHolder", "BanckName", "BankBranch", "BrankAcctNo",
+                "BankIFSC", "LocGuardName", "RelWithLocGurd", "LocGurdConNo", "LocGurdAdres",
+                "NameVistMale1", "RelVistMaleApp1", "NameVistMale2", "RelVistMaleApp2",
+                "NameVistMale3", "RelVistMaleApp3", "NameVistFeMale1", "RelVistFeMaleApp1",
+                "NameVistFeMale2", "RelVistFeMaleApp2", "NameVistFeMale3", "RelVistFeMaleApp3",
+                "StayPersonName", "StayRelWithApp", "StayAddress", "StayConNo",
+                "StayPersonName1", "StayRelWithApp1", "StayAddress1", "StayConNo1",
+                "food_preference", "room_type", "occupancy", "bed_type", "toilet_type",
+                "parking", "parking_type", "transportation"
+              ];
+
+              // Populate student profile fields
+              fieldsToPopulate.forEach((field) => {
+                if (studentData.hasOwnProperty(field) && studentData[field] !== null) {
+                  setFieldValue(field, studentData[field]);
+                }
+              });
+            }
+
+            if (photoData && Object.keys(photoData).length > 0) {
+              // List of image fields to populate
+              const imageFields = [
+                "StudimagepathBase", "LocalimagepathBase", "FatherimagepathBase",
+                "MotherimagepathBase", "ImgMaleApp1Base", "ImgMaleApp2Base", 
+                "ImgMaleApp3Base", "ImgFeMaleApp1Base", "ImgFeMaleApp2Base", 
+                "ImgFeMaleApp3Base"
+              ];
+
+              // Populate image fields
+              imageFields.forEach((field) => {
+                if (photoData.hasOwnProperty(field) && photoData[field]) {
+                  setFieldValue(field, photoData[field]);
+                }
+              });
+            }
+
+            if (studentData) {
+              swal("Success", "Mobile number verified successfully! Form populated with saved data.", "success");
+            } else {
+              swal("Success", res.data.message || "No student data found. User may continue to fill up the form.", "success");
+            }
+          } else if (residentialType === "New Hosteller") {
+            this.setState({
+              savedPhotoData: {},
+            });
+
+            swal("Success", "Mobile number verified successfully!", "success");
+          } else {
+            swal("Success", "Mobile number verified successfully!", "success");
+          }
         } else {
-          swal({
-            title: "Warning",
-            text: res.data.message,
-            icon: "warning",
-            button: "Ok",
+          this.setState({
+            otpError: res.data.message || "Invalid OTP",
+            planDetail: res.data.register_plan_data || this.state.planDetail,
           });
+          swal("Error", res.data.message || "OTP verification failed", "error");
         }
       })
       .catch((err) => {
-        console.log("err", err);
-        swal({
-          title: "Error",
-          text: "Registration Failed",
-          icon: "error",
-          button: "Ok",
-        });
+        this.setState({ isLoading: false });
+        const errorMsg = (err.response && err.response.data && err.response.data.message) || "Error verifying OTP";
+        this.setState({ otpError: errorMsg });
+        swal("Error", errorMsg, "error");
+        console.log("Error:", err);
       });
+  };
+
+  handleCloseOtpModal = () => {
+    this.setState({ 
+      showOtpModal: false,
+      otpInput: "",
+      otpError: ""
+    });
+  };
+
+  getSelectedResidentialType = (residentialTypeValue) => {
+    const selectedResidentialType = this.state.residentialtypeList.find(
+      (residentialType) =>
+        String(residentialType.id) === String(residentialTypeValue) ||
+        residentialType.resident_type === residentialTypeValue
+    );
+
+    return selectedResidentialType
+      ? selectedResidentialType.resident_type
+      : residentialTypeValue;
+  };
+
+
+  handleSubmitEvent = async (values, { resetForm }) => {
+    try {
+      // Show loader
+      this.setState({ isLoading: true });
+
+      // 1. Validate the profile
+      const validationRes = await API.post("/admin/un/secure/create/profile/check_validation", values);
+      if (validationRes.data.status !== 200) {
+        this.setState({ isLoading: false });
+        swal("Warning", validationRes.data.message, "warning");
+        return;
+      }
+
+      // 2. Create the profile
+      const profileRes = await API.post("/admin/un/secure/create/profile", values);
+      if (profileRes.data.status !== 200) {
+        this.setState({ isLoading: false });
+        swal("Warning", profileRes.data.message, "warning");
+        return;
+      }
+
+
+       // Save student details to state
+      this.setState({ studentDetail: profileRes.data.student_dtl[0] });
+      this.setState({ allocateDetail: profileRes.data.student_dtl[1] });
+
+      // 3. Initiate payment via Orange PG (ICICI)
+      const planDetail = this.state.planDetail;
+      const studentDetail = this.state.studentDetail;
+      const allocatedetail = this.state.allocateDetail;
+
+      const paymentRes = await API.post("/admin/un/secure/orangepg", {
+        amount: planDetail[0] && planDetail[0].plan_price,
+        productinfo: allocatedetail.id,
+        firstname: studentDetail.SFname,
+        phone: studentDetail.SmobNo,
+        email: studentDetail.StudEmail,
+      });
+
+      this.setState({ isLoading: false });
+
+      if (
+        paymentRes.data.status !== 200 ||
+        !paymentRes.data.data ||
+        !paymentRes.data.data.payment_url
+      ) {
+        swal("Warning", paymentRes.data.message || "Unable to initiate payment", "warning");
+        return;
+      }
+
+      // Redirect to the ICICI PG hosted payment page
+      window.location.href = paymentRes.data.data.payment_url;
+
+    } catch (error) {
+      this.setState({ isLoading: false });
+      swal(
+        "Error",
+        (error && error.response && error.response.data && error.response.data.message) ||
+        error.message ||
+        "Something went wrong",
+        "error"
+      );
+    }
   };
 
   checkDate = (event, setFieldTouched, setFieldValue, setErrors) => {
@@ -519,6 +789,8 @@ class Reg extends Component {
     // check only number regex
     const onlyNumberRegex = /^[0-9\b]+$/;
     const validationReg = Yup.object().shape({
+      AcademicYear: Yup.string().required("Academic Year is required"),
+      residentialType: Yup.string().required("Residential Type is required"),
       SFname: Yup.string().required("Student Name is required"),
       SmobNo: Yup.string()
         .phone("IN", "Please enter a valid phone number")
@@ -528,6 +800,7 @@ class Reg extends Component {
         .email("Please enter a valid email")
         .required("Student Email is required"),
       StudDOB: Yup.string().required("Student DOB is required"),
+      studentType: Yup.string().required("Student Type is required"),
       StudimagepathBase: Yup.string().required("Student Image is required"),
       NamofInstitute: Yup.string().required("Name of Institute is required"),
       AdrsodInstitute: Yup.string().required(
@@ -576,7 +849,8 @@ class Reg extends Component {
       occupancy: Yup.string().required("Occupancy is required"),
       room_type: Yup.string().required("Room Type is required"),
       toilet_type: Yup.string().required("Toilet Type is required"),
-      transportation: Yup.string().required("Transportation is required"),
+      // transportation: Yup.string().required("Transportation is required"),
+      blood_grp: Yup.string().required("Blood Group is required"),
       check: Yup.string().required("Check is required"),
       StayConNo1: Yup.string().phone("IN", "Please enter a valid phone number"),
       StayConNo: Yup.string().phone("IN", "Please enter a valid phone number"),
@@ -590,6 +864,36 @@ class Reg extends Component {
 
     return (
       <>
+        {this.state.isLoading && (
+          <div className="loader-overlay" style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            zIndex: 9999
+          }}>
+            <div className="spinner" style={{
+              border: '4px solid #f3f3f3',
+              borderTop: '4px solid #3498db',
+              borderRadius: '50%',
+              width: '50px',
+              height: '50px',
+              animation: 'spin 1s linear infinite'
+            }}></div>
+            <style>{`
+              @keyframes spin {
+                0% { transform: rotate(0deg); }
+                100% { transform: rotate(360deg); }
+              }
+            `}</style>
+          </div>
+        )}
+        
         <section className="register-panel">
           <div className="reg-header">
             <a href="https://www.ranimeyyammaihostel.org/" target="_blank">
@@ -626,1381 +930,1602 @@ class Reg extends Component {
                       <h1>Application Form</h1>
 
                       <div className="form">
-                        <form className="form-inline">
+                        {/* <form className="form-inline"> */}
+                        <div className="form-group">
                           <div className="row">
-                            {/* Student's Details */}
+                            <div className="col-lg-2">
+                              <label htmlFor="AcademicYear">
+                                Admission For *
+                              </label>
+                            </div>
+                            <div className="col-lg-4">
+                              <Field
+                                name="AcademicYear"
+                                component="select"
+                                className={"form-control"}
+                                autoComplete="off"
+                              >
+                                <option value="" >
+                                  Academic Year
+                                </option>
+                                {this.state.academicList &&
+                                  this.state.academicList.map((academicYear, i) => (
+                                    <option value={academicYear.year} key={i}>
+                                      {academicYear.display_value}
+                                    </option>
+                                  ))}
 
-                            <div className="col-lg-12">
-                              <div className="form-heading">
-                                <h3>Student's Details:</h3>
+                              </Field>
+                              {errors.AcademicYear &&
+                                touched.AcademicYear ? (
+                                <div className="error error text-left text-danger">
+                                  {errors.AcademicYear}
+                                </div>
+                              ) : null}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="form-group">
+                          <div className="row">
+                            <div className="col-lg-2">
+                              <label htmlFor="residentialType">
+                                Residential Type *
+                              </label>
+                            </div>
+                            <div className="col-lg-4">
+                              <Field
+                                name="residentialType"
+                                component="select"
+                                className={"form-control"}
+                                autoComplete="off"
+                              >
+                                <option value="">
+                                  Select Residential Type
+                                </option>
+                                {this.state.residentialtypeList &&
+                                  this.state.residentialtypeList.map((residentialType, i) => (
+                                    <option value={residentialType.id} key={i}>
+                                      {residentialType.resident_type}
+                                    </option>
+                                  ))}
+                              </Field>
+                              {errors.residentialType &&
+                                touched.residentialType ? (
+                                <div className="error error text-left text-danger">
+                                  {errors.residentialType}
+                                </div>
+                              ) : null}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="row">
+                          {/* Student's Details */}
+
+                          <div className="col-lg-12">
+                            <div className="form-heading">
+                              <h3>Student's Details:</h3>
+                            </div>
+                          </div>
+
+
+
+                          <div className="col-lg-6 col-md-6 txt-position">
+                           <div className="form-group">
+                              <div className="row">
+                                <div className="col-lg-4">
+                                  <label htmlFor="SmobNo">
+                                    Student's Mobile No. *
+                                  </label>
+                                </div>
+                                <div className="col-lg-8">
+                                  <Field
+                                    type="text"
+                                    name="SmobNo"
+                                    className={"form-control"}
+                                    onBlur={(e) => this.handleMobileNumberChange(e, values)}
+                                    disabled={this.state.mobileVerified}
+                                    readOnly={this.state.mobileVerified}
+                                  />
+                                  {errors.SmobNo && touched.SmobNo ? (
+                                    <div className="error text-left text-danger">
+                                      {errors.SmobNo}
+                                    </div>
+                                  ) : null}
+                                  {this.state.mobileVerified ? (
+                                    <div style={{ color: "green", marginTop: "5px" }}>
+                                      ✓ Mobile number verified
+                                    </div>
+                                  ) : null}
+                                </div>
+                              </div>
+                            </div>   
+
+                            <div className="form-group">
+                              <div className="row">
+                                <div className="col-lg-4">
+                                  <label htmlFor="SFname">
+                                    Student's Full Name *
+                                  </label>
+                                </div>
+                                <div className="col-lg-8">
+                                  <Field
+                                    type="text"
+                                    name="SFname"
+                                    className={"form-control"}
+                                  />
+                                  {errors.SFname && touched.SFname ? (
+                                    <div className="error text-left text-danger">
+                                      {errors.SFname}
+                                    </div>
+                                  ) : null}
+                                </div>
                               </div>
                             </div>
-                            <div className="col-lg-6 col-md-6 txt-position">
-                              <div className="form-group">
-                                <div className="row">
-                                  <div className="col-lg-4">
-                                    <label htmlFor="SFname">
-                                      Student's Full Name *
-                                    </label>
-                                  </div>
-                                  <div className="col-lg-8">
-                                    <Field
-                                      type="text"
-                                      name="SFname"
-                                      className={"form-control"}
-                                    />
-                                    {errors.SFname && touched.SFname ? (
-                                      <div className="error text-left text-danger">
-                                        {errors.SFname}
-                                      </div>
-                                    ) : null}
-                                  </div>
+
+                            
+
+                            <div className="form-group">
+                              <div className="row">
+                                <div className="col-lg-4">
+                                  <label htmlFor="blood_grp">
+                                    Blood Group *
+                                  </label>
+                                </div>
+                                <div className="col-lg-8">
+                                  <Field
+                                    name="blood_grp"
+                                    component="select"
+                                    className={"form-control"}
+                                    autoComplete="off"
+                                  >
+                                    <option value="" >
+                                      Default select
+                                    </option>
+                                    <option value="A+">A+</option>
+                                    <option value="A-">A-</option>
+                                    <option value="B+">B+</option>
+                                    <option value="B-">B-</option>
+                                    <option value="AB+">AB+</option>
+                                    <option value="AB-">AB-</option>
+                                    <option value="O+">O+</option>
+                                    <option value="O-">O-</option>
+                                    <option value="Other">Any Other</option>
+                                  </Field>
+
+                                  {errors.blood_grp &&
+                                    touched.blood_grp ? (
+                                    <div className="error error text-left text-danger">
+                                      {errors.blood_grp}
+                                    </div>
+                                  ) : null}
                                 </div>
                               </div>
-                              <div className="form-group">
-                                <div className="row">
-                                  <div className="col-lg-4">
-                                    <label htmlFor="SmobNo">
-                                      Student's Mobile No. *
-                                    </label>
-                                  </div>
-                                  <div className="col-lg-8">
-                                    <Field
-                                      type="text"
-                                      name="SmobNo"
-                                      className={"form-control"}
-                                      // onChange={(e) => {
-                                      //   this.checkNumberValidetion(
-                                      //     e,
-                                      //     setFieldTouched,
-                                      //     setFieldValue,
-                                      //     setErrors
-                                      //   );
-                                      // }}
-                                    />
-                                    {errors.SmobNo && touched.SmobNo ? (
-                                      <div className="error text-left text-danger">
-                                        {errors.SmobNo}
-                                      </div>
-                                    ) : null}
-                                  </div>
+                            </div>
+
+                            <div className="form-group">
+                              <div className="row">
+                                <div className="col-lg-4">
+                                  <label htmlFor="Studimagepath">
+                                    Upload Student's Photograph (Max file size
+                                    5 mb) *
+                                  </label>
                                 </div>
-                              </div>
-                              <div className="form-group">
-                                <div className="row">
-                                  <div className="col-lg-4">
-                                    <label htmlFor="Studimagepath">
-                                      Upload Student's Photograph (Max file size
-                                      5 mb) *
-                                    </label>
-                                  </div>
-                                  <div className="col-lg-8">
-                                    <Field
-                                      type="file"
-                                      name="Studimagepath"
-                                      className={"form-control"}
-                                      accept="image/*"
-                                      onChange={(event) =>
-                                        this.fileChangedHandler(
-                                          event,
-                                          setFieldTouched,
-                                          setFieldValue,
-                                          setErrors
-                                        )
-                                      }
-                                    />
-                                    {errors.StudimagepathBase &&
+                                <div className="col-lg-8">
+                                  <Field
+                                    type="file"
+                                    name="Studimagepath"
+                                    className={"form-control"}
+                                    accept="image/*"
+                                    onChange={(event) =>
+                                      this.fileChangedHandler(
+                                        event,
+                                        setFieldTouched,
+                                        setFieldValue,
+                                        setErrors
+                                      )
+                                    }
+                                  />
+                                  {errors.StudimagepathBase &&
                                     touched.StudimagepathBase ? (
-                                      <div className="error text-left text-danger">
-                                        {errors.StudimagepathBase}
-                                      </div>
-                                    ) : null}
-                                    {this.state.StudimagepathBaseError != "" ? (
-                                      <div className="error text-left text-danger">
-                                        {this.state.StudimagepathBaseError}
-                                      </div>
-                                    ) : null}
-                                  </div>
+                                    <div className="error text-left text-danger">
+                                      {errors.StudimagepathBase}
+                                    </div>
+                                  ) : null}
+                                  {this.state.StudimagepathBaseError != "" ? (
+                                    <div className="error text-left text-danger">
+                                      {this.state.StudimagepathBaseError}
+                                    </div>
+                                  ) : null}
+                                  {(
+                                    values.StudimagepathBase ||
+                                    this.state.savedPhotoData.StudimagepathBase
+                                  ) ? (
+                                    <div style={{ marginTop: "10px" }}>
+                                      <img
+                                        src={
+                                          values.StudimagepathBase ||
+                                          this.state.savedPhotoData.StudimagepathBase
+                                        }
+                                        alt="Student preview"
+                                        width="100px"
+                                      />
+                                    </div>
+                                  ) : null}
                                 </div>
                               </div>
-                              <div className="form-group">
-                                <div className="row">
-                                  <div className="col-lg-4">
-                                    <label htmlFor="NamofInstitute">
-                                      Name of the Institution enrolled *
-                                    </label>
-                                  </div>
-                                  <div className="col-lg-8">
-                                    <Field
-                                      type="text"
-                                      name="NamofInstitute"
-                                      className={"form-control"}
-                                    />
-                                    {errors.NamofInstitute &&
+                            </div>
+                            <div className="form-group">
+                              <div className="row">
+                                <div className="col-lg-4">
+                                  <label htmlFor="NamofInstitute">
+                                    Name of the Institution enrolled *
+                                  </label>
+                                </div>
+                                <div className="col-lg-8">
+                                  <Field
+                                    type="text"
+                                    name="NamofInstitute"
+                                    className={"form-control"}
+                                  />
+                                  {errors.NamofInstitute &&
                                     touched.NamofInstitute ? (
-                                      <div className="error text-left text-danger">
-                                        {errors.NamofInstitute}
-                                      </div>
-                                    ) : null}
-                                  </div>
+                                    <div className="error text-left text-danger">
+                                      {errors.NamofInstitute}
+                                    </div>
+                                  ) : null}
                                 </div>
                               </div>
-                              <div className="form-group">
-                                <div className="row">
-                                  <div className="col-lg-4">
-                                    <label htmlFor="CourEnrolled">
-                                      Course enrolled / Year *
-                                    </label>
-                                  </div>
-                                  <div className="col-lg-8">
-                                    <Field
-                                      type="text"
-                                      name="CourEnrolled"
-                                      className={"form-control"}
-                                    />
-                                    {errors.CourEnrolled &&
+                            </div>
+                            <div className="form-group">
+                              <div className="row">
+                                <div className="col-lg-4">
+                                  <label htmlFor="CourEnrolled">
+                                    Course enrolled / Year *
+                                  </label>
+                                </div>
+                                <div className="col-lg-8">
+                                  <Field
+                                    type="text"
+                                    name="CourEnrolled"
+                                    className={"form-control"}
+                                    placeholder="B.E 1st year"
+                                  />
+                                  {errors.CourEnrolled &&
                                     touched.CourEnrolled ? (
-                                      <div className="error text-left text-danger">
-                                        {errors.CourEnrolled}
-                                      </div>
-                                    ) : null}
-                                  </div>
+                                    <div className="error text-left text-danger">
+                                      {errors.CourEnrolled}
+                                    </div>
+                                  ) : null}
                                 </div>
                               </div>
                             </div>
 
-                            <div className="col-lg-6 col-md-6 txt-position">
-                              <div className="form-group">
-                                <div className="row">
-                                  <div className="col-lg-4">
-                                    <label htmlFor="SRaddress">
-                                      Student's Residential Address *
+                            <div className="form-group">
+                              <div className="row align-items-center">
+                                <div className="col-lg-4">
+                                  <label htmlFor="studentType" className="mb-0">Student Type *</label>
+                                </div>
+                                <div className="col-lg-8">
+                                  <div role="group" aria-labelledby="studentType" className="studenttypeclass d-flex">
+                                    <label className="mr-4 d-flex align-items-center">
+                                      <Field
+                                        name="studentType"
+                                        type="radio"
+                                        value="student"
+                                        className="mr-1"
+
+                                        checked={values.studentType === "student"}
+                                      /> College Student
+                                    </label>
+
+                                    <label className="mr-4 d-flex align-items-center">
+                                      <Field
+                                        name="studentType"
+                                        type="radio"
+                                        value="internship"
+                                        className="mr-1"
+                                         checked={values.studentType === "internship"}
+                                      /> Internship
+                                    </label>
+
+                                    <label className="mr-4 d-flex align-items-center">
+                                      <Field
+                                        name="studentType"
+                                        type="radio"
+                                        value="working_women"
+                                        checked={values.studentType === "working_women"}
+                                        className="mr-1"
+                                      /> Working Women
                                     </label>
                                   </div>
-                                  <div className="col-lg-8">
-                                    <Field
-                                      component="textarea"
-                                      rows="4"
-                                      name="SRaddress"
-                                      className={"form-control"}
-                                    />
-                                    {errors.SRaddress && touched.SRaddress ? (
-                                      <div className="error text-left text-danger">
-                                        {errors.SRaddress}
-                                      </div>
-                                    ) : null}
-                                  </div>
+                                  {errors.studentType && touched.studentType ? (
+                                    <div className="error text-left text-danger">{errors.studentType}</div>
+                                  ) : null}
                                 </div>
                               </div>
-                              <div className="form-group">
-                                <div className="row">
-                                  <div className="col-lg-4">
-                                    <label htmlFor="StudEmail">
-                                      Student's Email Id. *
-                                    </label>
-                                  </div>
-                                  <div className="col-lg-8">
-                                    <Field
-                                      type="email"
-                                      name="StudEmail"
-                                      className={"form-control"}
-                                    />
-                                    {errors.StudEmail && touched.StudEmail ? (
-                                      <div className="error text-left text-danger">
-                                        {errors.StudEmail}
-                                      </div>
-                                    ) : null}
-                                  </div>
+                            </div>
+                          </div>
+
+                          <div className="col-lg-6 col-md-6 txt-position">
+                            <div className="form-group">
+                              <div className="row">
+                                <div className="col-lg-4">
+                                  <label htmlFor="SRaddress">
+                                    Student's Residential Address *
+                                  </label>
+                                </div>
+                                <div className="col-lg-8">
+                                  <Field
+                                    component="textarea"
+                                    rows="4"
+                                    name="SRaddress"
+                                    className={"form-control"}
+                                  />
+                                  {errors.SRaddress && touched.SRaddress ? (
+                                    <div className="error text-left text-danger">
+                                      {errors.SRaddress}
+                                    </div>
+                                  ) : null}
                                 </div>
                               </div>
-                              <div className="form-group">
-                                <div className="row">
-                                  <div className="col-lg-4">
-                                    <label htmlFor="StudDOB">
-                                      Student's Date of Birth *
-                                    </label>
-                                  </div>
-                                  <div className="col-lg-8">
-                                    <Field
-                                      type="date"
-                                      name="StudDOB"
-                                      className={"form-control"}
-                                      onChange={(event) =>
-                                        this.checkDate(
-                                          event,
-                                          setFieldTouched,
-                                          setFieldValue,
-                                          setErrors
-                                        )
-                                      }
-                                    />
-                                    {this.state.date_error_msg != "" ? (
-                                      <div className="error text-left text-danger">
-                                        {this.state.date_error_msg}
-                                      </div>
-                                    ) : null}
-                                    {errors.StudDOB && touched.StudDOB ? (
-                                      <div className="error text-left text-danger">
-                                        {errors.StudDOB}
-                                      </div>
-                                    ) : null}
-                                  </div>
+                            </div>
+                            <div className="form-group">
+                              <div className="row">
+                                <div className="col-lg-4">
+                                  <label htmlFor="StudEmail">
+                                    Student's Email Id. *
+                                  </label>
+                                </div>
+                                <div className="col-lg-8">
+                                  <Field
+                                    type="email"
+                                    name="StudEmail"
+                                    className={"form-control"}
+                                  />
+                                  {errors.StudEmail && touched.StudEmail ? (
+                                    <div className="error text-left text-danger">
+                                      {errors.StudEmail}
+                                    </div>
+                                  ) : null}
                                 </div>
                               </div>
-                              <div className="form-group">
-                                <div className="row">
-                                  <div className="col-lg-4">
-                                    <label htmlFor="AdrsodInstitute">
-                                      Address of the Institution *
-                                    </label>
-                                  </div>
-                                  <div className="col-lg-8">
-                                    <Field
-                                      component="textarea"
-                                      rows="4"
-                                      name="AdrsodInstitute"
-                                      className={"form-control"}
-                                    />
-                                    {errors.AdrsodInstitute &&
+                            </div>
+                            <div className="form-group">
+                              <div className="row">
+                                <div className="col-lg-4">
+                                  <label htmlFor="StudDOB">
+                                    Student's Date of Birth *
+                                  </label>
+                                </div>
+                                <div className="col-lg-8">
+                                  <Field
+                                    type="date"
+                                    name="StudDOB"
+                                    className={"form-control"}
+                                    onChange={(event) =>
+                                      this.checkDate(
+                                        event,
+                                        setFieldTouched,
+                                        setFieldValue,
+                                        setErrors
+                                      )
+                                    }
+                                  />
+                                  {this.state.date_error_msg != "" ? (
+                                    <div className="error text-left text-danger">
+                                      {this.state.date_error_msg}
+                                    </div>
+                                  ) : null}
+                                  {errors.StudDOB && touched.StudDOB ? (
+                                    <div className="error text-left text-danger">
+                                      {errors.StudDOB}
+                                    </div>
+                                  ) : null}
+                                </div>
+                              </div>
+                            </div>
+                            <div className="form-group">
+                              <div className="row">
+                                <div className="col-lg-4">
+                                  <label htmlFor="AdrsodInstitute">
+                                    Address of the Institution *
+                                  </label>
+                                </div>
+                                <div className="col-lg-8">
+                                  <Field
+                                    component="textarea"
+                                    rows="4"
+                                    name="AdrsodInstitute"
+                                    className={"form-control"}
+                                  />
+                                  {errors.AdrsodInstitute &&
                                     touched.AdrsodInstitute ? (
-                                      <div className="error text-left text-danger">
-                                        {errors.AdrsodInstitute}
-                                      </div>
-                                    ) : null}
-                                  </div>
+                                    <div className="error text-left text-danger">
+                                      {errors.AdrsodInstitute}
+                                    </div>
+                                  ) : null}
                                 </div>
                               </div>
                             </div>
+                          </div>
 
-                            {/* Parent's Details */}
+                          {/* Parent's Details */}
 
-                            <div className="col-lg-12">
-                              <div className="form-heading">
-                                <h3>Parent's Details:</h3>
-                              </div>
+                          <div className="col-lg-12">
+                            <div className="form-heading">
+                              <h3>Parent's Details:</h3>
                             </div>
-                            <div className="col-lg-6 col-md-6 txt-position">
-                              <div className="form-group">
-                                <div className="row">
-                                  <div className="col-lg-4">
-                                    <label htmlFor="Fatherimagepath">
-                                      Father Photo (Max file size 5 mb) *
-                                    </label>
-                                  </div>
-                                  <div className="col-lg-8">
-                                    <Field
-                                      type="file"
-                                      name="Fatherimagepath"
-                                      className={"form-control"}
-                                      accept="image/*"
-                                      onChange={(event) =>
-                                        this.fileChangedHandler(
-                                          event,
-                                          setFieldTouched,
-                                          setFieldValue,
-                                          setErrors
-                                        )
-                                      }
-                                    />
-                                    {errors.FatherimagepathBase &&
+                          </div>
+                          <div className="col-lg-6 col-md-6 txt-position">
+                            <div className="form-group">
+                              <div className="row">
+                                <div className="col-lg-4">
+                                  <label htmlFor="Fatherimagepath">
+                                    Father Photo (Max file size 5 mb) *
+                                  </label>
+                                </div>
+                                <div className="col-lg-8">
+                                  <Field
+                                    type="file"
+                                    name="Fatherimagepath"
+                                    className={"form-control"}
+                                    accept="image/*"
+                                    onChange={(event) =>
+                                      this.fileChangedHandler(
+                                        event,
+                                        setFieldTouched,
+                                        setFieldValue,
+                                        setErrors
+                                      )
+                                    }
+                                  />
+                                  {errors.FatherimagepathBase &&
                                     touched.FatherimagepathBase ? (
-                                      <div className="error text-left text-danger">
-                                        {errors.FatherimagepathBase}
-                                      </div>
-                                    ) : null}
-                                    {this.state.FatherimagepathBaseError !=
+                                    <div className="error text-left text-danger">
+                                      {errors.FatherimagepathBase}
+                                    </div>
+                                  ) : null}
+                                  {this.state.FatherimagepathBaseError !=
                                     "" ? (
-                                      <div className="error text-left text-danger">
-                                        {this.state.FatherimagepathBaseError}
-                                      </div>
-                                    ) : null}
-                                  </div>
+                                    <div className="error text-left text-danger">
+                                      {this.state.FatherimagepathBaseError}
+                                    </div>
+                                  ) : null}
+                                  {(
+                                    values.FatherimagepathBase ||
+                                    this.state.savedPhotoData.FatherimagepathBase
+                                  ) ? (
+                                    <div style={{ marginTop: "10px" }}>
+                                      <img
+                                        src={
+                                          values.FatherimagepathBase ||
+                                          this.state.savedPhotoData.FatherimagepathBase
+                                        }
+                                        alt="Father preview"
+                                        width="100px"
+                                      />
+                                    </div>
+                                  ) : null}
                                 </div>
                               </div>
-                              <div className="form-group">
-                                <div className="row">
-                                  <div className="col-lg-4">
-                                    <label htmlFor="FatherName">
-                                      Father's Name *
-                                    </label>
-                                  </div>
-                                  <div className="col-lg-8">
-                                    <Field
-                                      type="text"
-                                      name="FatherName"
-                                      className={"form-control"}
-                                    />
-                                    {errors.FatherName && touched.FatherName ? (
-                                      <div className="error text-left text-danger">
-                                        {errors.FatherName}
-                                      </div>
-                                    ) : null}
-                                  </div>
+                            </div>
+                            <div className="form-group">
+                              <div className="row">
+                                <div className="col-lg-4">
+                                  <label htmlFor="FatherName">
+                                    Father's Name *
+                                  </label>
+                                </div>
+                                <div className="col-lg-8">
+                                  <Field
+                                    type="text"
+                                    name="FatherName"
+                                    className={"form-control"}
+                                  />
+                                  {errors.FatherName && touched.FatherName ? (
+                                    <div className="error text-left text-danger">
+                                      {errors.FatherName}
+                                    </div>
+                                  ) : null}
                                 </div>
                               </div>
-                              <div className="form-group">
-                                <div className="row">
-                                  <div className="col-lg-4">
-                                    <label htmlFor="occupation">
-                                      Father's Occupation *
-                                    </label>
-                                  </div>
-                                  <div className="col-lg-8">
-                                    <Field
-                                      type="text"
-                                      name="FatherOccu"
-                                      className={"form-control"}
-                                    />
-                                    {errors.FatherOccu && touched.FatherOccu ? (
-                                      <div className="error text-left text-danger">
-                                        {errors.FatherOccu}
-                                      </div>
-                                    ) : null}
-                                  </div>
+                            </div>
+                            <div className="form-group">
+                              <div className="row">
+                                <div className="col-lg-4">
+                                  <label htmlFor="occupation">
+                                    Father's Occupation *
+                                  </label>
+                                </div>
+                                <div className="col-lg-8">
+                                  <Field
+                                    type="text"
+                                    name="FatherOccu"
+                                    className={"form-control"}
+                                  />
+                                  {errors.FatherOccu && touched.FatherOccu ? (
+                                    <div className="error text-left text-danger">
+                                      {errors.FatherOccu}
+                                    </div>
+                                  ) : null}
                                 </div>
                               </div>
-                              <div className="form-group">
-                                <div className="row">
-                                  <div className="col-lg-4">
-                                    <label htmlFor="contact">
-                                      Father's Contact No. *
-                                    </label>
-                                  </div>
-                                  <div className="col-lg-8">
-                                    <Field
-                                      type="text"
-                                      name="FatherConNo"
-                                      className={"form-control"}
-                                    />
-                                    {errors.FatherConNo &&
+                            </div>
+                            <div className="form-group">
+                              <div className="row">
+                                <div className="col-lg-4">
+                                  <label htmlFor="contact">
+                                    Father's Contact No. *
+                                  </label>
+                                </div>
+                                <div className="col-lg-8">
+                                  <Field
+                                    type="text"
+                                    name="FatherConNo"
+                                    className={"form-control"}
+                                  />
+                                  {errors.FatherConNo &&
                                     touched.FatherConNo ? (
-                                      <div className="error text-left text-danger">
-                                        {errors.FatherConNo}
-                                      </div>
-                                    ) : null}
-                                  </div>
+                                    <div className="error text-left text-danger">
+                                      {errors.FatherConNo}
+                                    </div>
+                                  ) : null}
                                 </div>
                               </div>
-                              <div className="form-group">
-                                <div className="row">
-                                  <div className="col-lg-4">
-                                    <label
-                                      htmlFor="FatherEmail"
-                                      style={{ color: "#333333" }}
-                                    >
-                                      Father's Email Id.
-                                    </label>
-                                  </div>
-                                  <div className="col-lg-8">
-                                    <Field
-                                      type="email"
-                                      name="FatherEmail"
-                                      className={"form-control"}
-                                    />
-                                    {errors.FatherEmail &&
+                            </div>
+                            <div className="form-group">
+                              <div className="row">
+                                <div className="col-lg-4">
+                                  <label
+                                    htmlFor="FatherEmail"
+                                    style={{ color: "#333333" }}
+                                  >
+                                    Father's Email Id.
+                                  </label>
+                                </div>
+                                <div className="col-lg-8">
+                                  <Field
+                                    type="email"
+                                    name="FatherEmail"
+                                    className={"form-control"}
+                                  />
+                                  {errors.FatherEmail &&
                                     touched.FatherEmail ? (
-                                      <div className="error text-left text-danger">
-                                        {errors.FatherEmail}
-                                      </div>
-                                    ) : null}
-                                  </div>
+                                    <div className="error text-left text-danger">
+                                      {errors.FatherEmail}
+                                    </div>
+                                  ) : null}
                                 </div>
                               </div>
-                              <div className="form-group">
-                                <div className="row">
-                                  <div className="col-lg-4">
-                                    <label htmlFor="FatherAnnIncincome">
-                                      Father's Annual Income *
-                                    </label>
-                                  </div>
-                                  <div className="col-lg-8">
-                                    <Field
-                                      type="text"
-                                      name="FatherAnnInc"
-                                      className={"form-control"}
-                                    />
-                                    {errors.FatherAnnInc &&
+                            </div>
+                            <div className="form-group">
+                              <div className="row">
+                                <div className="col-lg-4">
+                                  <label htmlFor="FatherAnnIncincome">
+                                    Father's Annual Income *
+                                  </label>
+                                </div>
+                                <div className="col-lg-8">
+                                  <Field
+                                    type="text"
+                                    name="FatherAnnInc"
+                                    className={"form-control"}
+                                  />
+                                  {errors.FatherAnnInc &&
                                     touched.FatherAnnInc ? (
-                                      <div className="error text-left text-danger">
-                                        {errors.FatherAnnInc}
-                                      </div>
-                                    ) : null}
-                                  </div>
+                                    <div className="error text-left text-danger">
+                                      {errors.FatherAnnInc}
+                                    </div>
+                                  ) : null}
                                 </div>
                               </div>
                             </div>
+                          </div>
 
-                            <div className="col-lg-6 col-md-6 txt-position">
-                              <div className="form-group">
-                                <div className="row">
-                                  <div className="col-lg-4">
-                                    <label htmlFor="Motherimagepath">
-                                      Mother Photo (Max file size 5 mb) *
-                                    </label>
-                                  </div>
-                                  <div className="col-lg-8">
-                                    <Field
-                                      type="file"
-                                      name="Motherimagepath"
-                                      className={"form-control"}
-                                      accept="image/*"
-                                      onChange={(event) =>
-                                        this.fileChangedHandler(
-                                          event,
-                                          setFieldTouched,
-                                          setFieldValue,
-                                          setErrors
-                                        )
-                                      }
-                                    />
+                          <div className="col-lg-6 col-md-6 txt-position">
+                            <div className="form-group">
+                              <div className="row">
+                                <div className="col-lg-4">
+                                  <label htmlFor="Motherimagepath">
+                                    Mother Photo (Max file size 5 mb) *
+                                  </label>
+                                </div>
+                                <div className="col-lg-8">
+                                  <Field
+                                    type="file"
+                                    name="Motherimagepath"
+                                    className={"form-control"}
+                                    accept="image/*"
+                                    onChange={(event) =>
+                                      this.fileChangedHandler(
+                                        event,
+                                        setFieldTouched,
+                                        setFieldValue,
+                                        setErrors
+                                      )
+                                    }
+                                  />
 
-                                    {this.state.MotherimagepathBaseError !=
+                                  {this.state.MotherimagepathBaseError !=
                                     "" ? (
-                                      <div className="error text-left text-danger">
-                                        {this.state.MotherimagepathBaseError}
-                                      </div>
-                                    ) : null}
-                                    {errors.MotherimagepathBase &&
+                                    <div className="error text-left text-danger">
+                                      {this.state.MotherimagepathBaseError}
+                                    </div>
+                                  ) : null}
+                                  {errors.MotherimagepathBase &&
                                     touched.MotherimagepathBase ? (
-                                      <div className="error text-left text-danger">
-                                        {errors.MotherimagepathBase}
-                                      </div>
-                                    ) : null}
-                                  </div>
+                                    <div className="error text-left text-danger">
+                                      {errors.MotherimagepathBase}
+                                    </div>
+                                  ) : null}
+                                  {(
+                                    values.MotherimagepathBase ||
+                                    this.state.savedPhotoData.MotherimagepathBase
+                                  ) ? (
+                                    <div style={{ marginTop: "10px" }}>
+                                      <img
+                                        src={
+                                          values.MotherimagepathBase ||
+                                          this.state.savedPhotoData.MotherimagepathBase
+                                        }
+                                        alt="Mother preview"
+                                        width="100px"
+                                      />
+                                    </div>
+                                  ) : null}
                                 </div>
                               </div>
-                              <div className="form-group">
-                                <div className="row">
-                                  <div className="col-lg-4">
-                                    <label htmlFor="MothersName">
-                                      Mother's Name *
-                                    </label>
-                                  </div>
-                                  <div className="col-lg-8">
-                                    <Field
-                                      type="text"
-                                      name="MothersName"
-                                      className={"form-control"}
-                                    />
-                                    {errors.MothersName &&
+                            </div>
+                            <div className="form-group">
+                              <div className="row">
+                                <div className="col-lg-4">
+                                  <label htmlFor="MothersName">
+                                    Mother's Name *
+                                  </label>
+                                </div>
+                                <div className="col-lg-8">
+                                  <Field
+                                    type="text"
+                                    name="MothersName"
+                                    className={"form-control"}
+                                  />
+                                  {errors.MothersName &&
                                     touched.MothersName ? (
-                                      <div className="error text-left text-danger">
-                                        {errors.MothersName}
-                                      </div>
-                                    ) : null}
-                                  </div>
+                                    <div className="error text-left text-danger">
+                                      {errors.MothersName}
+                                    </div>
+                                  ) : null}
                                 </div>
                               </div>
-                              <div className="form-group">
-                                <div className="row">
-                                  <div className="col-lg-4">
-                                    <label htmlFor="MathersOccu">
-                                      Mother's Occupation *
-                                    </label>
-                                  </div>
-                                  <div className="col-lg-8">
-                                    <Field
-                                      type="text"
-                                      name="MathersOccu"
-                                      className={"form-control"}
-                                    />
-                                    {errors.MathersOccu &&
+                            </div>
+                            <div className="form-group">
+                              <div className="row">
+                                <div className="col-lg-4">
+                                  <label htmlFor="MathersOccu">
+                                    Mother's Occupation *
+                                  </label>
+                                </div>
+                                <div className="col-lg-8">
+                                  <Field
+                                    type="text"
+                                    name="MathersOccu"
+                                    className={"form-control"}
+                                  />
+                                  {errors.MathersOccu &&
                                     touched.MathersOccu ? (
-                                      <div className="error text-left text-danger">
-                                        {errors.MathersOccu}
-                                      </div>
-                                    ) : null}
-                                  </div>
+                                    <div className="error text-left text-danger">
+                                      {errors.MathersOccu}
+                                    </div>
+                                  ) : null}
                                 </div>
                               </div>
-                              <div className="form-group">
-                                <div className="row">
-                                  <div className="col-lg-4">
-                                    <label htmlFor="MothersConNo">
-                                      Mother's Contact No. *
-                                    </label>
-                                  </div>
-                                  <div className="col-lg-8">
-                                    <Field
-                                      type="text"
-                                      name="MothersConNo"
-                                      className={"form-control"}
-                                    />
-                                    {errors.MothersConNo &&
+                            </div>
+                            <div className="form-group">
+                              <div className="row">
+                                <div className="col-lg-4">
+                                  <label htmlFor="MothersConNo">
+                                    Mother's Contact No. *
+                                  </label>
+                                </div>
+                                <div className="col-lg-8">
+                                  <Field
+                                    type="text"
+                                    name="MothersConNo"
+                                    className={"form-control"}
+                                  />
+                                  {errors.MothersConNo &&
                                     touched.MothersConNo ? (
-                                      <div className="error text-left text-danger">
-                                        {errors.MothersConNo}
-                                      </div>
-                                    ) : null}
-                                  </div>
+                                    <div className="error text-left text-danger">
+                                      {errors.MothersConNo}
+                                    </div>
+                                  ) : null}
                                 </div>
                               </div>
-                              <div className="form-group">
-                                <div className="row">
-                                  <div className="col-lg-4">
-                                    <label
-                                      htmlFor="MothersEmail"
-                                      style={{ color: "#333333" }}
-                                    >
-                                      Mother's Email Id.
-                                    </label>
-                                  </div>
-                                  <div className="col-lg-8">
-                                    <Field
-                                      type="email"
-                                      name="MothersEmail"
-                                      className={"form-control"}
-                                    />
-                                    {errors.MothersEmail &&
+                            </div>
+                            <div className="form-group">
+                              <div className="row">
+                                <div className="col-lg-4">
+                                  <label
+                                    htmlFor="MothersEmail"
+                                    style={{ color: "#333333" }}
+                                  >
+                                    Mother's Email Id.
+                                  </label>
+                                </div>
+                                <div className="col-lg-8">
+                                  <Field
+                                    type="email"
+                                    name="MothersEmail"
+                                    className={"form-control"}
+                                  />
+                                  {errors.MothersEmail &&
                                     touched.MothersEmail ? (
-                                      <div className="error text-left text-danger">
-                                        {errors.MothersEmail}
-                                      </div>
-                                    ) : null}
-                                  </div>
-                                </div>
-                              </div>
-                              <div className="form-group">
-                                <div className="row">
-                                  <div className="col-lg-4">
-                                    <label
-                                      htmlFor="MotherAnnInc"
-                                      style={{ color: "#333333" }}
-                                    >
-                                      Mother's Annual Income
-                                    </label>
-                                  </div>
-                                  <div className="col-lg-8">
-                                    <Field
-                                      type="text"
-                                      name="MotherAnnInc"
-                                      className={"form-control"}
-                                    />
-                                  </div>
+                                    <div className="error text-left text-danger">
+                                      {errors.MothersEmail}
+                                    </div>
+                                  ) : null}
                                 </div>
                               </div>
                             </div>
-
-                            {/* Bank Details */}
-
-                            <div className="col-lg-12">
-                              <div className="form-heading">
-                                <h3>Bank Details:</h3>
+                            <div className="form-group">
+                              <div className="row">
+                                <div className="col-lg-4">
+                                  <label
+                                    htmlFor="MotherAnnInc"
+                                    style={{ color: "#333333" }}
+                                  >
+                                    Mother's Annual Income
+                                  </label>
+                                </div>
+                                <div className="col-lg-8">
+                                  <Field
+                                    type="text"
+                                    name="MotherAnnInc"
+                                    className={"form-control"}
+                                  />
+                                </div>
                               </div>
                             </div>
-                            <div className="col-lg-6 txt-position">
-                              <div className="form-group">
-                                <div className="row">
-                                  <div className="col-lg-4">
-                                    <label htmlFor="BankAccHolder">
-                                      Bank A/c Holder's Name *
-                                    </label>
-                                  </div>
-                                  <div className="col-lg-8">
-                                    <Field
-                                      type="text"
-                                      name="BankAccHolder"
-                                      className={"form-control"}
-                                    />
-                                    {errors.BankAccHolder &&
+                          </div>
+
+                          {/* Bank Details */}
+
+                          <div className="col-lg-12">
+                            <div className="form-heading">
+                              <h3>Bank Details:</h3>
+                            </div>
+                          </div>
+                          <div className="col-lg-6 txt-position">
+                            <div className="form-group">
+                              <div className="row">
+                                <div className="col-lg-4">
+                                  <label htmlFor="BankAccHolder">
+                                    Bank A/c Holder's Name *
+                                  </label>
+                                </div>
+                                <div className="col-lg-8">
+                                  <Field
+                                    type="text"
+                                    name="BankAccHolder"
+                                    className={"form-control"}
+                                  />
+                                  {errors.BankAccHolder &&
                                     touched.BankAccHolder ? (
-                                      <div className="error text-left text-danger">
-                                        {errors.BankAccHolder}
-                                      </div>
-                                    ) : null}
-                                  </div>
-                                </div>
-                              </div>
-                              <div className="form-group">
-                                <div className="row">
-                                  <div className="col-lg-4">
-                                    <label htmlFor="BankBranch">
-                                      Bank Branch Name *
-                                    </label>
-                                  </div>
-                                  <div className="col-lg-8">
-                                    <Field
-                                      type="text"
-                                      name="BankBranch"
-                                      className={"form-control"}
-                                    />
-                                    {errors.BankBranch && touched.BankBranch ? (
-                                      <div className="error text-left text-danger">
-                                        {errors.BankBranch}
-                                      </div>
-                                    ) : null}
-                                  </div>
-                                </div>
-                              </div>
-                              <div className="form-group">
-                                <div className="row">
-                                  <div className="col-lg-4">
-                                    <label htmlFor="BankIFSC">
-                                      Bank IFSC Code *
-                                    </label>
-                                  </div>
-                                  <div className="col-lg-8">
-                                    <Field
-                                      type="text"
-                                      name="BankIFSC"
-                                      className={"form-control"}
-                                    />
-                                    {errors.BankIFSC && touched.BankIFSC ? (
-                                      <div className="error text-left text-danger">
-                                        {errors.BankIFSC}
-                                      </div>
-                                    ) : null}
-                                  </div>
+                                    <div className="error text-left text-danger">
+                                      {errors.BankAccHolder}
+                                    </div>
+                                  ) : null}
                                 </div>
                               </div>
                             </div>
-
-                            <div className="col-lg-6 txt-position">
-                              <div className="form-group">
-                                <div className="row">
-                                  <div className="col-lg-4">
-                                    <label htmlFor="BanckName">
-                                      Bank Name *
-                                    </label>
-                                  </div>
-                                  <div className="col-lg-8">
-                                    <Field
-                                      type="text"
-                                      name="BanckName"
-                                      className={"form-control"}
-                                    />
-                                    {errors.BanckName && touched.BanckName ? (
-                                      <div className="error text-left text-danger">
-                                        {errors.BanckName}
-                                      </div>
-                                    ) : null}
-                                  </div>
+                            <div className="form-group">
+                              <div className="row">
+                                <div className="col-lg-4">
+                                  <label htmlFor="BankBranch">
+                                    Bank Branch Name *
+                                  </label>
+                                </div>
+                                <div className="col-lg-8">
+                                  <Field
+                                    type="text"
+                                    name="BankBranch"
+                                    className={"form-control"}
+                                  />
+                                  {errors.BankBranch && touched.BankBranch ? (
+                                    <div className="error text-left text-danger">
+                                      {errors.BankBranch}
+                                    </div>
+                                  ) : null}
                                 </div>
                               </div>
-                              <div className="form-group">
-                                <div className="row">
-                                  <div className="col-lg-4">
-                                    <label htmlFor="BrankAcctNo">
-                                      Bank Account Number *
-                                    </label>
-                                  </div>
-                                  <div className="col-lg-8">
-                                    <Field
-                                      type="text"
-                                      name="BrankAcctNo"
-                                      className={"form-control"}
-                                    />
-                                    {errors.BrankAcctNo &&
+                            </div>
+                            <div className="form-group">
+                              <div className="row">
+                                <div className="col-lg-4">
+                                  <label htmlFor="BankIFSC">
+                                    Bank IFSC Code *
+                                  </label>
+                                </div>
+                                <div className="col-lg-8">
+                                  <Field
+                                    type="text"
+                                    name="BankIFSC"
+                                    className={"form-control"}
+                                  />
+                                  {errors.BankIFSC && touched.BankIFSC ? (
+                                    <div className="error text-left text-danger">
+                                      {errors.BankIFSC}
+                                    </div>
+                                  ) : null}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="col-lg-6 txt-position">
+                            <div className="form-group">
+                              <div className="row">
+                                <div className="col-lg-4">
+                                  <label htmlFor="BanckName">
+                                    Bank Name *
+                                  </label>
+                                </div>
+                                <div className="col-lg-8">
+                                  <Field
+                                    type="text"
+                                    name="BanckName"
+                                    className={"form-control"}
+                                  />
+                                  {errors.BanckName && touched.BanckName ? (
+                                    <div className="error text-left text-danger">
+                                      {errors.BanckName}
+                                    </div>
+                                  ) : null}
+                                </div>
+                              </div>
+                            </div>
+                            <div className="form-group">
+                              <div className="row">
+                                <div className="col-lg-4">
+                                  <label htmlFor="BrankAcctNo">
+                                    Bank Account Number *
+                                  </label>
+                                </div>
+                                <div className="col-lg-8">
+                                  <Field
+                                    type="text"
+                                    name="BrankAcctNo"
+                                    className={"form-control"}
+                                  />
+                                  {errors.BrankAcctNo &&
                                     touched.BrankAcctNo ? (
-                                      <div className="error text-left text-danger">
-                                        {errors.BrankAcctNo}
-                                      </div>
-                                    ) : null}
-                                  </div>
-                                </div>
-                              </div>
-                              <div className="form-group">
-                                <div className="row">
-                                  <div className="col-lg-4 col-md-4 male-panel">
-                                    <label htmlFor="ImgBankProf">
-                                      Upload Cancel Cheque Or Bank First Page
-                                    </label>
-                                  </div>
-                                  <div className="col-lg-8 col-md-12">
-                                    <Field
-                                      type="file"
-                                      name="ImgBankProf"
-                                      className={"form-control"}
-                                      accept="image/*"
-                                      onChange={(event) => {
-                                        this.fileCheckImageType(
-                                          event,
-                                          setFieldTouched,
-                                          setFieldValue,
-                                          setErrors
-                                        );
-                                      }}
-                                    />
-
-                                    {this.state.BankimagepathBaseError != "" ? (
-                                      <div className="error text-left text-danger">
-                                        {this.state.BankimagepathBaseError}
-                                      </div>
-                                    ) : null}
-                                  </div>
+                                    <div className="error text-left text-danger">
+                                      {errors.BrankAcctNo}
+                                    </div>
+                                  ) : null}
                                 </div>
                               </div>
                             </div>
+                            <div className="form-group">
+                              <div className="row">
+                                <div className="col-lg-4 col-md-4 male-panel">
+                                  <label htmlFor="ImgBankProf">
+                                    Upload Cancel Cheque Or Bank First Page
+                                  </label>
+                                </div>
+                                <div className="col-lg-8 col-md-12">
+                                  <Field
+                                    type="file"
+                                    name="ImgBankProf"
+                                    className={"form-control"}
+                                    accept="image/*"
+                                    onChange={(event) => {
+                                      this.fileCheckImageType(
+                                        event,
+                                        setFieldTouched,
+                                        setFieldValue,
+                                        setErrors
+                                      );
+                                    }}
+                                  />
 
-                            {/* Local Guardian Details */}
-
-                            <div className="col-lg-12">
-                              <div className="form-heading">
-                                <h3>Local Guardian's Details:</h3>
+                                  {this.state.BankimagepathBaseError != "" ? (
+                                    <div className="error text-left text-danger">
+                                      {this.state.BankimagepathBaseError}
+                                    </div>
+                                  ) : null}
+                                </div>
                               </div>
                             </div>
+                          </div>
 
-                            <div className="col-lg-6 txt-position">
-                              <div className="form-group">
-                                <div className="row">
-                                  <div className="col-lg-4">
-                                    <label htmlFor="Localimagepath">
-                                      Local Guardian's Photo (Max file size 5
-                                      mb) *
-                                    </label>
-                                  </div>
-                                  <div className="col-lg-8">
-                                    <Field
-                                      type="file"
-                                      name="Localimagepath"
-                                      className={"form-control"}
-                                      accept="image/*"
-                                      onChange={(event) => {
-                                        this.fileChangedHandler(
-                                          event,
-                                          setFieldTouched,
-                                          setFieldValue,
-                                          setErrors
-                                        );
-                                      }}
-                                    />
-                                    {errors.LocalimagepathBase &&
+                          {/* Local Guardian Details */}
+
+                          <div className="col-lg-12">
+                            <div className="form-heading">
+                              <h3>Local Guardian's Details:</h3>
+                            </div>
+                          </div>
+
+                          <div className="col-lg-6 txt-position">
+                            <div className="form-group">
+                              <div className="row">
+                                <div className="col-lg-4">
+                                  <label htmlFor="Localimagepath">
+                                    Local Guardian's Photo (Max file size 5
+                                    mb) *
+                                  </label>
+                                </div>
+                                <div className="col-lg-8">
+                                  <Field
+                                    type="file"
+                                    name="Localimagepath"
+                                    className={"form-control"}
+                                    accept="image/*"
+                                    onChange={(event) => {
+                                      this.fileChangedHandler(
+                                        event,
+                                        setFieldTouched,
+                                        setFieldValue,
+                                        setErrors
+                                      );
+                                    }}
+                                  />
+                                  {errors.LocalimagepathBase &&
                                     touched.LocalimagepathBase ? (
-                                      <div className="error text-left text-danger">
-                                        {errors.LocalimagepathBase}
-                                      </div>
-                                    ) : null}
-                                    {this.state.LocalimagepathBaseError !=
+                                    <div className="error text-left text-danger">
+                                      {errors.LocalimagepathBase}
+                                    </div>
+                                  ) : null}
+                                  {this.state.LocalimagepathBaseError !=
                                     "" ? (
-                                      <div className="error text-left text-danger">
-                                        {this.state.LocalimagepathBaseError}
-                                      </div>
-                                    ) : null}
-                                  </div>
+                                    <div className="error text-left text-danger">
+                                      {this.state.LocalimagepathBaseError}
+                                    </div>
+                                  ) : null}
+                                  {(
+                                    values.LocalimagepathBase ||
+                                    this.state.savedPhotoData.LocalimagepathBase
+                                  ) ? (
+                                    <div style={{ marginTop: "10px" }}>
+                                      <img
+                                        src={
+                                          values.LocalimagepathBase ||
+                                          this.state.savedPhotoData.LocalimagepathBase
+                                        }
+                                        alt="Local guardian preview"
+                                        width="100px"
+                                      />
+                                    </div>
+                                  ) : null}
                                 </div>
                               </div>
-                              <div className="form-group">
-                                <div className="row">
-                                  <div className="col-lg-4">
-                                    <label htmlFor="LocGuardName">
-                                      Local Guardian's Name *
-                                    </label>
-                                  </div>
-                                  <div className="col-lg-8">
-                                    <Field
-                                      type="text"
-                                      name="LocGuardName"
-                                      className={"form-control"}
-                                    />
-                                    {errors.LocGuardName &&
+                            </div>
+                            <div className="form-group">
+                              <div className="row">
+                                <div className="col-lg-4">
+                                  <label htmlFor="LocGuardName">
+                                    Local Guardian's Name *
+                                  </label>
+                                </div>
+                                <div className="col-lg-8">
+                                  <Field
+                                    type="text"
+                                    name="LocGuardName"
+                                    className={"form-control"}
+                                  />
+                                  {errors.LocGuardName &&
                                     touched.LocGuardName ? (
-                                      <div className="error text-left text-danger">
-                                        {errors.LocGuardName}
-                                      </div>
-                                    ) : null}
-                                  </div>
+                                    <div className="error text-left text-danger">
+                                      {errors.LocGuardName}
+                                    </div>
+                                  ) : null}
                                 </div>
                               </div>
-                              <div className="form-group">
-                                <div className="row">
-                                  <div className="col-lg-4">
-                                    <label htmlFor="LocGurdConNo">
-                                      Local Guardian's Contact No. *
-                                    </label>
-                                  </div>
-                                  <div className="col-lg-8">
-                                    <Field
-                                      type="contact"
-                                      name="LocGurdConNo"
-                                      className={"form-control"}
-                                    />
-                                    {errors.LocGurdConNo &&
+                            </div>
+                            <div className="form-group">
+                              <div className="row">
+                                <div className="col-lg-4">
+                                  <label htmlFor="LocGurdConNo">
+                                    Local Guardian's Contact No. *
+                                  </label>
+                                </div>
+                                <div className="col-lg-8">
+                                  <Field
+                                    type="contact"
+                                    name="LocGurdConNo"
+                                    className={"form-control"}
+                                  />
+                                  {errors.LocGurdConNo &&
                                     touched.LocGurdConNo ? (
-                                      <div className="error text-left text-danger">
-                                        {errors.LocGurdConNo}
-                                      </div>
-                                    ) : null}
-                                  </div>
+                                    <div className="error text-left text-danger">
+                                      {errors.LocGurdConNo}
+                                    </div>
+                                  ) : null}
                                 </div>
                               </div>
                             </div>
+                          </div>
 
-                            <div className="col-lg-6 txt-position">
-                              <div className="form-group">
-                                <div className="row">
-                                  <div className="col-lg-4">
-                                    <label htmlFor="RelWithLocGurd">
-                                      Relationship with Local Guardian *
-                                    </label>
-                                  </div>
-                                  <div className="col-lg-8">
-                                    <Field
-                                      type="text"
-                                      name="RelWithLocGurd"
-                                      className={"form-control"}
-                                    />
-                                    {errors.RelWithLocGurd &&
+                          <div className="col-lg-6 txt-position">
+                            <div className="form-group">
+                              <div className="row">
+                                <div className="col-lg-4">
+                                  <label htmlFor="RelWithLocGurd">
+                                    Relationship with Local Guardian *
+                                  </label>
+                                </div>
+                                <div className="col-lg-8">
+                                  <Field
+                                    type="text"
+                                    name="RelWithLocGurd"
+                                    className={"form-control"}
+                                  />
+                                  {errors.RelWithLocGurd &&
                                     touched.RelWithLocGurd ? (
-                                      <div className="error text-left text-danger">
-                                        {errors.RelWithLocGurd}
-                                      </div>
-                                    ) : null}
-                                  </div>
+                                    <div className="error text-left text-danger">
+                                      {errors.RelWithLocGurd}
+                                    </div>
+                                  ) : null}
                                 </div>
                               </div>
-                              <div className="form-group">
-                                <div className="row">
-                                  <div className="col-lg-4 col-md-4">
-                                    <label htmlFor="LocGurdAdres">
-                                      Local Guardian's Address *
-                                    </label>
-                                  </div>
-                                  <div className="col-lg-8 col-md-12">
-                                    <Field
-                                      component="textarea"
-                                      rows="4"
-                                      name="LocGurdAdres"
-                                      className={"form-control"}
-                                    />
-                                    {errors.LocGurdAdres &&
+                            </div>
+                            <div className="form-group">
+                              <div className="row">
+                                <div className="col-lg-4 col-md-4">
+                                  <label htmlFor="LocGurdAdres">
+                                    Local Guardian's Address *
+                                  </label>
+                                </div>
+                                <div className="col-lg-8 col-md-12">
+                                  <Field
+                                    component="textarea"
+                                    rows="4"
+                                    name="LocGurdAdres"
+                                    className={"form-control"}
+                                  />
+                                  {errors.LocGurdAdres &&
                                     touched.LocGurdAdres ? (
-                                      <div className="error text-left text-danger">
-                                        {errors.LocGurdAdres}
-                                      </div>
-                                    ) : null}
-                                  </div>
-                                </div>
-                              </div>
-
-                              
-                            </div>
-
-                            {/* List of Male Visitors */}
-
-                            <div className="col-lg-12">
-                              <div className="form-heading">
-                                <h3>
-                                  List of Male visitors who will be visiting:
-                                </h3>
-                              </div>
-                            </div>
-                            <div className="col-lg-4 col-md-6 txt-position male-panel">
-                              <div className="form-group">
-                                <div className="row">
-                                  <div className="col-lg-6">
-                                    <label htmlFor="NameVistMale1">
-                                      Name of the Visitor:
-                                    </label>
-                                  </div>
-                                  <div className="col-lg-6">
-                                    <Field
-                                      type="text"
-                                      name="NameVistMale1"
-                                      className={"form-control"}
-                                    />
-                                  </div>
-                                </div>
-                              </div>
-                              <div className="form-group">
-                                <div className="row">
-                                  <div className="col-lg-6">
-                                    <label htmlFor="NameVistMale2">
-                                      Name of the Visitor:
-                                    </label>
-                                  </div>
-                                  <div className="col-lg-6">
-                                    <Field
-                                      type="text"
-                                      name="NameVistMale2"
-                                      className={"form-control"}
-                                    />
-                                  </div>
-                                </div>
-                              </div>
-                              <div className="form-group">
-                                <div className="row">
-                                  <div className="col-lg-6">
-                                    <label htmlFor="NameVistMale3">
-                                      Name of the Visitor:
-                                    </label>
-                                  </div>
-                                  <div className="col-lg-6">
-                                    <Field
-                                      type="text"
-                                      name="NameVistMale3"
-                                      className={"form-control"}
-                                    />
-                                  </div>
+                                    <div className="error text-left text-danger">
+                                      {errors.LocGurdAdres}
+                                    </div>
+                                  ) : null}
                                 </div>
                               </div>
                             </div>
 
-                            <div className="col-lg-4 col-md-6 txt-position male-panel">
-                              <div className="form-group">
-                                <div className="row">
-                                  <div className="col-lg-6">
-                                    <label htmlFor="RelVistMaleApp1">
-                                      Relationship of the Visitor to the
-                                      applicant:
-                                    </label>
-                                  </div>
-                                  <div className="col-lg-6">
-                                    <Field
-                                      type="text"
-                                      name="RelVistMaleApp1"
-                                      className={"form-control"}
-                                    />
-                                  </div>
+
+                          </div>
+
+                          {/* List of Male Visitors */}
+
+                          <div className="col-lg-12">
+                            <div className="form-heading">
+                              <h3>
+                                List of Male visitors who will be visiting:
+                              </h3>
+                            </div>
+                          </div>
+                          <div className="col-lg-4 col-md-6 txt-position male-panel">
+                            <div className="form-group">
+                              <div className="row">
+                                <div className="col-lg-6">
+                                  <label htmlFor="NameVistMale1">
+                                    Name of the Visitor:
+                                  </label>
                                 </div>
-                              </div>
-                              <div className="form-group">
-                                <div className="row">
-                                  <div className="col-lg-6">
-                                    <label htmlFor="RelVistMaleApp2">
-                                      Relationship of the Visitor to the
-                                      applicant:
-                                    </label>
-                                  </div>
-                                  <div className="col-lg-6">
-                                    <Field
-                                      type="text"
-                                      name="RelVistMaleApp2"
-                                      className={"form-control"}
-                                    />
-                                  </div>
-                                </div>
-                              </div>
-                              <div className="form-group">
-                                <div className="row">
-                                  <div className="col-lg-6">
-                                    <label htmlFor="RelVistMaleApp3">
-                                      Relationship of the Visitor to the
-                                      applicant:
-                                    </label>
-                                  </div>
-                                  <div className="col-lg-6">
-                                    <Field
-                                      type="text"
-                                      name="RelVistMaleApp3"
-                                      className={"form-control"}
-                                    />
-                                  </div>
+                                <div className="col-lg-6">
+                                  <Field
+                                    type="text"
+                                    name="NameVistMale1"
+                                    className={"form-control"}
+                                  />
                                 </div>
                               </div>
                             </div>
-
-                            <div className="col-lg-4 col-md-6 txt-position male-panel">
-                              <div className="form-group">
-                                <div className="row">
-                                  <div className="col-lg-6">
-                                    <label htmlFor="ImgMaleApp1">
-                                      Upload Photograph of the Visitor
-                                    </label>
-                                  </div>
-                                  <div className="col-lg-6">
-                                    <Field
-                                      type="file"
-                                      name="ImgMaleApp1"
-                                      className={"form-control"}
-                                      accept="image/*"
-                                      onChange={(event) => {
-                                        this.fileCheckImageType(
-                                          event,
-                                          setFieldTouched,
-                                          setFieldValue,
-                                          setErrors
-                                        );
-                                      }}
-                                    />
-
-                                    {this.state.ImgMaleApp1Error != "" ? (
-                                      <div className="error text-left text-danger">
-                                        {this.state.ImgMaleApp1Error}
-                                      </div>
-                                    ) : null}
-                                  </div>
+                            <div className="form-group">
+                              <div className="row">
+                                <div className="col-lg-6">
+                                  <label htmlFor="NameVistMale2">
+                                    Name of the Visitor:
+                                  </label>
                                 </div>
-                              </div>
-                              <div className="form-group">
-                                <div className="row">
-                                  <div className="col-lg-6">
-                                    <label htmlFor="ImgMaleApp2">
-                                      Upload Photograph of the Visitor (Max file
-                                      size 5 mb)
-                                    </label>
-                                  </div>
-                                  <div className="col-lg-6">
-                                    <Field
-                                      type="file"
-                                      name="ImgMaleApp2"
-                                      className={"form-control"}
-                                      accept="image/*"
-                                      onChange={(event) => {
-                                        this.fileCheckImageType(
-                                          event,
-                                          setFieldTouched,
-                                          setFieldValue,
-                                          setErrors
-                                        );
-                                      }}
-                                    />
-                                    {this.state.ImgMaleApp2Error != "" ? (
-                                      <div className="error text-left text-danger">
-                                        {this.state.ImgMaleApp2Error}
-                                      </div>
-                                    ) : null}
-                                  </div>
-                                </div>
-                              </div>
-                              <div className="form-group">
-                                <div className="row">
-                                  <div className="col-lg-6">
-                                    <label htmlFor="ImgMaleApp3">
-                                      Upload Photograph of the Visitor (Max file
-                                      size 5 mb)
-                                    </label>
-                                  </div>
-                                  <div className="col-lg-6">
-                                    <Field
-                                      type="file"
-                                      name="ImgMaleApp3"
-                                      className={"form-control"}
-                                      accept="image/*"
-                                      onChange={(event) => {
-                                        this.fileCheckImageType(
-                                          event,
-                                          setFieldTouched,
-                                          setFieldValue,
-                                          setErrors
-                                        );
-                                      }}
-                                    />
-                                    {this.state.ImgMaleApp3Error != "" ? (
-                                      <div className="error text-left text-danger">
-                                        {this.state.ImgMaleApp3Error}
-                                      </div>
-                                    ) : null}
-                                  </div>
+                                <div className="col-lg-6">
+                                  <Field
+                                    type="text"
+                                    name="NameVistMale2"
+                                    className={"form-control"}
+                                  />
                                 </div>
                               </div>
                             </div>
-
-                            {/* List of Female Visitors */}
-
-                            <div className="col-lg-12">
-                              <div className="form-heading">
-                                <h3>
-                                  List of Female visitors who will be visiting:
-                                </h3>
-                              </div>
-                            </div>
-                            <div className="col-lg-4 col-md-12 txt-position female-panel">
-                              <div className="form-group">
-                                <div className="row">
-                                  <div className="col-lg-6">
-                                    <label htmlFor="NameVistFeMale1">
-                                      Name of the Visitor:
-                                    </label>
-                                  </div>
-                                  <div className="col-lg-6">
-                                    <Field
-                                      type="text"
-                                      name="NameVistFeMale1"
-                                      className={"form-control"}
-                                    />
-                                  </div>
+                            <div className="form-group">
+                              <div className="row">
+                                <div className="col-lg-6">
+                                  <label htmlFor="NameVistMale3">
+                                    Name of the Visitor:
+                                  </label>
                                 </div>
-                              </div>
-                              <div className="form-group">
-                                <div className="row">
-                                  <div className="col-lg-6">
-                                    <label htmlFor="NameVistFeMale2">
-                                      Name of the Visitor:
-                                    </label>
-                                  </div>
-                                  <div className="col-lg-6">
-                                    <Field
-                                      type="text"
-                                      name="NameVistFeMale2"
-                                      className={"form-control"}
-                                    />
-                                  </div>
-                                </div>
-                              </div>
-                              <div className="form-group">
-                                <div className="row">
-                                  <div className="col-lg-6">
-                                    <label htmlFor="NameVistFeMale3">
-                                      Name of the Visitor:
-                                    </label>
-                                  </div>
-                                  <div className="col-lg-6">
-                                    <Field
-                                      type="text"
-                                      name="NameVistFeMale3"
-                                      className={"form-control"}
-                                    />
-                                  </div>
+                                <div className="col-lg-6">
+                                  <Field
+                                    type="text"
+                                    name="NameVistMale3"
+                                    className={"form-control"}
+                                  />
                                 </div>
                               </div>
                             </div>
+                          </div>
 
-                            <div className="col-lg-4 -col-md-12 txt-position female-panel">
-                              <div className="form-group">
-                                <div className="row">
-                                  <div className="col-lg-6">
-                                    <label htmlFor="RelVistFeMaleApp1">
-                                      Relationship of the Visitor to the
-                                      applicant:
-                                    </label>
-                                  </div>
-
-                                  <div className="col-lg-6">
-                                    <Field
-                                      type="text"
-                                      name="RelVistFeMaleApp1"
-                                      className={"form-control"}
-                                    />
-                                  </div>
+                          <div className="col-lg-4 col-md-6 txt-position male-panel">
+                            <div className="form-group">
+                              <div className="row">
+                                <div className="col-lg-6">
+                                  <label htmlFor="RelVistMaleApp1">
+                                    Relationship of the Visitor to the
+                                    applicant:
+                                  </label>
                                 </div>
-                              </div>
-                              <div className="form-group">
-                                <div className="row">
-                                  <div className="col-lg-6">
-                                    <label htmlFor="RelVistFeMaleApp2">
-                                      Relationship of the Visitor to the
-                                      applicant:
-                                    </label>
-                                  </div>
-                                  <div className="col-lg-6">
-                                    <Field
-                                      type="text"
-                                      name="RelVistFeMaleApp2"
-                                      className={"form-control"}
-                                    />
-                                  </div>
-                                </div>
-                              </div>
-                              <div className="form-group">
-                                <div className="row">
-                                  <div className="col-lg-6">
-                                    <label htmlFor="RelVistFeMaleApp3">
-                                      Relationship of the Visitor to the
-                                      applicant:
-                                    </label>
-                                  </div>
-                                  <div className="col-lg-6">
-                                    <Field
-                                      type="text"
-                                      name="RelVistFeMaleApp3"
-                                      className={"form-control"}
-                                    />
-                                  </div>
+                                <div className="col-lg-6">
+                                  <Field
+                                    type="text"
+                                    name="RelVistMaleApp1"
+                                    className={"form-control"}
+                                  />
                                 </div>
                               </div>
                             </div>
-
-                            <div className="col-lg-4 col-md-12 txt-position female-panel">
-                              <div className="form-group">
-                                <div className="row">
-                                  <div className="col-lg-6">
-                                    <label htmlFor="ImgFeMaleApp1">
-                                      Upload Photograph of the Visitor (Max file
-                                      size 5 mb)
-                                    </label>
-                                  </div>
-                                  <div className="col-lg-6">
-                                    <Field
-                                      type="file"
-                                      name="ImgFeMaleApp1"
-                                      className={"form-control"}
-                                      accept="image/*"
-                                      onChange={(event) => {
-                                        this.fileCheckImageType(
-                                          event,
-                                          setFieldTouched,
-                                          setFieldValue,
-                                          setErrors
-                                        );
-                                      }}
-                                    />
-                                    {this.state.ImgFeMaleApp1Error != "" ? (
-                                      <div className="error error text-left text-danger">
-                                        {this.state.ImgFeMaleApp1Error}
-                                      </div>
-                                    ) : null}
-                                  </div>
+                            <div className="form-group">
+                              <div className="row">
+                                <div className="col-lg-6">
+                                  <label htmlFor="RelVistMaleApp2">
+                                    Relationship of the Visitor to the
+                                    applicant:
+                                  </label>
                                 </div>
-                              </div>
-                              <div className="form-group">
-                                <div className="row">
-                                  <div className="col-lg-6">
-                                    <label htmlFor="ImgFeMaleApp2">
-                                      Upload Photograph of the Visitor (Max file
-                                      size 5 mb)
-                                    </label>
-                                  </div>
-                                  <div className="col-lg-6">
-                                    <Field
-                                      type="file"
-                                      name="ImgFeMaleApp2"
-                                      className={"form-control"}
-                                      accept="image/*"
-                                      onChange={(event) => {
-                                        this.fileCheckImageType(
-                                          event,
-                                          setFieldTouched,
-                                          setFieldValue,
-                                          setErrors
-                                        );
-                                      }}
-                                    />
-                                    {this.state.ImgFeMaleApp2Error != "" ? (
-                                      <div className="error error text-left text-danger">
-                                        {this.state.ImgFeMaleApp2Error}
-                                      </div>
-                                    ) : null}
-                                  </div>
-                                </div>
-                              </div>
-                              <div className="form-group">
-                                <div className="row">
-                                  <div className="col-lg-6">
-                                    <label htmlFor="ImgFeMaleApp3">
-                                      Upload Photograph of the Visitor (Max file
-                                      size 5 mb)
-                                    </label>
-                                  </div>
-                                  <div className="col-lg-6">
-                                    <Field
-                                      type="file"
-                                      name="ImgFeMaleApp3"
-                                      className={"form-control"}
-                                      accept="image/*"
-                                      onChange={(event) => {
-                                        this.fileCheckImageType(
-                                          event,
-                                          setFieldTouched,
-                                          setFieldValue,
-                                          setErrors
-                                        );
-                                      }}
-                                    />
-                                    {this.state.ImgFeMaleApp3Error != "" ? (
-                                      <div className="error error text-left text-danger">
-                                        {this.state.ImgFeMaleApp3Error}
-                                      </div>
-                                    ) : null}
-                                  </div>
+                                <div className="col-lg-6">
+                                  <Field
+                                    type="text"
+                                    name="RelVistMaleApp2"
+                                    className={"form-control"}
+                                  />
                                 </div>
                               </div>
                             </div>
-
-                            {/* Weekend Stay in Chennai */}
-
-                            <div className="col-lg-12">
-                              <div className="form-heading">
-                                <h3>Weekend Stay in Chennai:</h3>
+                            <div className="form-group">
+                              <div className="row">
+                                <div className="col-lg-6">
+                                  <label htmlFor="RelVistMaleApp3">
+                                    Relationship of the Visitor to the
+                                    applicant:
+                                  </label>
+                                </div>
+                                <div className="col-lg-6">
+                                  <Field
+                                    type="text"
+                                    name="RelVistMaleApp3"
+                                    className={"form-control"}
+                                  />
+                                </div>
                               </div>
                             </div>
-                            <div className="col-lg-6 txt-position">
-                              <div className="form-group">
-                                <div className="row">
-                                  <div className="col-lg-4">
-                                    <label
-                                      htmlFor="StayPersonName"
-                                      style={{ color: "#333333" }}
-                                    >
-                                      Name of Person:
-                                    </label>
-                                  </div>
-                                  <div className="col-lg-8">
-                                    <Field
-                                      type="text"
-                                      name="StayPersonName"
-                                      className={"form-control"}
-                                    />
-                                  </div>
+                          </div>
+
+                          <div className="col-lg-4 col-md-6 txt-position male-panel">
+                            <div className="form-group">
+                              <div className="row">
+                                <div className="col-lg-6">
+                                  <label htmlFor="ImgMaleApp1">
+                                    Upload Photograph of the Visitor
+                                  </label>
+                                </div>
+                                <div className="col-lg-6">
+                                  <Field
+                                    type="file"
+                                    name="ImgMaleApp1"
+                                    className={"form-control"}
+                                    accept="image/*"
+                                    onChange={(event) => {
+                                      this.fileCheckImageType(
+                                        event,
+                                        setFieldTouched,
+                                        setFieldValue,
+                                        setErrors
+                                      );
+                                    }}
+                                  />
+
+                                  {this.state.ImgMaleApp1Error != "" ? (
+                                    <div className="error text-left text-danger">
+                                      {this.state.ImgMaleApp1Error}
+                                    </div>
+                                  ) : null}
                                 </div>
                               </div>
-                              <div className="form-group">
-                                <div className="row">
-                                  <div className="col-lg-4">
-                                    <label
-                                      htmlFor="StayAddress"
-                                      style={{ color: "#333333" }}
-                                    >
-                                      Address:
-                                    </label>
-                                  </div>
-                                  <div className="col-lg-8">
-                                    <Field
-                                      component="textarea"
-                                      rows="4"
-                                      name="StayAddress"
-                                      className={"form-control"}
-                                    />
-                                  </div>
+                            </div>
+                            <div className="form-group">
+                              <div className="row">
+                                <div className="col-lg-6">
+                                  <label htmlFor="ImgMaleApp2">
+                                    Upload Photograph of the Visitor (Max file
+                                    size 5 mb)
+                                  </label>
+                                </div>
+                                <div className="col-lg-6">
+                                  <Field
+                                    type="file"
+                                    name="ImgMaleApp2"
+                                    className={"form-control"}
+                                    accept="image/*"
+                                    onChange={(event) => {
+                                      this.fileCheckImageType(
+                                        event,
+                                        setFieldTouched,
+                                        setFieldValue,
+                                        setErrors
+                                      );
+                                    }}
+                                  />
+                                  {this.state.ImgMaleApp2Error != "" ? (
+                                    <div className="error text-left text-danger">
+                                      {this.state.ImgMaleApp2Error}
+                                    </div>
+                                  ) : null}
                                 </div>
                               </div>
-                              <div className="form-group">
-                                <div className="row">
-                                  <div className="col-lg-4">
-                                    <label
-                                      htmlFor="StayPersonName1"
-                                      style={{ color: "#333333" }}
-                                    >
-                                      Name of Person:
-                                    </label>
-                                  </div>
-                                  <div className="col-lg-8">
-                                    <Field
-                                      type="text"
-                                      name="StayPersonName1"
-                                      className={"form-control"}
-                                    />
-                                  </div>
+                            </div>
+                            <div className="form-group">
+                              <div className="row">
+                                <div className="col-lg-6">
+                                  <label htmlFor="ImgMaleApp3">
+                                    Upload Photograph of the Visitor (Max file
+                                    size 5 mb)
+                                  </label>
+                                </div>
+                                <div className="col-lg-6">
+                                  <Field
+                                    type="file"
+                                    name="ImgMaleApp3"
+                                    className={"form-control"}
+                                    accept="image/*"
+                                    onChange={(event) => {
+                                      this.fileCheckImageType(
+                                        event,
+                                        setFieldTouched,
+                                        setFieldValue,
+                                        setErrors
+                                      );
+                                    }}
+                                  />
+                                  {this.state.ImgMaleApp3Error != "" ? (
+                                    <div className="error text-left text-danger">
+                                      {this.state.ImgMaleApp3Error}
+                                    </div>
+                                  ) : null}
                                 </div>
                               </div>
-                              <div className="form-group">
-                                <div className="row">
-                                  <div className="col-lg-4">
-                                    <label
-                                      htmlFor="StayAddress1"
-                                      style={{ color: "#333333" }}
-                                    >
-                                      Address:
-                                    </label>
-                                  </div>
-                                  <div className="col-lg-8">
-                                    <Field
-                                      component="textarea"
-                                      rows="4"
-                                      name="StayAddress1"
-                                      className={"form-control"}
-                                    />
-                                  </div>
+                            </div>
+                          </div>
+
+                          {/* List of Female Visitors */}
+
+                          <div className="col-lg-12">
+                            <div className="form-heading">
+                              <h3>
+                                List of Female visitors who will be visiting:
+                              </h3>
+                            </div>
+                          </div>
+                          <div className="col-lg-4 col-md-12 txt-position female-panel">
+                            <div className="form-group">
+                              <div className="row">
+                                <div className="col-lg-6">
+                                  <label htmlFor="NameVistFeMale1">
+                                    Name of the Visitor:
+                                  </label>
+                                </div>
+                                <div className="col-lg-6">
+                                  <Field
+                                    type="text"
+                                    name="NameVistFeMale1"
+                                    className={"form-control"}
+                                  />
                                 </div>
                               </div>
-                              <div className="form-group">
-                                <div className="row">
-                                  <div className="col-lg-4">
-                                    <label htmlFor="food_preference">
-                                      Food Preference *
-                                    </label>
-                                  </div>
-                                  <div className="col-lg-8">
-                                    <Field
-                                      name="food_preference"
-                                      component="select"
-                                      className={"form-control"}
-                                      autoComplete="off"
-                                    >
-                                      <option value="" selected>
-                                        Default select
-                                      </option>
-                                      <option value="Veg">Veg</option>
-                                      <option value="Eggeterian - 1">
+                            </div>
+                            <div className="form-group">
+                              <div className="row">
+                                <div className="col-lg-6">
+                                  <label htmlFor="NameVistFeMale2">
+                                    Name of the Visitor:
+                                  </label>
+                                </div>
+                                <div className="col-lg-6">
+                                  <Field
+                                    type="text"
+                                    name="NameVistFeMale2"
+                                    className={"form-control"}
+                                  />
+                                </div>
+                              </div>
+                            </div>
+                            <div className="form-group">
+                              <div className="row">
+                                <div className="col-lg-6">
+                                  <label htmlFor="NameVistFeMale3">
+                                    Name of the Visitor:
+                                  </label>
+                                </div>
+                                <div className="col-lg-6">
+                                  <Field
+                                    type="text"
+                                    name="NameVistFeMale3"
+                                    className={"form-control"}
+                                  />
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="col-lg-4 -col-md-12 txt-position female-panel">
+                            <div className="form-group">
+                              <div className="row">
+                                <div className="col-lg-6">
+                                  <label htmlFor="RelVistFeMaleApp1">
+                                    Relationship of the Visitor to the
+                                    applicant:
+                                  </label>
+                                </div>
+
+                                <div className="col-lg-6">
+                                  <Field
+                                    type="text"
+                                    name="RelVistFeMaleApp1"
+                                    className={"form-control"}
+                                  />
+                                </div>
+                              </div>
+                            </div>
+                            <div className="form-group">
+                              <div className="row">
+                                <div className="col-lg-6">
+                                  <label htmlFor="RelVistFeMaleApp2">
+                                    Relationship of the Visitor to the
+                                    applicant:
+                                  </label>
+                                </div>
+                                <div className="col-lg-6">
+                                  <Field
+                                    type="text"
+                                    name="RelVistFeMaleApp2"
+                                    className={"form-control"}
+                                  />
+                                </div>
+                              </div>
+                            </div>
+                            <div className="form-group">
+                              <div className="row">
+                                <div className="col-lg-6">
+                                  <label htmlFor="RelVistFeMaleApp3">
+                                    Relationship of the Visitor to the
+                                    applicant:
+                                  </label>
+                                </div>
+                                <div className="col-lg-6">
+                                  <Field
+                                    type="text"
+                                    name="RelVistFeMaleApp3"
+                                    className={"form-control"}
+                                  />
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="col-lg-4 col-md-12 txt-position female-panel">
+                            <div className="form-group">
+                              <div className="row">
+                                <div className="col-lg-6">
+                                  <label htmlFor="ImgFeMaleApp1">
+                                    Upload Photograph of the Visitor (Max file
+                                    size 5 mb)
+                                  </label>
+                                </div>
+                                <div className="col-lg-6">
+                                  <Field
+                                    type="file"
+                                    name="ImgFeMaleApp1"
+                                    className={"form-control"}
+                                    accept="image/*"
+                                    onChange={(event) => {
+                                      this.fileCheckImageType(
+                                        event,
+                                        setFieldTouched,
+                                        setFieldValue,
+                                        setErrors
+                                      );
+                                    }}
+                                  />
+                                  {this.state.ImgFeMaleApp1Error != "" ? (
+                                    <div className="error error text-left text-danger">
+                                      {this.state.ImgFeMaleApp1Error}
+                                    </div>
+                                  ) : null}
+                                </div>
+                              </div>
+                            </div>
+                            <div className="form-group">
+                              <div className="row">
+                                <div className="col-lg-6">
+                                  <label htmlFor="ImgFeMaleApp2">
+                                    Upload Photograph of the Visitor (Max file
+                                    size 5 mb)
+                                  </label>
+                                </div>
+                                <div className="col-lg-6">
+                                  <Field
+                                    type="file"
+                                    name="ImgFeMaleApp2"
+                                    className={"form-control"}
+                                    accept="image/*"
+                                    onChange={(event) => {
+                                      this.fileCheckImageType(
+                                        event,
+                                        setFieldTouched,
+                                        setFieldValue,
+                                        setErrors
+                                      );
+                                    }}
+                                  />
+                                  {this.state.ImgFeMaleApp2Error != "" ? (
+                                    <div className="error error text-left text-danger">
+                                      {this.state.ImgFeMaleApp2Error}
+                                    </div>
+                                  ) : null}
+                                </div>
+                              </div>
+                            </div>
+                            <div className="form-group">
+                              <div className="row">
+                                <div className="col-lg-6">
+                                  <label htmlFor="ImgFeMaleApp3">
+                                    Upload Photograph of the Visitor (Max file
+                                    size 5 mb)
+                                  </label>
+                                </div>
+                                <div className="col-lg-6">
+                                  <Field
+                                    type="file"
+                                    name="ImgFeMaleApp3"
+                                    className={"form-control"}
+                                    accept="image/*"
+                                    onChange={(event) => {
+                                      this.fileCheckImageType(
+                                        event,
+                                        setFieldTouched,
+                                        setFieldValue,
+                                        setErrors
+                                      );
+                                    }}
+                                  />
+                                  {this.state.ImgFeMaleApp3Error != "" ? (
+                                    <div className="error error text-left text-danger">
+                                      {this.state.ImgFeMaleApp3Error}
+                                    </div>
+                                  ) : null}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Weekend Stay in Chennai */}
+
+                          <div className="col-lg-12">
+                            <div className="form-heading">
+                              <h3>Weekend Stay in Chennai:</h3>
+                            </div>
+                          </div>
+                          <div className="col-lg-6 txt-position">
+                            <div className="form-group">
+                              <div className="row">
+                                <div className="col-lg-4">
+                                  <label
+                                    htmlFor="StayPersonName"
+                                    style={{ color: "#333333" }}
+                                  >
+                                    Name of Person:
+                                  </label>
+                                </div>
+                                <div className="col-lg-8">
+                                  <Field
+                                    type="text"
+                                    name="StayPersonName"
+                                    className={"form-control"}
+                                  />
+                                </div>
+                              </div>
+                            </div>
+                            <div className="form-group">
+                              <div className="row">
+                                <div className="col-lg-4">
+                                  <label
+                                    htmlFor="StayAddress"
+                                    style={{ color: "#333333" }}
+                                  >
+                                    Address:
+                                  </label>
+                                </div>
+                                <div className="col-lg-8">
+                                  <Field
+                                    component="textarea"
+                                    rows="4"
+                                    name="StayAddress"
+                                    className={"form-control"}
+                                  />
+                                </div>
+                              </div>
+                            </div>
+                            <div className="form-group">
+                              <div className="row">
+                                <div className="col-lg-4">
+                                  <label
+                                    htmlFor="StayPersonName1"
+                                    style={{ color: "#333333" }}
+                                  >
+                                    Name of Person:
+                                  </label>
+                                </div>
+                                <div className="col-lg-8">
+                                  <Field
+                                    type="text"
+                                    name="StayPersonName1"
+                                    className={"form-control"}
+                                  />
+                                </div>
+                              </div>
+                            </div>
+                            <div className="form-group">
+                              <div className="row">
+                                <div className="col-lg-4">
+                                  <label
+                                    htmlFor="StayAddress1"
+                                    style={{ color: "#333333" }}
+                                  >
+                                    Address:
+                                  </label>
+                                </div>
+                                <div className="col-lg-8">
+                                  <Field
+                                    component="textarea"
+                                    rows="4"
+                                    name="StayAddress1"
+                                    className={"form-control"}
+                                  />
+                                </div>
+                              </div>
+                            </div>
+                            <div className="form-group">
+                              <div className="row">
+                                <div className="col-lg-4">
+                                  <label htmlFor="food_preference">
+                                    Food Preference *
+                                  </label>
+                                </div>
+                                <div className="col-lg-8">
+                                  <Field
+                                    name="food_preference"
+                                    component="select"
+                                    className={"form-control"}
+                                    autoComplete="off"
+                                  >
+                                    <option value="" >
+                                      Default select
+                                    </option>
+                                    <option value="Veg">Veg</option>
+                                    <option value="Non-Veg">Non-Veg</option>
+                                    {/* <option value="Eggeterian - 1">
                                         Veg + Egg (Plan 1) : Egg 3 Meals a week
                                       </option>
                                       <option value="Eggeterian - 2">
@@ -2013,265 +2538,265 @@ class Reg extends Component {
                                       <option value="Non-Veg - 2">
                                         Non-Veg (Plan 2) : Non-veg 3 Meals & Egg
                                         5 Meals a week
-                                      </option>
-                                    </Field>
+                                      </option> */}
+                                  </Field>
 
-                                    {errors.food_preference &&
+                                  {errors.food_preference &&
                                     touched.food_preference ? (
-                                      <div className="error error text-left text-danger">
-                                        {errors.food_preference}
-                                      </div>
-                                    ) : null}
-                                  </div>
-                                </div>
-                              </div>
-                              <div className="form-group">
-                                <div className="row">
-                                  <div className="col-lg-4">
-                                    <label htmlFor="parking">Parking *</label>
-                                  </div>
-                                  <div className="col-lg-8">
-                                    <Field
-                                      name="parking"
-                                      component="select"
-                                      className={"form-control"}
-                                      autoComplete="off"
-                                      onChange={(event) => {
-                                        this.handleParkingChange(
-                                          event,
-                                          setFieldValue,
-                                          setFieldTouched,
-                                          setErrors
-                                        );
-                                      }}
-                                    >
-                                      <option value="" selected>
-                                        Default select
-                                      </option>
-                                      <option value="Yes">Yes</option>
-                                      <option value="No">No</option>
-                                    </Field>
-                                    {errors.parking && touched.parking ? (
-                                      <div className="error error text-left text-danger">
-                                        {errors.parking}
-                                      </div>
-                                    ) : null}
-                                    {this.state.parking_type_filed_open ? (
-                                      <Field
-                                        component="select"
-                                        name="parking_type"
-                                        className={"form-control"}
-                                        // autoComplete="off"
-                                        style={{ marginTop: "10px" }}
-                                        onChange={(event) => {
-                                          this.setState({
-                                            parking_type_wheller:
-                                              event.target.value,
-                                          });
-                                          setFieldTouched("parking_type", true);
-                                          setFieldValue(
-                                            "parking_type",
-                                            event.target.value
-                                          );
-                                        }}
-                                      >
-                                        <option value="" selected>
-                                          Default select
-                                        </option>
-                                        <option value="2">
-                                          2 Wheeler Parking
-                                        </option>
-                                        <option value="4">
-                                          4 Wheeler Parking
-                                        </option>
-                                      </Field>
-                                    ) : null}
-
-                                    {errors.parking_type &&
-                                    touched.parking_type ? (
-                                      <div className="error error text-left text-danger">
-                                        {errors.parking_type}
-                                      </div>
-                                    ) : null}
-                                  </div>
-                                </div>
-                              </div>
-                              <div className="form-group">
-                                <div className="row">
-                                  <div className="col-lg-4">
-                                    <label htmlFor="occupancy">
-                                      Occupancy *
-                                    </label>
-                                  </div>
-                                  <div className="col-lg-8">
-                                    <Field
-                                      name="occupancy"
-                                      component="select"
-                                      className={"form-control"}
-                                      autoComplete="off"
-                                    >
-                                      <option value="" selected>
-                                        Default select
-                                      </option>
-                                      <option value="2 in 1">2 in 1</option>
-                                      <option value="3 in 1">3 in 1</option>
-                                      <option value="4 in 1">4 in 1</option>
-                                      <option value="5 in 1">5 in 1</option>
-                                      <option value="6 in 1">6 in 1</option>
-                                      <option value="7 in 1">7 in 1</option>
-                                    </Field>
-                                    {errors.occupancy && touched.occupancy ? (
-                                      <div className="error error text-left text-danger">
-                                        {errors.occupancy}
-                                      </div>
-                                    ) : null}
-                                  </div>
+                                    <div className="error error text-left text-danger">
+                                      {errors.food_preference}
+                                    </div>
+                                  ) : null}
                                 </div>
                               </div>
                             </div>
-                            <div className="col-lg-6 txt-position">
-                              <div className="form-group">
-                                <div className="row">
-                                  <div className="col-lg-4">
-                                    <label
-                                      htmlFor="StayRelWithApp"
-                                      style={{ color: "#333333" }}
-                                    >
-                                      Relationship with the Applicant:
-                                    </label>
-                                  </div>
-                                  <div className="col-lg-8">
-                                    <Field
-                                      type="text"
-                                      name="StayRelWithApp"
-                                      className={"form-control"}
-                                    />
-                                  </div>
+                            <div className="form-group">
+                              <div className="row">
+                                <div className="col-lg-4">
+                                  <label htmlFor="parking">Parking *</label>
                                 </div>
-                              </div>
-                              <div className="form-group">
-                                <div className="row">
-                                  <div className="col-lg-4">
-                                    <label
-                                      htmlFor="StayConNo"
-                                      style={{ color: "#333333" }}
-                                    >
-                                      Contact No.:
-                                    </label>
-                                  </div>
-                                  <div className="col-lg-8">
+                                <div className="col-lg-8">
+                                  <Field
+                                    name="parking"
+                                    component="select"
+                                    className={"form-control"}
+                                    autoComplete="off"
+                                    onChange={(event) => {
+                                      this.handleParkingChange(
+                                        event,
+                                        setFieldValue,
+                                        setFieldTouched,
+                                        setErrors
+                                      );
+                                    }}
+                                  >
+                                    <option value="" >
+                                      Default select
+                                    </option>
+                                    <option value="Yes">Yes</option>
+                                    <option value="No">No</option>
+                                  </Field>
+                                  {errors.parking && touched.parking ? (
+                                    <div className="error error text-left text-danger">
+                                      {errors.parking}
+                                    </div>
+                                  ) : null}
+                                  {this.state.parking_type_filed_open ? (
                                     <Field
-                                      type="contact"
-                                      name="StayConNo"
-                                      className={"form-control"}
-                                    />
-                                    {errors.StayConNo && touched.StayConNo ? (
-                                      <div className="error error text-left text-danger">
-                                        {errors.StayConNo}
-                                      </div>
-                                    ) : null}
-                                  </div>
-                                </div>
-                              </div>
-                              <div className="form-group">
-                                <div className="row">
-                                  <div className="col-lg-4">
-                                    <label
-                                      htmlFor="StayPersonName1"
-                                      style={{ color: "#333333" }}
-                                    >
-                                      Relationship with the Applicant:
-                                    </label>
-                                  </div>
-                                  <div className="col-lg-8">
-                                    <Field
-                                      type="text"
-                                      name="StayPersonName1"
-                                      className={"form-control"}
-                                    />
-                                  </div>
-                                </div>
-                              </div>
-                              <div className="form-group">
-                                <div className="row">
-                                  <div className="col-lg-4">
-                                    <label
-                                      htmlFor="StayConNo1"
-                                      style={{ color: "#333333" }}
-                                    >
-                                      Contact No.:
-                                    </label>
-                                  </div>
-                                  <div className="col-lg-8">
-                                    <Field
-                                      type="contact"
-                                      name="StayConNo1"
-                                      className={"form-control"}
-                                    />
-                                    {errors.StayConNo1 && touched.StayConNo1 ? (
-                                      <div className="error error text-left text-danger">
-                                        {errors.StayConNo1}
-                                      </div>
-                                    ) : null}
-                                  </div>
-                                </div>
-                              </div>
-                              <div className="form-group">
-                                <div className="row">
-                                  <div className="col-lg-4">
-                                    <label htmlFor="name">Room Type *</label>
-                                  </div>
-                                  <div className="col-lg-8">
-                                    <Field
-                                      name="room_type"
                                       component="select"
+                                      name="parking_type"
                                       className={"form-control"}
-                                      autoComplete="off"
+                                      // autoComplete="off"
+                                      style={{ marginTop: "10px" }}
+                                      onChange={(event) => {
+                                        this.setState({
+                                          parking_type_wheller:
+                                            event.target.value,
+                                        });
+                                        setFieldTouched("parking_type", true);
+                                        setFieldValue(
+                                          "parking_type",
+                                          event.target.value
+                                        );
+                                      }}
                                     >
-                                      <option value="" selected>
+                                      <option value="" >
                                         Default select
                                       </option>
-                                      <option value="AC">AC</option>
-                                      <option value="Non-AC">Non-AC</option>
+                                      <option value="2">
+                                        2 Wheeler Parking
+                                      </option>
+                                      <option value="4">
+                                        4 Wheeler Parking
+                                      </option>
                                     </Field>
-                                    {errors.room_type && touched.room_type ? (
-                                      <div className="error error text-left text-danger">
-                                        {errors.room_type}
-                                      </div>
-                                    ) : null}
-                                  </div>
+                                  ) : null}
+
+                                  {errors.parking_type &&
+                                    touched.parking_type ? (
+                                    <div className="error error text-left text-danger">
+                                      {errors.parking_type}
+                                    </div>
+                                  ) : null}
                                 </div>
                               </div>
-                              <div className="form-group">
-                                <div className="row">
-                                  <div className="col-lg-4">
-                                    <label htmlFor="toilet_type">
-                                      Toilet Type *
-                                    </label>
-                                  </div>
-                                  <div className="col-lg-8">
-                                    <Field
-                                      name="toilet_type"
-                                      component="select"
-                                      className={"form-control"}
-                                      autoComplete="off"
-                                    >
-                                      <option value="" selected>
-                                        Default select
-                                      </option>
-                                      <option value="Attached">Attached</option>
-                                      <option value="Common">Common</option>
-                                    </Field>
-                                    {errors.toilet_type &&
+                            </div>
+                            <div className="form-group">
+                              <div className="row">
+                                <div className="col-lg-4">
+                                  <label htmlFor="occupancy">
+                                    Occupancy *
+                                  </label>
+                                </div>
+                                <div className="col-lg-8">
+                                  <Field
+                                    name="occupancy"
+                                    component="select"
+                                    className={"form-control"}
+                                    autoComplete="off"
+                                  >
+                                    <option value="" >
+                                      Default select
+                                    </option>
+                                    <option value="2 in 1">2 in 1</option>
+                                    <option value="3 in 1">3 in 1</option>
+                                    <option value="4 in 1">4 in 1</option>
+                                    <option value="5 in 1">5 in 1</option>
+                                    <option value="6 in 1">6 in 1</option>
+                                    <option value="7 in 1">7 in 1</option>
+                                  </Field>
+                                  {errors.occupancy && touched.occupancy ? (
+                                    <div className="error error text-left text-danger">
+                                      {errors.occupancy}
+                                    </div>
+                                  ) : null}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="col-lg-6 txt-position">
+                            <div className="form-group">
+                              <div className="row">
+                                <div className="col-lg-4">
+                                  <label
+                                    htmlFor="StayRelWithApp"
+                                    style={{ color: "#333333" }}
+                                  >
+                                    Relationship with the Applicant:
+                                  </label>
+                                </div>
+                                <div className="col-lg-8">
+                                  <Field
+                                    type="text"
+                                    name="StayRelWithApp"
+                                    className={"form-control"}
+                                  />
+                                </div>
+                              </div>
+                            </div>
+                            <div className="form-group">
+                              <div className="row">
+                                <div className="col-lg-4">
+                                  <label
+                                    htmlFor="StayConNo"
+                                    style={{ color: "#333333" }}
+                                  >
+                                    Contact No.:
+                                  </label>
+                                </div>
+                                <div className="col-lg-8">
+                                  <Field
+                                    type="contact"
+                                    name="StayConNo"
+                                    className={"form-control"}
+                                  />
+                                  {errors.StayConNo && touched.StayConNo ? (
+                                    <div className="error error text-left text-danger">
+                                      {errors.StayConNo}
+                                    </div>
+                                  ) : null}
+                                </div>
+                              </div>
+                            </div>
+                            <div className="form-group">
+                              <div className="row">
+                                <div className="col-lg-4">
+                                  <label
+                                    htmlFor="StayPersonName1"
+                                    style={{ color: "#333333" }}
+                                  >
+                                    Relationship with the Applicant:
+                                  </label>
+                                </div>
+                                <div className="col-lg-8">
+                                  <Field
+                                    type="text"
+                                    name="StayPersonName1"
+                                    className={"form-control"}
+                                  />
+                                </div>
+                              </div>
+                            </div>
+                            <div className="form-group">
+                              <div className="row">
+                                <div className="col-lg-4">
+                                  <label
+                                    htmlFor="StayConNo1"
+                                    style={{ color: "#333333" }}
+                                  >
+                                    Contact No.:
+                                  </label>
+                                </div>
+                                <div className="col-lg-8">
+                                  <Field
+                                    type="contact"
+                                    name="StayConNo1"
+                                    className={"form-control"}
+                                  />
+                                  {errors.StayConNo1 && touched.StayConNo1 ? (
+                                    <div className="error error text-left text-danger">
+                                      {errors.StayConNo1}
+                                    </div>
+                                  ) : null}
+                                </div>
+                              </div>
+                            </div>
+                            <div className="form-group">
+                              <div className="row">
+                                <div className="col-lg-4">
+                                  <label htmlFor="name">Room Type *</label>
+                                </div>
+                                <div className="col-lg-8">
+                                  <Field
+                                    name="room_type"
+                                    component="select"
+                                    className={"form-control"}
+                                    autoComplete="off"
+                                  >
+                                    <option value="" >
+                                      Default select
+                                    </option>
+                                    <option value="AC">AC</option>
+                                    <option value="Non-AC">Non-AC</option>
+                                  </Field>
+                                  {errors.room_type && touched.room_type ? (
+                                    <div className="error error text-left text-danger">
+                                      {errors.room_type}
+                                    </div>
+                                  ) : null}
+                                </div>
+                              </div>
+                            </div>
+                            <div className="form-group">
+                              <div className="row">
+                                <div className="col-lg-4">
+                                  <label htmlFor="toilet_type">
+                                    Toilet Type *
+                                  </label>
+                                </div>
+                                <div className="col-lg-8">
+                                  <Field
+                                    name="toilet_type"
+                                    component="select"
+                                    className={"form-control"}
+                                    autoComplete="off"
+                                  >
+                                    <option value="">
+                                      Default select
+                                    </option>
+                                    <option value="Attached">Attached</option>
+                                    <option value="Common">Common</option>
+                                  </Field>
+                                  {errors.toilet_type &&
                                     touched.toilet_type ? (
-                                      <div className="error error text-left text-danger">
-                                        {errors.toilet_type}
-                                      </div>
-                                    ) : null}
-                                  </div>
+                                    <div className="error error text-left text-danger">
+                                      {errors.toilet_type}
+                                    </div>
+                                  ) : null}
                                 </div>
                               </div>
-                              <div className="form-group">
+                            </div>
+                            {/* <div className="form-group">
                                 <div className="row">
                                   <div className="col-lg-4">
                                     <label htmlFor="transportation">
@@ -2285,7 +2810,7 @@ class Reg extends Component {
                                       component="select"
                                       className={"form-control"}
                                     >
-                                      <option value="" selected>
+                                      <option value="">
                                         Default select
                                       </option>
                                       <option value="Yes">Yes</option>
@@ -2299,10 +2824,10 @@ class Reg extends Component {
                                     ) : null}
                                   </div>
                                 </div>
-                              </div>
-                            </div>
+                              </div> */}
                           </div>
-                        </form>
+                        </div>
+                        {/* </form> */}
                       </div>
                       <div className="footer">
                         {errors.check && touched.check ? (
@@ -2312,7 +2837,7 @@ class Reg extends Component {
                         ) : null}
                         <Field type="checkbox" name="check" value="checked" />
 
-                        <label for="checkbox">We understand that</label>
+                        <label htmlFor="checkbox">We understand that</label>
                         <p>- Room allocation is based on availability.</p>
                         <p>
                           - The decision of the President, Secretary and / or
@@ -2361,6 +2886,99 @@ class Reg extends Component {
                         </div>
                       </div>
                     </div>
+
+                    {this.state.showOtpModal && (
+                      <div style={{
+                        position: 'fixed',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                        display: 'flex',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        zIndex: 10000
+                      }}>
+                        <div style={{
+                          backgroundColor: 'white',
+                          padding: '30px',
+                          borderRadius: '8px',
+                          maxWidth: '400px',
+                          width: '90%',
+                          boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
+                        }}>
+                          <h4 style={{ marginBottom: '20px', textAlign: 'center' }}>Verify OTP</h4>
+                          <p style={{ marginBottom: '15px', textAlign: 'center', color: '#666' }}>
+                            OTP has been sent to {this.state.mobileForOtp}
+                          </p>
+                          <div style={{ marginBottom: '15px' }}>
+                            <input
+                              type="text"
+                              placeholder="Enter OTP"
+                              value={this.state.otpInput}
+                              onChange={(e) => {
+                                this.setState({ 
+                                  otpInput: e.target.value,
+                                  otpError: "" 
+                                });
+                              }}
+                              maxLength="6"
+                              style={{
+                                width: '100%',
+                                padding: '10px',
+                                borderRadius: '4px',
+                                border: '1px solid #ccc',
+                                fontSize: '16px',
+                                textAlign: 'center',
+                                letterSpacing: '2px',
+                                boxSizing: 'border-box'
+                              }}
+                            />
+                          </div>
+                          {this.state.otpError && (
+                            <div style={{ color: 'red', marginBottom: '15px', fontSize: '14px' }}>
+                              {this.state.otpError}
+                            </div>
+                          )}
+                          <div style={{ display: 'flex', gap: '10px' }}>
+                            <button
+                              type="button"
+                              onClick={() => this.handleOtpVerification(values, setFieldValue)}
+                              style={{
+                                flex: 1,
+                                padding: '10px',
+                                backgroundColor: '#883495',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '4px',
+                                cursor: 'pointer',
+                                fontSize: '14px',
+                                fontWeight: 'bold'
+                              }}
+                            >
+                              Verify
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => this.handleCloseOtpModal()}
+                              style={{
+                                flex: 1,
+                                padding: '10px',
+                                backgroundColor: '#999',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '4px',
+                                cursor: 'pointer',
+                                fontSize: '14px'
+                              }}
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </Form>
                 )}
               </Formik>

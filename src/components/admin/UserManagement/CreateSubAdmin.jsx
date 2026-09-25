@@ -5,6 +5,7 @@ import API from "../../../shared/admin-axios";
 import swal from "sweetalert";
 import * as Yup from "yup";
 import "yup-phone-lite";
+import userLog from "../Utils/Logadd";
 import { Redirect } from "react-router-dom";
 import { connect } from "react-redux";
 import { withRouter } from "react-router-dom";
@@ -126,6 +127,7 @@ class CreateSubAdmin extends Component {
           if (response.data.status === 201) {
             swal("Success", "Admin Added Successfully", "success");
             resetForm(initialValues);
+            userLog('Create Sub Admin','Add Sub Admin');
             this.setState(this.baseState);
           }
           if (response.data.status === 401) {

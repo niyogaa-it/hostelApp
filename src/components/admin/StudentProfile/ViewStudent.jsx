@@ -8,11 +8,10 @@ import { connect } from "react-redux";
 import { withRouter } from "react-router-dom";
 import { Redirect } from "react-router-dom";
 import "./table.css";
+import moment from "moment";
 
 const statusType = {
-  0: "Not Approved",
   1: "Approved",
-  2: "Rejected",
   3: "Inactive",
 };
 
@@ -87,10 +86,31 @@ class Region extends Component {
     ) {
       API.get(`/admin/secure/student`)
         .then((res) => {
+
+          let approveData = 0;
+          let deactivateData = 0;
+
+          for (let a = 0; a < res.data.result_data.length; a++) {
+
+            if (res.data.result_data[a].is_approved == 1) {
+              approveData++;
+            }
+
+            if (res.data.result_data[a].is_approved == 3) {
+              deactivateData++;
+            }
+            this.setState({
+              userDeactivateConut: deactivateData,
+              userApproveConut: approveData,
+            });
+
+          }
+
           this.setState({
             usermangment: res.data.result_data,
             userconut: res.data.result_data.length,
           });
+
         })
         .catch((err) => {
           console.log("err:", err);
@@ -102,7 +122,8 @@ class Region extends Component {
     }
   }
 
-  statusdeactive = (id, code, reason= null) => {
+  statusdeactive = (id, code, reason = null) => {
+    
     let data = {
       id: id,
       status: "3",
@@ -111,27 +132,35 @@ class Region extends Component {
 
     API.put(`/admin/secure/create/student/deactivate/${id}`, data)
       .then((res) => {
-        console.log("res:", res);
-        this.componentDidMount();
+        
+        if (res.data.status === 200) {
+          swal("Success", res.data.message, "success");
+          this.props.history.push("/admin/view_student/");
+        }
+        if (res.data.status === 401) {
+          console.log(res.data.message);
+          swal("Warning", res.data.message, "warning");
+        }
+
       })
       .catch((err) => {
-        console.log("err:", err);
+        swal("Error", err, "warning");
       });
   };
 
   deactivateAlert = (id, code) => {
-    setTimeout(()=>{
+    setTimeout(() => {
       document.getElementsByClassName("swal-button--confirm")[0].disabled = true;
-    },10);
-    
+    }, 10);
+
     var textarea = document.createElement("textarea");
     textarea.rows = 4;
     textarea.className = "swal-content__textarea";
     textarea.placeholder = "Please provide a reason for deactivating account...";
     textarea.onkeyup = function (e) {
-      if(this.value){
+      if (this.value) {
         document.getElementsByClassName("swal-button--confirm")[0].disabled = false;
-      }else{
+      } else {
         document.getElementsByClassName("swal-button--confirm")[0].disabled = true;
         textarea.classList.add("border-danger");
 
@@ -150,8 +179,8 @@ class Region extends Component {
       content: textarea
     }).then((willDelete) => {
       if (typeof willDelete == "string") {
-        this.statusdeactive(id, code,willDelete);
-     }
+        this.statusdeactive(id, code, willDelete);
+      }
       // console.log("willDelete:", willDelete);
       // if (willDelete) {
       //   this.statusdeactive(id, code);
@@ -176,7 +205,8 @@ class Region extends Component {
 
   handleViewPlan = (id) => {
     console.log("id:", id);
-    window.location.href = `/admin/view_plan/${id}`;
+    window.open(`/admin/view_plan/${id}`, '_blank');
+    //window.location.href = `/admin/view_plan/${id}`;
   };
   handleEditPlan = (id) => {
     console.log("id:", id);
@@ -188,37 +218,37 @@ class Region extends Component {
     window.location.href = `/admin/monthly_plan/${id}`;
   };
 
-  handleFilter = (event) => {
-    console.log("not approved data", event.target.value);
-    this.setState({ filterValue: event.target.value });
-    if (event.target.value === "approved") {
-      this.setState({
-        approvedData: [...this.state.usermangment].filter((a) => {
-          return a.is_approved == "1";
-        }),
-      });
-    } else if (event.target.value === "not approved") {
-      this.setState({
-        notapprovedData: [...this.state.usermangment].filter((a) => {
-          return a.is_approved == "0";
-        }),
-      });
-    } else if (event.target.value === "rejected") {
-      this.setState({
-        rejectedData: [...this.state.usermangment].filter((a) => {
-          return a.is_approved == "2";
-        }),
-      });
-    } else if (event.target.value === "inactive") {
-      this.setState({
-        inactiveData: [...this.state.usermangment].filter((a) => {
-          return a.is_approved == "3";
-        }),
-      });
-    } else {
-      return this.state.usermangment;
-    }
-  };
+  // handleFilter = (event) => {
+  //   console.log("not approved data", event.target.value);
+  //   this.setState({ filterValue: event.target.value });
+  //   if (event.target.value === "approved") {
+  //     this.setState({
+  //       approvedData: [...this.state.usermangment].filter((a) => {
+  //         return a.is_approved == "1";
+  //       }),
+  //     });
+  //   } else if (event.target.value === "not approved") {
+  //     this.setState({
+  //       notapprovedData: [...this.state.usermangment].filter((a) => {
+  //         return a.is_approved == "0";
+  //       }),
+  //     });
+  //   } else if (event.target.value === "rejected") {
+  //     this.setState({
+  //       rejectedData: [...this.state.usermangment].filter((a) => {
+  //         return a.is_approved == "2";
+  //       }),
+  //     });
+  //   } else if (event.target.value === "inactive") {
+  //     this.setState({
+  //       inactiveData: [...this.state.usermangment].filter((a) => {
+  //         return a.is_approved == "3";
+  //       }),
+  //     });
+  //   } else {
+  //     return this.state.usermangment;
+  //   }
+  // };
 
   imageModalShowHandler = (url) => {
     this.setState({ thumbNailModal: true, url: url });
@@ -231,60 +261,61 @@ class Region extends Component {
       ? "Not Approved"
       : // `${row}`
       cell == "1"
-      ? "Approved"
-      : cell == "2"
-      ? "Rejected"
-      : "Inactive";
+        ? "Approved"
+        : cell == "2"
+          ? "Rejected"
+          : "Inactive";
   }
   csvFormatterNull(cell) {
     return cell == null ? "" : cell;
   }
   render() {
     const paginationOptions = {
-			page: 1, // which page you want to show as default
-			sizePerPageList: [
-				{
-					text: '5',
-					value: 5,
-				},
-				{
-					text: '10',
-					value: 10,
-				},
+      page: 1, // which page you want to show as default
+      sizePerPageList: [
         {
-					text: '20',
-					value: 20,
-				},
+          text: '5',
+          value: 5,
+        },
         {
-					text: '50',
-					value: 50,
-				},
+          text: '10',
+          value: 10,
+        },
         {
-					text: '100',
-					value: 100,
-				},
-				{
-					text: 'All',
-					value: this.state.userconut > 0 ? this.state.userconut : 1,
-				},
-			], // you can change the dropdown list for size per page
-			sizePerPage: 5, // which size per page you want to locate as default
-			pageStartIndex: 1, // where to start counting the pages
-			paginationSize: 6, // the pagination bar size.
-			prePage: 'Prev', // Previous page button text
-			nextPage: 'Next', // Next page button text
-			firstPage: 'First', // First page button text
-			lastPage: 'Last', // Last page button text
-			paginationPosition: 'bottom', // default is bottom, top and both is all available
-			// hideSizePerPage: true //> You can hide the dropdown for sizePerPage
-			// alwaysShowAllBtns: true // Always show next and previous button
-			// withFirstAndLast: false //> Hide the going to First and Last page button
-		};
+          text: '20',
+          value: 20,
+        },
+        {
+          text: '50',
+          value: 50,
+        },
+        {
+          text: '100',
+          value: 100,
+        },
+        {
+          text: 'All',
+          value: this.state.userconut > 0 ? this.state.userconut : 1,
+        },
+      ], // you can change the dropdown list for size per page
+      sizePerPage: 5, // which size per page you want to locate as default
+      pageStartIndex: 1, // where to start counting the pages
+      paginationSize: 6, // the pagination bar size.
+      prePage: 'Prev', // Previous page button text
+      nextPage: 'Next', // Next page button text
+      firstPage: 'First', // First page button text
+      lastPage: 'Last', // Last page button text
+      paginationPosition: 'bottom', // default is bottom, top and both is all available
+      // hideSizePerPage: true //> You can hide the dropdown for sizePerPage
+      // alwaysShowAllBtns: true // Always show next and previous button
+      // withFirstAndLast: false //> Hide the going to First and Last page button
+    };
 
     const custStatus = () => (cell, id) => {
       return (
         <>
           <div className="actionStyle">
+
             <div className="d-flex justify-content-evenly">
               {cell == "3" ? (
                 <div style={{ marginTop: "4%", cursor: "pointer" }}>
@@ -303,27 +334,10 @@ class Region extends Component {
                     INACTIVE
                   </div>
                 </div>
-              ) : cell == "2" ? (
-                <div style={{ marginTop: "4%", cursor: "pointer" }}>
-                  <div
-                    style={{
-                      padding: "0.5rem",
-                      borderRadius: "5px",
-                      backgroundColor: "#ffe0db",
-                      color: "#ff3e1d",
-                      fontWeight: "bold",
-                      border: "none",
-                      width: "fit-content",
-                    }}
-                    data-toggle="tooltip" data-placement="right" title={id.reject_reason}
-                  >
-                    REJECTED
-                  </div>
-                </div>
-              ) : cell == "1" ? (
+              ) : (
                 <div className="ml-5" style={{ marginTop: "4%" }}>
                   <div
-                    style={{
+                     style={{
                       padding: "0.5rem",
                       borderRadius: "5px",
                       backgroundColor: "#e8fadf",
@@ -333,29 +347,18 @@ class Region extends Component {
                       width: "fit-content",
                     }}
                   >
-                    APPROVED
-                  </div>
-                </div>
-              ) : (
-                <div className="ml-5" style={{ marginTop: "4%" }}>
-                  <div
-                    style={{
-                      padding: "0.5rem",
-                      borderRadius: "5px",
-                      backgroundColor: "#fff2d6",
-                      color: "#ffab00",
-                      fontWeight: "bold",
-                      border: "none",
-                      width: "fit-content",
-                    }}
-                  >
-                    NOT APPROVED
+                     APPROVED
                   </div>
                 </div>
               )}
 
-              <div className="ml-5" style={{ marginTop: "4%" }}>
-                {id.plan_id == null && id.is_approved == 1 ? (
+            </div>
+
+            <div className="ml-5" style={{ marginTop: "4%" }}>
+
+              {id.is_approved == 1 &&(
+                <>
+                  {" "}
                   <Button
                     style={{
                       padding: "0.5rem",
@@ -367,54 +370,40 @@ class Region extends Component {
                       backgroundColor: "#ffe0db",
                       color: "#ff3e1d",
                     }}
-                    onClick={() => this.handleSetPlan(id.student_id)}
+                    onClick={() => this.handleSetPlan(id.id)}
                   >
-                    SET PLAN
+                    RAISED FEE DEMAND
                   </Button>
-                ) : null}
-              </div>
-            </div>
-            <div className="ml-5" style={{ marginTop: "4%" }}>
-              {id.plan_id != null && id.monthly == null? (
-                  <>
-                    {" "}
-                    <Button
-                      style={{
-                        padding: "0.5rem",
-                        borderRadius: "5px",
-                        fontWeight: "bold",
-                        border: "none",
-                        cursor: "pointer",
-                        width: "fit-content",
-                        color: "#03c3ec",
-                      }}
-                      onClick={() => this.handleViewPlan(id.student_id)}
-                    >
-                      VIEW PLAN
-                    </Button>
-                    
-                    <Button
-                      style={{
-                        padding: "0.5rem",
-                        borderRadius: "5px",
-                        fontWeight: "bold",
-                        border: "none",
-                        cursor: "pointer",
-                        width: "fit-content",
-                      }}
-                      onClick={() => this.handleEditPlan(id.student_id)}
-                    >
-                      EDIT PLAN
-                    </Button>
-                    
-
-                  </>
-                ) : null
+                </>
+              ) 
               }
 
-              {id.plan_id != null && id.monthly != null? (
-                      <>
+            </div>
+
+
+
+            <div className="ml-5" style={{ marginTop: "4%" }}>
+
+              
+                  {id.plan_id != null && id.plan_id <= 5 ? (
+                    <>
                       {" "}
+                      <Button
+                        style={{
+                          padding: "0.5rem",
+                          borderRadius: "5px",
+                          fontWeight: "bold",
+                          border: "none",
+                          cursor: "pointer",
+                          width: "fit-content",
+                          backgroundColor: "#ffe0db",
+                          color: "#ff3e1d",
+                        }}
+                        onClick={() => this.handleEditPlan(id.id)}
+                      >
+                        CHANGE PLAN
+                      </Button>
+
                       <Button
                         style={{
                           padding: "0.5rem",
@@ -425,47 +414,65 @@ class Region extends Component {
                           width: "fit-content",
                           color: "#03c3ec",
                         }}
-                        onClick={() => this.handleViewPlan(id.student_id)}
+                        onClick={() => this.handleViewPlan(id.id)}
                       >
                         VIEW PLAN
                       </Button>
-
-                      <Button
-                        style={{
-                          padding: "0.5rem",
-                          borderRadius: "5px",
-                          fontWeight: "bold",
-                          border: "none",
-                          cursor: "pointer",
-                          width: "fit-content",
-                        }}
-                        onClick={() => this.handleMonthlyPlan(id.student_id)}
-                      >
-                        EDIT PLAN
-                      </Button>
-                      </>
+                    </>
                   ) : null
-              }
-              
+                  }
+
+          
             </div>
+
+
+
+
           </div>
         </>
       );
     };
+
+
     const docLabel = () => (cell) => {
       return cell == "addhar_card"
         ? "Aadhar Card"
         : cell == "voter_id"
-        ? "Voter ID"
-        : cell == "pan_Card"
-        ? "Pan Card"
-        : null;
+          ? "Voter ID"
+          : cell == "pan_Card"
+            ? "Pan Card"
+            : null;
     };
 
+    const formatBankdtl = () => (row, cell) => {
+      return `${cell.BanckName} ${cell.BankBranch} ${cell.BankIFSC} ${cell.BrankAcctNo}`
+    };
+
+    const regdate = () => (row, cell) => {
+      const createdAt = cell.created_at ? moment(cell.created_at).format("DD/MM/YYYY, h:mm:ss a") : "";
+      return createdAt;
+    };
+
+
+    const approvedate = () => (row, cell) => {
+      const approveDate = cell.approve_date ? moment(cell.approve_date).format("DD/MM/YYYY, h:mm:ss a") : "";
+      return approveDate;
+    };
+
+
+    const deactivedate = () => (row, cell) => {
+      const deactivate_date = cell.deactivate_date ? moment(cell.deactivate_date).format("DD/MM/YYYY, h:mm:ss a") : "";
+      return deactivate_date;
+    };
+
+
+
     const actionFormatter = (refObj) => (cell, id) => {
+
+    
       return (
         <div>
-          {id.is_approved == "1" || id.is_approved == "0" ? (
+          {id.is_approved == "1"  ? (
             <div>
               <Button
                 style={{
@@ -476,7 +483,7 @@ class Region extends Component {
                   fontWeight: "bold",
                   border: "none",
                 }}
-                onClick={() => this.downloadApplicationForm(id.student_id)}
+                onClick={() => this.downloadApplicationForm(id.id)}
               >
                 PRINT FORM
               </Button>
@@ -495,7 +502,7 @@ class Region extends Component {
                 }}
                 onClick={() => {
                   window.open(
-                    `/admin/view_student_profile/${id.student_id}`,
+                    `/admin/view_student_profile/${id.id}`,
                     "_blank"
                   );
                 }}
@@ -512,7 +519,7 @@ class Region extends Component {
                   margin: "3%",
                 }}
                 onClick={() =>
-                  (window.location.href = `/admin/edit_student/${id.student_id}`)
+                  (window.location.href = `/admin/edit_student/${id.id}`)
                 }
                 disabled={cell == "1" ? false : true}
               >
@@ -529,7 +536,7 @@ class Region extends Component {
                   margin: "3%",
                 }}
                 onClick={() => {
-                  refObj.deactivateAlert(id.student_id, id.status);
+                  refObj.deactivateAlert(id.id, id.status);
                 }}
                 disabled={cell == "1" ? false : true}
               >
@@ -549,7 +556,7 @@ class Region extends Component {
                 }}
                 onClick={() => {
                   window.open(
-                    `/admin/view_student_profile/${id.student_id}`,
+                    `/admin/view_student_profile/${id.id}`,
                     "_blank"
                   );
                 }}
@@ -606,27 +613,31 @@ class Region extends Component {
             </section>
             <section className="content">
               <div className="box">
-                <div className="box-body">
+                <div className="row  box-body">
+                  <div className="col-md-12 d-flex text-center">
+                    <div className="mr-2">Total no of Approved:  {this.state.userApproveConut}</div>
+                    <div className="mr-2">Total no of Deactivate: {this.state.userDeactivateConut} </div>
+                  </div>
                   <BootstrapTable
                     data={
                       this.state.filterValue == "approved"
                         ? this.state.approvedData
                         : this.state.filterValue == "not approved"
-                        ? this.state.notapprovedData
-                        : this.state.filterValue == "rejected"
-                        ? this.state.rejectedData
-                        : this.state.usermangment
+                          ? this.state.notapprovedData
+                          : this.state.filterValue == "rejected"
+                            ? this.state.rejectedData
+                            : this.state.usermangment
                     }
                     exportCSV
                     csvFileName="Student-details.csv"
                     search={true}
                     pagination={true}
-										options={paginationOptions}
+                    options={paginationOptions}
                   >
                     <TableHeaderColumn
                       width="70"
                       isKey
-                      dataField="student_id"
+                      dataField="id"
                       dataSort={true}
                       className={"text-uppercase"}
                       dataAlign="center"
@@ -645,6 +656,20 @@ class Region extends Component {
                     >
                       Student's Name
                     </TableHeaderColumn>
+
+
+                    <TableHeaderColumn
+                      width="150"
+                      dataField="AcademicYear"
+                      className={"text-uppercase"}
+                      dataSort={true}
+                      dataAlign="center"
+                      csvFormat={this.csvFormatterNull}
+                      csvHeader="Academic Year"
+                    >
+                      Academic Year
+                    </TableHeaderColumn>
+                    
                     <TableHeaderColumn
                       width="100"
                       dataField="SmobNo"
@@ -656,6 +681,105 @@ class Region extends Component {
                     >
                       Phone No
                     </TableHeaderColumn>
+
+                    <TableHeaderColumn
+                      width="150"
+                      dataField="FatherName"
+                      className={"text-uppercase"}
+                      dataSort={true}
+                      dataAlign="center"
+                      hidden
+                      export={true}
+                      csvFormat={this.csvFormatterNull}
+                      csvHeader="Father's Name"
+                    >
+                      Father's Name
+                    </TableHeaderColumn>
+                    <TableHeaderColumn
+                      width="100"
+                      dataField="FatherConNo"
+                      dataSort={true}
+                      className={"text-uppercase"}
+                      dataAlign="center"
+                      hidden
+                      export={true}
+                      csvFormat={this.csvFormatterNull}
+                      csvHeader="Father's Phone No."
+                    >
+                      Father's Phone No
+                    </TableHeaderColumn>
+
+                    <TableHeaderColumn
+                      width="150"
+                      dataField="MothersName"
+                      className={"text-uppercase"}
+                      dataSort={true}
+                      dataAlign="center"
+                      hidden
+                      export={true}
+                      csvFormat={this.csvFormatterNull}
+                      csvHeader="Mother's Name"
+                    >
+                      Mother's Name
+                    </TableHeaderColumn>
+                    <TableHeaderColumn
+                      width="100"
+                      dataField="MothersConNo"
+                      dataSort={true}
+                      className={"text-uppercase"}
+                      dataAlign="center"
+                      hidden
+                      export={true}
+                      csvFormat={this.csvFormatterNull}
+                      csvHeader="Mother's Phone No."
+                    >
+                      Mother's Phone No
+                    </TableHeaderColumn>
+
+                    <TableHeaderColumn
+                      dataFormat={formatBankdtl(this)}
+                      dataField="BanckName"
+                      className={"text-uppercase"}
+                      width="90"
+                      dataSort={true}
+                      dataAlign="center"
+                      csvFormat={this.csvFormatterNull}
+                      csvHeader="Bank Details"
+                      hidden
+                      export={true}
+                    >
+                      Bank Details
+                    </TableHeaderColumn>
+
+                    <TableHeaderColumn
+                      dataField="NamofInstitute"
+                      className={"text-uppercase"}
+                      width="90"
+                      dataSort={true}
+                      dataAlign="center"
+                      csvFormat={this.csvFormatterNull}
+                      csvHeader="Nam Of Institute"
+                      hidden
+                      export={true}
+                    >
+                      Nam Of Institute
+                    </TableHeaderColumn>
+
+
+                    <TableHeaderColumn
+                      dataField="CourEnrolled"
+                      className={"text-uppercase"}
+                      width="90"
+                      dataSort={true}
+                      dataAlign="center"
+                      csvFormat={this.csvFormatterNull}
+                      csvHeader="Course Enrolled"
+                      hidden
+                      export={true}
+                    >
+                      Course Enrolled
+                    </TableHeaderColumn>
+
                     <TableHeaderColumn
                       dataField="building_name"
                       dataSort={true}
@@ -668,7 +792,7 @@ class Region extends Component {
                       Building Name
                     </TableHeaderColumn>
                     <TableHeaderColumn
-                      dataField="room_id"
+                      dataField="roomNumber"
                       dataSort={true}
                       className={"text-uppercase"}
                       width="100"
@@ -690,13 +814,13 @@ class Region extends Component {
                       Guardian Name
                     </TableHeaderColumn>
                     <TableHeaderColumn
-                      dataField="SmobNo"
+                      dataField="LocGurdConNo"
                       className={"text-uppercase"}
                       width="100"
                       dataSort={true}
                       dataAlign="center"
                       csvFormat={this.csvFormatterNull}
-                      csvHeader="Phone No."
+                      csvHeader="Local Guardian Phone No."
                     >
                       Phone No
                     </TableHeaderColumn>
@@ -758,6 +882,32 @@ class Region extends Component {
                     >
                       Slot ID of Parking
                     </TableHeaderColumn>
+
+
+                    <TableHeaderColumn
+                      dataField="room_type"
+                      className={"text-uppercase"}
+                      width="120"
+                      dataSort={true}
+                      dataAlign="center"
+                      csvFormat={this.csvFormatterNull}
+                      csvHeader="Room Type"
+                    >
+                      Room Type
+                    </TableHeaderColumn>
+
+                    <TableHeaderColumn
+                      dataField="toilet_type"
+                      className={"text-uppercase"}
+                      width="120"
+                      dataSort={true}
+                      dataAlign="center"
+                      csvFormat={this.csvFormatterNull}
+                      csvHeader="Toilet Type"
+                    >
+                      Toilet Type
+                    </TableHeaderColumn>
+
                     <TableHeaderColumn
                       dataField="occupancy"
                       className={"text-uppercase"}
@@ -769,6 +919,68 @@ class Region extends Component {
                     >
                       Occupancy
                     </TableHeaderColumn>
+
+                    <TableHeaderColumn
+                      dataField="created_at"
+                      className={"text-uppercase"}
+                      dataFormat={regdate(this)}
+                      width="220"
+                      dataSort={true}
+                      dataAlign="center"
+                      export={true}
+                      csvFormat={regdate(this)}
+                      csvHeader="Reg date and time"
+                    >
+                      Reg date and time
+                    </TableHeaderColumn>
+
+
+                    <TableHeaderColumn
+                      dataField="approve_date"
+                      className={"text-uppercase"}
+                      dataFormat={approvedate(this)}
+                      width="220"
+                      dataSort={true}
+                      dataAlign="center"
+                      export={true}
+                      csvFormat={approvedate(this)}
+                      csvHeader="Approved date and time"
+                    >
+                      Approved date and time
+                    </TableHeaderColumn>
+
+
+
+
+
+
+
+                    <TableHeaderColumn
+                      dataField="approve_date"
+                      className={"text-uppercase"}
+                      dataFormat={deactivedate(this)}
+                      width="220"
+                      dataSort={true}
+                      dataAlign="center"
+                      export={true}
+                      csvFormat={deactivedate(this)}
+                      csvHeader="Deactivated date and time"
+                    >
+                      Deactivated  date and time
+                    </TableHeaderColumn>
+
+
+                    <TableHeaderColumn
+                      dataField="deactive_reason"
+                      className={"text-uppercase d-none"}
+                      width="220"
+                      dataAlign="center"
+                      csvFormat={this.csvFormatterNull}
+                      csvHeader="Reason"
+                    >
+                      Reason
+                    </TableHeaderColumn>
+
                     <TableHeaderColumn
                       dataField="is_approved"
                       className={"text-uppercase"}
@@ -788,19 +1000,7 @@ class Region extends Component {
                     >
                       Status
                     </TableHeaderColumn>
-                    <TableHeaderColumn
-                      dataField="reject_reason"
-                      className={"text-uppercase d-none"}
-                      width="220"
-                      dataAlign="center"
-                      csvFormat={this.csvFormatterNull}
-                      csvHeader="Reason"
-                      hidden="true"
-                      csvExport={true} 
-                      export={true}
-                    >
-                      Reason
-                    </TableHeaderColumn>
+
 
                     <TableHeaderColumn
                       dataField="is_approved"

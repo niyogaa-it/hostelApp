@@ -121,7 +121,9 @@ class SidebarAdmin extends Component {
     if (
       path === "/admin/create_profile" ||
       path === "/admin/view_student" ||
-      path === "/admin/view_guardian"
+      path === "/admin/view_guardian" ||
+      path === "/admin/view_old_student" ||
+      path === "/admin/view_old_guardian" 
     ) {
       this.setState({ shown: "11" });
     }
@@ -131,6 +133,15 @@ class SidebarAdmin extends Component {
       path === "/admin/payment_history"
     ) {
       this.setState({ shown: "15" });
+    }
+    if (
+      path === "/admin/services/dashboard" ||
+      path === "/admin/services/requests" ||
+      path === "/admin/services/staff" ||
+      path === "/admin/services/categories" ||
+      path === "/admin/services/reports"
+    ) {
+      this.setState({ shown: "16" });
     }
   };
 
@@ -236,6 +247,8 @@ class SidebarAdmin extends Component {
                     </Link>{" "}
                   </li>
                 )}
+
+                
               </ul>
             </li>
           ) : null}
@@ -367,6 +380,66 @@ class SidebarAdmin extends Component {
                     </Link>{" "}
                   </li>
                 )}
+
+
+                 {this.props.path_name === "/admin/oldplanlist" ? (
+                  <li className="active">
+                    {" "}
+                    <Link to="/admin/oldplanlist">
+                      {" "}
+                      <span>Old plan data</span>
+                    </Link>{" "}
+                  </li>
+                ) : (
+                  <li>
+                    {" "}
+                    <Link to="/admin/oldplanlist">
+                      {" "}
+                      <span>Old plan data</span>
+                    </Link>{" "}
+                  </li>
+                )}
+
+
+
+                 {this.props.path_name === "/admin/newplanlist" ? (
+                  <li className="active">
+                    {" "}
+                    <Link to="/admin/newplanlist">
+                      {" "}
+                      <span>New plan data</span>
+                    </Link>{" "}
+                  </li>
+                ) : (
+                  <li>
+                    {" "}
+                    <Link to="/admin/newplanlist">
+                      {" "}
+                      <span>New plan data</span>
+                    </Link>{" "}
+                  </li>
+                )}
+
+
+                {this.props.path_name === "/admin/gstlist" ? (
+                  <li className="active">
+                    {" "}
+                    <Link to="/admin/gstlist">
+                      {" "}
+                      <span>Gst setting</span>
+                    </Link>{" "}
+                  </li>
+                ) : (
+                  <li>
+                    {" "}
+                    <Link to="/admin/gstlist">
+                      {" "}
+                      <span>Gst setting</span>
+                    </Link>{" "}
+                  </li>
+                )}
+
+
               </ul>
             </li>
           ) : null}
@@ -446,6 +519,23 @@ class SidebarAdmin extends Component {
                   </li>
                 )} */}
 
+                  <li className="active">
+                    {" "}
+                    <Link to="/admin/announcement/edit">
+                      {" "}
+                      <span>Announcement</span>
+                    </Link>{" "}
+                  </li>
+
+
+                  <li className="active">
+                    {" "}
+                    <Link to="/admin/individual_meal">
+                      {" "}
+                      <span>Individual Meal</span>
+                    </Link>{" "}
+                  </li>
+
                 {this.props.path_name === "/admin/laundry_managment" ? (
                   <li className="active">
                     {" "}
@@ -511,7 +601,7 @@ class SidebarAdmin extends Component {
               <Link to="#" data-id="9" onClick={this.handleClick}>
                 <i data-id="2" onClick={this.handleClick}></i>{" "}
                 <span data-id="9" onClick={this.handleClick}>
-                  Hosteller{" "}
+                Applications{" "}
                 </span>
                 <span className="pull-right-container">
                   <i
@@ -532,7 +622,7 @@ class SidebarAdmin extends Component {
                     {" "}
                     <Link to="/admin/student_approval">
                       {" "}
-                      <span>Student Approval</span>
+                      <span>Manage applications</span>
                     </Link>{" "}
                   </li>
                 ) : (
@@ -540,7 +630,7 @@ class SidebarAdmin extends Component {
                     {" "}
                     <Link to="/admin/student_approval">
                       {" "}
-                      <span>Student Approval</span>
+                      <span>Manage applications</span>
                     </Link>{" "}
                   </li>
                 )}
@@ -626,6 +716,48 @@ class SidebarAdmin extends Component {
                     </Link>{" "}
                   </li>
                 )}
+
+
+                {this.props.path_name === "/admin/view_old_students" ? (
+                  <li className="active">
+                    {" "}
+                    <Link to="/admin/view_old_students">
+                      {" "}
+                      <span>View Old Student</span>
+                    </Link>{" "}
+                  </li>
+                ) : (
+                  <li>
+                    {" "}
+                    <Link to="/admin/view_old_students">
+                      {" "}
+                      <span>View Old Student</span>
+                    </Link>{" "}
+                  </li>
+                )}
+
+                {this.props.path_name === "/admin/view_old_guardian" ? (
+                  <li className="active">
+                    {" "}
+                    <Link to="/admin/view_old_guardian">
+                      {" "}
+                      <span>View Old Guardian</span>
+                    </Link>{" "}
+                  </li>
+                ) : (
+                  <li>
+                    {" "}
+                    <Link to="/admin/view_old_guardian">
+                      {" "}
+                      <span>View Old Guardian</span>
+                    </Link>{" "}
+                  </li>
+                )}
+
+
+
+
+
               </ul>
             </li>
           ) : null}
@@ -698,7 +830,7 @@ class SidebarAdmin extends Component {
               </Link>
 
               <ul className="treeview-menu">
-                {this.props.path_name === "/admin/create_profile" ? (
+                { /* this.props.path_name === "/admin/create_profile" ? (
                   <li className="active">
                     {" "}
                     <Link to="/admin/payment_activities">
@@ -714,7 +846,7 @@ class SidebarAdmin extends Component {
                       <span>Payment Activities</span>
                     </Link>{" "}
                   </li>
-                )}
+                )*/}
 
                 {this.props.path_name === "/admin/monthly_activities" ? (
                   <li className="active">
@@ -750,6 +882,25 @@ class SidebarAdmin extends Component {
                     </Link>{" "}
                   </li>
                 )}
+
+                 {this.props.path_name === "/admin/invoice_bulk_upload" ? (
+                  <li className="active">
+                    {" "}
+                    <Link to="/admin/invoice_bulk_upload">
+                      {" "}
+                      <span>Invoice Bulk Upload</span>
+                    </Link>{" "}
+                  </li>
+                ) : (
+                  <li>
+                    {" "}
+                    <Link to="/admin/invoice_bulk_upload">
+                      {" "}
+                      <span>Invoice Bulk Upload</span>
+                    </Link>{" "}
+                  </li>
+                )}
+                
               </ul>
             </li>
           ) : null}
@@ -815,7 +966,7 @@ class SidebarAdmin extends Component {
                   {" "}
                   <Link to="/admin/help_and_quieres">
                     {" "}
-                    <span>&nbsp; Help & Queries</span>
+                    <span>&nbsp; Feedback & Queries</span>
                   </Link>{" "}
                 </li>
               ) : (
@@ -823,7 +974,7 @@ class SidebarAdmin extends Component {
                   {" "}
                   <Link to="/admin/help_and_quieres">
                     {" "}
-                    <span>&nbsp; Help & Queries</span>
+                    <span>&nbsp; Feedback & Queries</span>
                   </Link>{" "}
                 </li>
               )}
@@ -856,6 +1007,69 @@ class SidebarAdmin extends Component {
           ) : null}
 
           {/* Emergency end */}
+
+          {/* services */}
+          {/* {this.state.user_permmision.emergency_management == 0 ||
+          this.state.user_role == "admin" ? (
+            <li className={rotate == "16" ? "treeview active" : "treeview"}>
+              <Link to="#" data-id="16" onClick={this.handleClick}>
+                <i data-id="16" onClick={this.handleClick}></i>{" "}
+                <span data-id="16" onClick={this.handleClick}>
+                  Services{" "}
+                </span>
+                <span className="pull-right-container">
+                  <i
+                    data-id="16"
+                    onClick={this.handleClick}
+                    className={
+                      rotate == "16"
+                        ? "fa pull-right fa-minus"
+                        : "fa pull-right fa-plus"
+                    }
+                  ></i>
+                </span>
+              </Link>
+
+              <ul className="treeview-menu">
+                <li className={this.props.path_name === "/admin/services/dashboard" ? "active" : ""}>
+                  {" "}
+                  <Link to="/admin/services/dashboard">
+                    {" "}
+                    <span>Dashboard</span>
+                  </Link>{" "}
+                </li>
+                <li className={this.props.path_name === "/admin/services/requests" ? "active" : ""}>
+                  {" "}
+                  <Link to="/admin/services/requests">
+                    {" "}
+                    <span>Requests</span>
+                  </Link>{" "}
+                </li>
+                <li className={this.props.path_name === "/admin/services/staff" ? "active" : ""}>
+                  {" "}
+                  <Link to="/admin/services/staff">
+                    {" "}
+                    <span>Staff</span>
+                  </Link>{" "}
+                </li>
+                <li className={this.props.path_name === "/admin/services/categories" ? "active" : ""}>
+                  {" "}
+                  <Link to="/admin/services/categories">
+                    {" "}
+                    <span>Categories</span>
+                  </Link>{" "}
+                </li>
+                <li className={this.props.path_name === "/admin/services/reports" ? "active" : ""}>
+                  {" "}
+                  <Link to="/admin/services/reports">
+                    {" "}
+                    <span>Reports</span>
+                  </Link>{" "}
+                </li>
+              </ul>
+            </li>
+          ) : null} */}
+          {/* services end */}
 
           {/* laundry process */}
           {this.state.user_permmision.laundary_management == 0 ||
@@ -1000,6 +1214,16 @@ class SidebarAdmin extends Component {
             </>
           ) : null}
           {/* events list end*/}
+
+
+
+          <li>
+              {" "}
+              <Link to="/admin/loglist">
+                {" "}
+                <span>Action Log</span>
+              </Link>{" "}
+          </li>
 
           {/* log out */}
           <li className="">

@@ -4,6 +4,8 @@ import { Route, Switch, Redirect } from "react-router-dom";
 
 import Login from "../components/admin/login/Login";
 import RegisterComponent from "../components/admin/Register/RegisterNew";
+import RegisterSuccessComponent from "../components/admin/Register/RegisterSuccess";
+import RegisterFailureComponent from "../components/admin/Register/RegisterFailure";
 
 import AdminPageNotFound from "../components/404/AdminPageNotFound";
 import Dashboard from "../components/admin/dashboard/Dashboard";
@@ -15,7 +17,6 @@ import AdminList from "../components/admin/adminlist/AdminList";
 import Profile from "../components/admin/profile/Profile";
 
 import Pharmacopeial from "../components/admin/pharmacopeial/Pharmacopeial.jsx";
-
 import AddBuilding from "../components/admin/masterdata/AddBuilding";
 import BuildingList from "../components/admin/masterdata/BuildingList";
 import EditBuilding from "../components/admin/masterdata/EditBuilding";
@@ -25,6 +26,7 @@ import EditRoom from "../components/admin/masterdata/EditRoom";
 import AddParking from "../components/admin/masterdata/AddParking";
 import Parking from "../components/admin/masterdata/Parking";
 import ParkingSloat from "../components/admin/masterdata/ParkingSloat";
+import ParkingEdit from "../components/admin/masterdata/ParkingEdit";
 
 import AddMeal from "../components/admin/Warden/AddMeal";
 import CheckMeal from "../components/admin/Warden/CheckMeal";
@@ -37,10 +39,16 @@ import MealSchedule from "../components/admin/Warden/MealSchedule";
 import MealScheduleAdd from "../components/admin/Warden/MealScheduleAdd";
 import MealScheduleEdit from "../components/admin/Warden/MealScheduleEdit";
 
+import IndividualMeal from "../components/admin/Warden/IndividualMeal";
+import IndividualMealAdd from "../components/admin/Warden/IndividualMealAdd";
+import IndividualMealEdit from "../components/admin/Warden/IndividualMealEdit";
+import AnnouncementEdit from "../components/admin/Warden/AnnouncementEdit";
+
 import LaundryManagment from "../components/admin/Warden/LaundryManagment";
 import LeaveApplication from "../components/admin/Warden/LeaveApplication";
 import StudentApproval from "../components/admin/studentApproval/StudentApproval";
 import AssignRoom from "../components/admin/studentApproval/AssignRoom";
+import RegMarkAsPaid from "../components/admin/studentApproval/RegMarkAsPaid";
 
 import WaterCan from "../components/admin/Warden/WaterCan";
 
@@ -49,6 +57,18 @@ import EditStudent from "../components/admin/StudentProfile/EditStudent";
 import EditStudentDetails from "../components/admin/StudentProfile/EditStudentDetails";
 import ViewStudent from "../components/admin/StudentProfile/ViewStudent";
 import ViewGuardian from "../components/admin/StudentProfile/ViewGuardian";
+import ViewOldStudent from "../components/admin/StudentProfile/ViewOldStudent";
+import ViewOldGuardian from "../components/admin/StudentProfile/ViewOldGuardian";
+
+import Gstlist from "../components/admin/masterdata/Gstlist";
+import GstEdit from "../components/admin/masterdata/GstEdit";
+import OldPlanDatalist from "../components/admin/masterdata/OldPlanDatalist";
+import OldPlanEdit from "../components/admin/masterdata/OldPlanEdit";
+import NewPlanDatalist from "../components/admin/masterdata/NewPlanDatalist";
+import NewPlanEdit from "../components/admin/masterdata/NewPlanEdit";
+
+
+
 // import ViewStudentProfile from "../components/admin/StudentProfile/ViewStudentProfile";
 import CreatePlan from "../components/admin/CreatePlan/CreatePlan";
 
@@ -57,6 +77,11 @@ import PaymentActivity from "../components/admin/PaymentActivities/PaymentActivi
 import MonthlyActivity from "../components/admin/PaymentActivities/MonthlyActivities";
 import SetPayment from "../components/admin/PaymentActivities/AppPayment.js";
 import MonthlyPayment from "../components/admin/PaymentActivities/MonthlyPayment.js";
+import MarkAsPaid from "../components/admin/PaymentActivities/MarkAsPaid";
+import MonthlyMarkAsPaid from "../components/admin/PaymentActivities/MonthlyMarkAsPaid";
+import PostPaidBulkUpload from "../components/admin/PaymentActivities/InvoiceBulkUpload";
+import ViewInvoicePlan from "../components/admin/PaymentActivities/ViewInvoicePlan";
+
 
 import UpgradeRequest from "../components/admin/UpgradeRequest/UpgradeRequest";
 import HelpAndQuieres from "../components/admin/HelpAndQuieres/HelpAndQuieres";
@@ -76,6 +101,7 @@ import AddEvent from "../components/admin/Events/AddEvent";
 import EditEvent from "../components/admin/Events/EditEvent";
 
 import EventsList from "../components/admin/EventsList/EventsList";
+import Loglist from "../components/admin/loglist/Loglist";
 
 import SetPlan from "../components/admin/Plan/SetPlan";
 import ViewPlan from "../components/admin/Plan/ViewPlan";
@@ -83,6 +109,16 @@ import EditPlan from "../components/admin/Plan/EditPlan";
 import MonthlyPlan from "../components/admin/Plan/MonthlyPlan";
 
 import Xceldownload from "../components/admin/xceldownload/xceldownload";
+
+import ServicesDashboard from "../components/admin/Services/ServicesDashboard";
+import ServiceRequestsList from "../components/admin/Services/ServiceRequestsList";
+import ServiceRequestDetails from "../components/admin/Services/ServiceRequestDetails";
+import AssignStaff from "../components/admin/Services/AssignStaff";
+import UpdateStatus from "../components/admin/Services/UpdateStatus";
+import RequestHistory from "../components/admin/Services/RequestHistory";
+import StaffList from "../components/admin/Services/StaffList";
+import CategoriesList from "../components/admin/Services/CategoriesList";
+import ServiceReports from "../components/admin/Services/ServiceReports";
 
 import "../assets/css/all.css";
 import "../assets/css/admin-style.css";
@@ -124,9 +160,19 @@ class Admin extends Component {
         <PrivateRoute exact path="/admin/subadmin" component={SubAdminList} />
         <PrivateRoute exact path="/admin/subadmin/edit/:id" component={SubAdminEdit} />
         <PrivateRoute exact path="/admin/admin_list" component={AdminList} />
+        
 
         <PrivateRoute exact path="/admin/profile" component={Profile} />
 
+        <PrivateRoute
+          exact
+          path="/admin/individual_meal"
+          component={IndividualMeal}
+        />
+
+                <PrivateRoute exact path="/admin/individual_meal/add" component={IndividualMealAdd} />
+        <PrivateRoute exact path="/admin/individual_meal/edit/:id" component={IndividualMealEdit} />
+        <PrivateRoute exact path="/admin/announcement/edit" component={AnnouncementEdit} />
         <PrivateRoute
           exact
           path="/admin/laundry_managment"
@@ -147,6 +193,16 @@ class Admin extends Component {
         <PrivateRoute exact path="/admin/meal-schedule" component={MealSchedule} />
         <PrivateRoute exact path="/admin/meal-schedule/add" component={MealScheduleAdd} />
         <PrivateRoute exact path="/admin/meal-schedule/edit/:id" component={MealScheduleEdit} />
+
+        <PrivateRoute exact path="/admin/gstlist" component={Gstlist} />
+        <PrivateRoute exact path="/admin/gstedit/:id" component={GstEdit} />
+
+        <PrivateRoute exact path="/admin/oldplanlist" component={OldPlanDatalist} />
+        <PrivateRoute exact path="/admin/oldplanedit/:id" component={OldPlanEdit} />
+
+        <PrivateRoute exact path="/admin/newplanlist" component={NewPlanDatalist} />
+        <PrivateRoute exact path="/admin/newplanedit/:id" component={NewPlanEdit} />
+
 
         <PrivateRoute exact path="/admin/water_can" component={WaterCan} />
         <PrivateRoute
@@ -186,6 +242,20 @@ class Admin extends Component {
           path="/admin/view_guardian"
           component={ViewGuardian}
         />
+
+        <PrivateRoute
+          exact
+          path="/admin/view_old_students"
+          component={ViewOldStudent}
+        />
+
+        <PrivateRoute
+          exact
+          path="/admin/view_old_guardian"
+          component={ViewOldGuardian}
+        />
+
+
         <PrivateRoute
           exact
           path="/admin/create_profile"
@@ -200,6 +270,7 @@ class Admin extends Component {
         <PrivateRoute exact path="/admin/events" component={AddEvent} />
         <PrivateRoute exact path="/admin/event_edit/:id" component={EditEvent} />
         <PrivateRoute exact path="/admin/events_list" component={EventsList} />
+        <PrivateRoute exact path="/admin/loglist" component={Loglist} />
 
         <PrivateRoute exact path="/admin/create_plan" component={CreatePlan} />
         <PrivateRoute
@@ -212,6 +283,7 @@ class Admin extends Component {
           path="/admin/payment_activities"
           component={PaymentActivity}
         />
+
         <PrivateRoute
           exact
           path="/admin/monthly_activities"
@@ -222,6 +294,39 @@ class Admin extends Component {
           path="/admin/payment_history"
           component={PaymentHistory}
         />
+
+        <PrivateRoute
+          exact
+          path="/admin/reg_mark_as_paid/:id"
+          component={RegMarkAsPaid}
+        />
+
+        <PrivateRoute
+          exact
+          path="/admin/mark_as_paid/:id"
+          component={MarkAsPaid}
+        />
+
+
+        <PrivateRoute
+          exact
+          path="/admin/monthly_mark_as_paid/:id"
+          component={MonthlyMarkAsPaid}
+        />
+
+        <PrivateRoute
+          exact
+          path="/admin/invoice_bulk_upload"
+          component={PostPaidBulkUpload}
+        />
+
+
+        <PrivateRoute
+          exact
+          path="/admin/view_plan_invoice/:id"
+          component={ViewInvoicePlan}
+        />
+
         <PrivateRoute
           exact
           path="/admin/upgrade_request"
@@ -280,6 +385,12 @@ class Admin extends Component {
           path="/admin/parking/sloat/:id"
           component={ParkingSloat}
         />
+
+        <PrivateRoute
+          exact
+          path="/admin/parking/edit/:id"
+          component={ParkingEdit}
+        />
         <PrivateRoute
           exact
           path="/admin/error_log_details"
@@ -287,6 +398,20 @@ class Admin extends Component {
         />
         <PrivateRoute exact path="/admin/crm_error" component={CrmErr} />
         <Route exact path="/register" component={RegisterComponent} />
+        <Route exact path="/registerSuccess" component={RegisterSuccessComponent} />
+        <Route exact path="/registerFailure" component={RegisterFailureComponent} />
+
+        <PrivateRoute exact path="/admin/services/dashboard" component={ServicesDashboard} />
+        <PrivateRoute exact path="/admin/services/requests" component={ServiceRequestsList} />
+        <PrivateRoute exact path="/admin/services/requests/view/:id" component={ServiceRequestDetails} />
+        <PrivateRoute exact path="/admin/services/requests/assign/:id" component={AssignStaff} />
+        <PrivateRoute exact path="/admin/services/requests/status/:id" component={UpdateStatus} />
+        <PrivateRoute exact path="/admin/services/requests/history/:id" component={RequestHistory} />
+        <PrivateRoute exact path="/admin/services/staff" component={StaffList} />
+        <PrivateRoute exact path="/admin/services/categories" component={CategoriesList} />
+        <PrivateRoute exact path="/admin/services/reports" component={ServiceReports} />
+
+
         <Route exact path="/" component={Login} />
         <Route
           exact

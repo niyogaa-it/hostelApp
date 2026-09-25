@@ -12,11 +12,12 @@ import {
 //import { Label } from 'reactstrap';
 import { Link } from "react-router-dom";
 import swal from "sweetalert";
-
+import userLog from "../Utils/Logadd";
 import Layout from "../layout/Layout";
 import whitelogo from "../../../assets/images/drreddylogo_white.png";
 import API from "../../../shared/admin-axios";
 import { showErrorMessage } from "../../../shared/handle_error";
+import moment from "moment";
 
 function LinkWithTooltip({ id, children, href, tooltip, clicked }) {
   return (
@@ -47,6 +48,22 @@ class StudentApproval extends Component {
   componentDidMount() {
     API.get(`/admin/secure/request/student`)
       .then((res) => {
+
+        let rejectedData = 0;
+
+        for (let a = 0; a < res.data.result_data.length; a++) {
+
+          if (res.data.result_data[a].is_approved == 2) {
+            rejectedData++;
+          }
+         
+          this.setState({
+            userRejectedDataConut: rejectedData,
+
+          });
+
+        }
+
         this.setState({
           usermangment: res.data.result_data,
           userconut: res.data.result_data.length,
@@ -87,6 +104,7 @@ class StudentApproval extends Component {
         },
       },
     }).then((willDelete) => {
+
       if (willDelete == "Automatic") {
         this.statusaccept(id);
       } else if (willDelete == "Manual") {
@@ -94,6 +112,7 @@ class StudentApproval extends Component {
       }
     });
   };
+  
   confirmStatusReject = (event, id) => {
     event.preventDefault();
     setTimeout(()=>{
@@ -163,6 +182,8 @@ class StudentApproval extends Component {
       .then((res) => {
         if (res.data.status == 201) {
           swal("Success", "Student rejected successfully", "success");
+
+          userLog('Student Approval','Student rejected');
           this.componentDidMount();
         } else {
           swal("Warning", res.data.message, "warning");
@@ -215,24 +236,62 @@ class StudentApproval extends Component {
       // alwaysShowAllBtns: true // Always show next and previous button
       // withFirstAndLast: false //> Hide the going to First and Last page button
     };
-    const actionFormatter = (refObj) => (cell, id) => {
+
+    const custStatus = () => (cell, id) => {
+      return (
+        <>
+          <div className="actionStyle">
+            <div className="d-flex justify-content-evenly">
+              {cell == "2" ? (
+                <div style={{ marginTop: "4%", cursor: "pointer" }}>
+                  <div
+                    style={{
+                      padding: "0.5rem",
+                      borderRadius: "5px",
+                      backgroundColor: "#ffe0db",
+                      color: "#ff3e1d",
+                      fontWeight: "bold",
+                      border: "none",
+                      width: "fit-content",
+                    }}
+                    data-toggle="tooltip" data-placement="right" title={id.reject_reason}
+                  >
+                    REJECTED
+                  </div>
+                </div>
+              ) : (
+                <div className="ml-5" style={{ marginTop: "4%" }}>
+                  <div
+                     style={{
+                      padding: "0.5rem",
+                      borderRadius: "5px",
+                      backgroundColor: "#e8fadf",
+                      color: "#71dd37",
+                      fontWeight: "bold",
+                      border: "none",
+                      width: "fit-content",
+                    }}
+                  >
+                     APPLIED
+                  </div>
+                </div>
+              )}
+
+            </div>
+
+         
+          </div>
+        </>
+      );
+    };
+
+    const actionFormatter = (refObj) => (cell, row) => {
+
       return (
         <div className="actionStyle">
           {cell == "2" ? (
             <div className="d-flex">
-              <Button
-                style={{
-                  padding: "0.5rem",
-                  borderRadius: "5px",
-                  backgroundColor: "#ffe0db",
-                  color: "#ff3e1d",
-                  fontWeight: "bold",
-                  border: "none",
-                }}
-                disabled
-              >
-                REJECTED
-              </Button>
+             
               <Button
                 style={{
                   borderRadius: "5px",
@@ -243,7 +302,7 @@ class StudentApproval extends Component {
                   border: "none",
                 }}
                 onClick={() => {
-                  window.open(`/admin/view_student_profile/${id.id}`, "_blank");
+                  window.open(`/admin/view_student_profile/${row.id}`, "_blank");
                 }}
               >
                 VIEW
@@ -251,6 +310,10 @@ class StudentApproval extends Component {
             </div>
           ) : (
             <div className="d-flex">
+
+            {row.paid === "Yes" ? (
+            <>
+
               <Button
                 style={{
                   padding: "0.5rem",
@@ -261,11 +324,32 @@ class StudentApproval extends Component {
                   fontWeight: "bold",
                 }}
                 onClick={(e) => {
-                  refObj.confirmStatusAccept(e, id.id, id.status);
+                  refObj.confirmStatusAccept(e, row.id, row.status);
                 }}
               >
                 APPROVE
               </Button>
+              </>
+              ) : 
+
+              <Button
+                style={{
+                  padding: "0.5rem",
+                  borderRadius: "5px",
+                  backgroundColor: "#e8fadf",
+                  color: "#71dd37",
+                  fontWeight: "bold",
+                  border: "none",
+                }}
+            
+                onClick={() => {
+                  window.open(`/admin/reg_mark_as_paid/${row.planId}`, "_blank");
+                }}
+              >
+                Mark as Paid
+              </Button>
+            }
+
               <Button
                 style={{
                   padding: "0.5rem",
@@ -277,11 +361,12 @@ class StudentApproval extends Component {
                   border: "none",
                 }}
                 onClick={(e) => {
-                  refObj.confirmStatusReject(e, id.id, id.status);
+                  refObj.confirmStatusReject(e, row.id, row.status);
                 }}
               >
                 REJECT
               </Button>
+
               <Button
                 style={{
                   borderRadius: "5px",
@@ -291,11 +376,12 @@ class StudentApproval extends Component {
                   border: "none",
                 }}
                 onClick={() => {
-                  window.open(`/admin/view_student_profile/${id.id}`, "_blank");
+                  window.open(`/admin/view_student_profile/${row.id}`, "_blank");
                 }}
               >
                 VIEW
               </Button>
+
               <Button
                 style={{
                   borderRadius: "5px",
@@ -305,15 +391,22 @@ class StudentApproval extends Component {
                   border: "none",
                 }}
                 onClick={() => {
-                  window.open(`/admin/edit_student_details/${id.id}`, "_blank");
+                  window.open(`/admin/edit_student_details/${row.id}`, "_blank");
                 }}
               >
                 EDIT
               </Button>
+
             </div>
           )}
         </div>
       );
+    };
+
+
+    const regdate = () => (row,cell) => {
+      const createdAt= cell.created_at ? moment(cell.created_at).format("DD/MM/YYYY, h:mm:ss a") : "";
+      return createdAt;
     };
 
     return (
@@ -332,6 +425,12 @@ class StudentApproval extends Component {
           <section className="content">
             <div className="box">
               <div className="box-body">
+
+                  <div className="col-md-12 d-flex text-center">
+                    <div class="mr-2">Total no of Applied : {this.state.userconut}</div>
+                    <div class="mr-2">Total no of Rejected:  {this.state.userRejectedDataConut} </div>
+                  </div>
+
                 <div className="nav-tabs-custom">
                   <ul className="nav nav-tabs">
                     <li className="tabButtonSec pull-right">
@@ -379,6 +478,17 @@ class StudentApproval extends Component {
                   >
                     Student's Name
                   </TableHeaderColumn>
+
+                    <TableHeaderColumn
+                    width="190"
+                    dataField="AcademicYear"
+                    className={"text-uppercase"}
+                    dataSort={true}
+                    dataAlign="center"
+                  >
+                    Academic Year
+                  </TableHeaderColumn>
+
                   <TableHeaderColumn
                     width="190"
                     dataField="LocGuardName"
@@ -443,6 +553,48 @@ class StudentApproval extends Component {
                   >
                     Occupancy
                   </TableHeaderColumn>
+
+                  <TableHeaderColumn
+                      dataField="created_at"
+                      className={"text-uppercase"}
+                      dataFormat={regdate(this)}
+                      width="220"
+                      dataSort={true}
+                      dataAlign="center"
+                      export={true}
+                      csvFormat={regdate(this)}
+                      csvHeader="Reg date and time"
+                    >
+                      Reg date and time
+                    </TableHeaderColumn>
+
+
+                    <TableHeaderColumn
+                      dataField="reject_reason"
+                      className={"text-uppercase d-none"}
+                      width="220"
+                      dataAlign="center"
+                      csvFormat={this.csvFormatterNull}
+                      csvHeader="Reject Reason"
+                    >
+                      Reject Reason
+                    </TableHeaderColumn>
+
+
+                    <TableHeaderColumn
+                      dataField="is_approved"
+                      className={"text-uppercase"}
+                      width="180"
+                      dataSort={true}
+                      dataFormat={custStatus(this, this.id)}
+                      dataAlign="center"
+                     
+                      csvFormat={this.csvFormatterStatus}
+                      csvHeader="Status"
+                    >
+                      Status
+                    </TableHeaderColumn>
+                  
                   <TableHeaderColumn
                     width="230"
                     className={"text-uppercase"}

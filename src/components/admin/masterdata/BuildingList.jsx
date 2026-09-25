@@ -148,7 +148,8 @@ class Region extends Component {
   render() {
     const actionFormatter = () => (cell) => {
       return (
-        <><button
+        <>
+        {/* <button
         onClick={(e) => this.confirmDelete(e, cell)}
         style={{
           padding: "0.5rem",
@@ -160,7 +161,7 @@ class Region extends Component {
         }}
         >
         DELETE
-        </button>
+        </button> */}
         <button
         onClick={(e) => this.handleEditBuilding(e, cell)}
         style={{

@@ -27,7 +27,6 @@ class Meals extends Component {
             showModal: false,
             remove_search: false,
             showModalLoader: false,
-            //////////
             Invalid: false,
             usermangment: [],
             userconut: 0,
@@ -176,7 +175,7 @@ class Meals extends Component {
                                             dataField="id"
                                             dataSort={true}
                                             className={"text-uppercase"}
-                                            width="180"
+                                            width="4%"
                                             dataAlign="center"
                                         >
                                             Id
@@ -185,7 +184,7 @@ class Meals extends Component {
                                             dataField="meal_type"
                                             dataSort={true}
                                             className={"text-uppercase"}
-                                            width="180"
+                                            width="16.66%"
                                             dataAlign="center"
                                             tdStyle={{ textTransform:'capitalize' }}
                                         >
@@ -195,7 +194,7 @@ class Meals extends Component {
                                             dataField="food_preference"
                                             dataSort={true}
                                             className={"text-uppercase"}
-                                            width="180"
+                                            width="28%"
                                             dataAlign="center"
                                             tdStyle={{ textTransform:'capitalize' }}
                                         >
@@ -205,29 +204,20 @@ class Meals extends Component {
                                             dataField="meal_name"
                                             dataSort={true}
                                             className={"text-uppercase text-secondary"}
-                                            width="180"
+                                            width="16.66%"
                                             dataAlign="center"
                                         >
                                             Food Name
                                         </TableHeaderColumn>
 
 
-                                        <TableHeaderColumn
-                                            dataField="created_at"
-                                            dataFormat={dateFormatting(this)}
-                                            dataSort={true}
-                                            className={"text-uppercase"}
-                                            width="180"
-                                            dataAlign="center"
-                                        >
-                                            Created At
-                                        </TableHeaderColumn>
+                                     
 
                                         <TableHeaderColumn
                                             dataField="id"
                                             dataFormat={actionFormatter(this)}
                                             dataAlign="center" 
-                                        
+                                            width="16.66%"
                                         >
                                             Actions
                                         </TableHeaderColumn>

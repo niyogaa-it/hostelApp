@@ -5,15 +5,23 @@ import API from "../../../shared/admin-axios";
 import swal from "sweetalert";
 import * as Yup from "yup";
 import "./masterdata.css";
+import DatePicker from "react-datepicker";
+import moment from 'moment';
 
 let initialValues = {
   edit_type: "",
   room_no: "",
   bed_type: "",
   meal_type: "",
-  meal_month: "",
-  room_month: "",
+  meal_month_change: "",
+  room_month_change: "",
   term_value: "",
+  parking_type: "",
+  transportation: "",
+  old_room_plan_dtl: "",
+  old_meal_plan_dtl: "",
+
+
 };
 
 class EditPlan extends Component {
@@ -27,95 +35,122 @@ class EditPlan extends Component {
       bedType: [],
       roomData: [],
       mealData: [],
-      mealDataNew: [],
+      current_raise_fees: [],
+      parkingData: [{ id: 'Yes', parking: 'Yes' }, { id: 'No', parking: 'No' }],
+      parkingType: [{ id: 2, parking_type: 'Two wheeler' }, { id: 4, parking_type: 'Four wheeler' }],
+      transportData: [{ id: 'Yes', transportation: 'Yes' }, { id: 'No', transportation: 'No' }],
+      //mealDataNew: [],
       studenttype: "",
       total_price: 0,
       studentDetails: "",
       price_obj: "",
       plan_details: [],
       student_plan: [],
-      new_meal: "",
-      new_meal_amount: 0,
-      new_room_amount: 0,
+      new_get_roomrent: [],
+      old_get_roomrent: [],
+      new_get_meals: [],
+      old_get_meals: [],
+      new_parking_type: "",
+      new_parking: "",
+      new_transport: "",
+      amount_paid_by_student: 0,
+      // new_meal_amount: 0,
+      // new_room_amount: 0,
+      //new_parking_amount: 0,
+      //new_transport_amount: 0,
+      new_meal_type: "",
       termData: [],
       term_values: "",
+      total: 0
     };
   }
 
+
+  componentDidMount() {
+    let student_id = decodeURIComponent(this.props.match.params.id);
+
+    API.get(`/admin/secure/plan/get_current_regular_plan/${student_id}`)
+      .then((res) => {
+
+        if (res.data.status === 200) {
+          this.setState({
+            current_raise_fees: res.data.result[0]
+          });
+        }
+      })
+      .catch((err) => {
+        swal("Error", err.message, "error");
+      });
+  }
+
+
+  monthDiff = (d1, d2) => {
+    const firstDate = new Date(d1);
+    const secondDate = new Date(d2);
+    const firstYear = firstDate.getFullYear();
+    const firstMonth = firstDate.getMonth();
+    const firstDay = firstDate.getDate();
+    const secondYear = secondDate.getFullYear();
+    const secondMonth = secondDate.getMonth();
+    const secondDay = secondDate.getDate();
+    const yearDifference = secondYear - firstYear;
+    const monthDifference = secondMonth - firstMonth + (yearDifference * 12);
+    return monthDifference;
+  }
+
   handleChange = (e) => {
+
     let data = {
       student_id: decodeURIComponent(this.props.match.params.id),
-      edit_type: e.target.value == "term" ? "meal" : e.target.value,
+      edit_type: e.target.value,
     };
-    // this.setState({ studenttype: e.target.value });
-    if (e.target.value == "room" || e.target.value == "meal") {
-      API.post("/admin/secure/plan/get_edit_values", data)
-        .then((response) => {
-          if (data.edit_type == "room") {
-            if (response.data.status === 200) {
-              this.setState({
-                roomData: response.data.rooms_data,
-              });
-            } else {
-              swal("Warning", response.data.message, "warning");
-            }
-          } else {
-            if (response.data.status === 200) {
-              this.setState({
-                mealData: response.data.meal_data,
-                student_plan: response.data.student_plan,
-              });
-            } else {
-              swal("Warning", response.data.message, "warning");
-            }
-          }
-        })
-        .catch((error) => {
-          swal("Error", error, "warning");
-        });
-    } else {
-      API.post("/admin/secure/plan/get_edit_values", data)
-        .then((response) => {
+
+    API.post("/admin/secure/plan/get_edit_values", data)
+      .then((response) => {
+
+        if (data.edit_type == "room") {
+
           if (response.data.status === 200) {
+
             this.setState({
-              termData:
-                response.data.student_plan[0].term == 1
-                  ? [{ label: "Term 2", value: 2 }]
-                  : [{ label: "Term 1", value: 1 }],
-              student_plan: response.data.student_plan,
+              roomData: response.data.rooms_data ? response.data.rooms_data : 0,
+              studentDetails: response.data.student_dtl[0],
+              student_plan: response.data.student_plan[0],
+
             });
           } else {
             swal("Warning", response.data.message, "warning");
           }
-        })
-        .catch((error) => {
-          swal("Error", error, "warning");
-        });
-    }
+        } else if (data.edit_type == "meal") {
+          if (response.data.status === 200) {
+            this.setState({
+              //mealData: response.data.meal_data,
+              studentDetails: response.data.student_dtl[0],
+              student_plan: response.data.student_plan[0],
+
+            });
+          } else {
+            swal("Warning", response.data.message, "warning");
+          }
+        } else if (data.edit_type == "parking") {
+          this.setState({
+
+            studentDetails: response.data.student_dtl[0],
+
+          });
+
+        } else {
+
+          this.setState({
+            studentDetails: response.data.student_dtl[0],
+          });
+        }
+      })
+      .catch((error) => {
+        swal("Error", error, "warning");
+      });
   };
 
-  
-  handleChangeTermNew = (e) => {
-    let data = {
-      student_id: decodeURIComponent(this.props.match.params.id),
-      term_id: e.target.value,
-      edit_type: "term",
-    };
-    
-    API.post("/admin/secure/plan/get_edit_values", data)
-        .then((response) => {
-            if (response.data.status === 200) {
-              this.setState({
-                mealDataNew: response.data.meal_data,
-              });
-            } else {
-              swal("Warning", response.data.message, "warning");
-            }
-        })
-        .catch((error) => {
-          swal("Error", error, "warning");
-        });
-  };
 
   handleChangeRoom = (e) => {
     this.setState({ bed_type: e.target.value });
@@ -128,6 +163,8 @@ class EditPlan extends Component {
     API.post("/admin/secure/plan/edit_room", data)
       .then((response) => {
         if (response.data.status === 200) {
+
+          this.setState({ amount_paid_by_student: 0 });
           this.setState({
             bedType: response.data.bed_type,
           });
@@ -140,34 +177,9 @@ class EditPlan extends Component {
       });
   };
 
-  handleChangMeal = (e) => {
-    let arr = this.state.mealData;
-    arr = arr.filter((item) => item.package == e.target.value);
-    this.setState({ new_meal: arr });
-  };
 
-  handleChangeTerm = (e, term) => {
-    let data = {
-      student_id: decodeURIComponent(this.props.match.params.id),
-      meal: e.target.value,
-      term: term,
-    };
-
-    API.post("/admin/secure/plan/edit_term", data)
-      .then((response) => {
-        if (response.data.status === 200) {
-          this.setState({
-            term_values: response.data.result,
-          });
-        } else {
-          swal("Warning", response.data.message, "warning");
-        }
-      })
-      .catch((error) => {
-        swal("Error", error, "warning");
-      });
-  };
   handleChangeBedType = (e) => {
+
     let bedtype = {
       student_id: decodeURIComponent(this.props.match.params.id),
       room_no: this.state.room_no,
@@ -177,9 +189,19 @@ class EditPlan extends Component {
     API.post("/admin/secure/plan/edit_bed_type", bedtype)
       .then((response) => {
         if (response.data.status === 200) {
+
+
+          this.setState({ amount_paid_by_student: 0 });
+
           this.setState({
-            plan_details: response.data.plan_details[0],
-            student_plan: response.data.student_plan,
+            new_get_roomrent: [],
+            old_get_roomrent: [],
+
+          });
+
+          this.setState({
+            new_get_roomrent: response.data.new_room_plan_details[0],
+            old_get_roomrent: response.data.old_room_plans_details[0],
           });
         }
         if (response.data.status === 401) {
@@ -190,24 +212,216 @@ class EditPlan extends Component {
         swal("Error", error, "warning");
       });
   };
-  handleMealMonthChange = (e, original, new_price) => {
-    let per_month_meal = original / 6;
-    let amount_paid = per_month_meal * e.target.value;
-    let amount_remaining = original - amount_paid;
-    let per_month_new_meal = new_price / 6;
-    let amount_new_paid = per_month_new_meal * (6 - Number(e.target.value));
-    let amount_remaidning = amount_new_paid - amount_remaining;
-    this.setState({ new_meal_amount: amount_remaidning });
+
+
+  handleRoomMonthChange = (name, value) => {
+
+    if (name === "room_month_change") {
+      this.setState({ room_month_change: value }, () => this.validateRoomchangeDate());
+    }
+
   };
-  handleRoomMonthChange = (e, original, new_price) => {
-    let per_month_meal = original / 12;
-    let amount_paid = per_month_meal * e.target.value;
-    let amount_remaining = original - amount_paid;
-    let per_month_new_meal = new_price / 12;
-    let amount_new_paid = per_month_new_meal * (12 - Number(e.target.value));
-    let amount_remaidning = amount_new_paid - amount_remaining;
-    this.setState({ new_room_amount: amount_remaidning });
+
+
+  validateRoomchangeDate = (e) => {
+
+    let amount_room_remaining = 0;
+
+    let room_change_start_date = this.state.room_month_change;
+
+    amount_room_remaining = (this.state.new_get_roomrent.room_rent - this.state.old_get_roomrent.room_rent);
+
+    if (this.state.student_plan.plan_id != 5) {
+
+      let normal_end_date = process.env.REACT_APP_HOSTEL_END;
+      
+      //let month_change_value = this.monthDiff(room_change_start_date, this.state.student_plan.normal_end_date);
+      //let month_change_value = this.monthDiff(room_change_start_date, '2025-05-30');
+      let month_change_value = this.monthDiff(room_change_start_date, normal_end_date);
+  
+      if(month_change_value>0){
+
+        amount_room_remaining = Math.round((amount_room_remaining / 12) * (month_change_value+1));
+        this.setState({ amount_paid_by_student: (amount_room_remaining > 0) ? amount_room_remaining : 0 });
+
+      }else{
+
+        this.setState({ amount_paid_by_student: 0 });
+        swal("Warning", 'Your date is not proper for room chnage', "warning");
+      }
+    }
+
+
+    if (this.state.student_plan.plan_id == 5) {
+
+       
+      if (this.state.student_plan.plan_type == 'lateral') {
+
+        let lateralDiff = 0;
+
+        let lateralDifference = this.monthDiff(room_change_start_date, this.state.student_plan.lateral_end_date);
+
+        if (lateralDifference >= 0) {
+
+          let lateral_end_month = moment(this.state.student_plan.lateral_end_date, 'YYYY-MM-DD').format('MM');
+
+          if(lateral_end_month=='04'){
+            lateralDiff = (lateralDifference + 2);
+          }else{
+
+            lateralDiff = (lateralDifference + 1);
+          }
+
+          amount_room_remaining = Math.round((amount_room_remaining / 12) * lateralDiff);
+          this.setState({ amount_paid_by_student: (amount_room_remaining > 0) ? amount_room_remaining : 0 });
+
+        }else {
+          this.setState({ amount_paid_by_student: 0 });
+          swal("Warning", 'Your date is not proper for laterral room chnage', "warning");
+        }
+
+      }else if (this.state.student_plan.plan_type == 'temporary') {
+        this.setState({ amount_paid_by_student: 0 });
+      }  else {
+        this.setState({ amount_paid_by_student: 0 });
+        swal("Warning", 'Apart From Lateral no other option will be available for Edit', "warning");
+
+      }
+    }
   };
+
+
+  handleChangMeal = (e) => {
+
+    this.setState({ new_meal_type: e.target.value });
+
+    let data = {
+      student_id: decodeURIComponent(this.props.match.params.id),
+      meal_preferance: e.target.value,
+    };
+
+    API.post("/admin/secure/plan/meal_change", data)
+      .then((response) => {
+
+        if (response.data.status === 200) {
+
+          this.setState({
+            new_get_meals: response.data.new_get_meals[0],
+            old_get_meals: response.data.old_meal_fees[0]
+          });
+
+
+          this.setState({ total: 0 });
+
+        } else {
+          swal("Warning", response.data.message, "warning");
+        }
+      })
+      .catch((error) => {
+        swal("Error", error, "warning");
+      });
+
+  };
+
+
+  handleMealMonthChange = (name, value) => {
+
+    if (name === "meal_month_change") {
+      this.setState({ meal_month_change: value }, () => this.validateMealchangeDate());
+    }
+
+  };
+
+
+  validateMealchangeDate = (e) => {
+
+    let amount_remaining_for_fees = 0;
+    let meal_change_start_date = this.state.meal_month_change;
+
+    amount_remaining_for_fees = (this.state.new_get_meals.mealPrice - this.state.old_get_meals.mealPrice);
+
+
+    if (this.state.student_plan.plan_id != 5) {
+
+      let month_change_value = this.monthDiff(meal_change_start_date, this.state.student_plan.normal_end_date);
+
+    
+
+      if(month_change_value>0){
+
+        if(this.state.student_plan.plan_id==1){
+
+          amount_remaining_for_fees = Math.round((amount_remaining_for_fees / 11) * (month_change_value+1));
+        }
+        if(this.state.student_plan.plan_id==2){
+
+          amount_remaining_for_fees = Math.round((amount_remaining_for_fees / 6) * (month_change_value+1));
+        }
+        if(this.state.student_plan.plan_id==3 || this.state.student_plan.plan_id==4){
+          amount_remaining_for_fees = Math.round((amount_remaining_for_fees / 5) * (month_change_value));
+
+        }
+        
+        this.setState({ total: (amount_remaining_for_fees > 0) ? amount_remaining_for_fees : 0 });
+
+      }else{
+
+        this.setState({ total: 0 });
+        swal("Warning", 'Your date is not proper for Meal chnage', "warning");
+      }
+    }
+
+
+    if (this.state.student_plan.plan_id == 5) {
+
+      let remaining_month = 0;
+
+      if (this.state.student_plan.plan_type == 'lateral') {
+
+        remaining_month = this.monthDiff(meal_change_start_date, this.state.student_plan.lateral_end_date);
+
+        if (remaining_month >= 0) {
+          remaining_month = (remaining_month + 1);
+          amount_remaining_for_fees = Math.round((amount_remaining_for_fees / 11) * remaining_month);
+          this.setState({ total: (amount_remaining_for_fees > 0) ? amount_remaining_for_fees : 0 });
+        } else {
+          this.setState({ total: 0 });
+          swal("Warning", 'Your date is not proper for lateral Meal chnage', "warning");
+
+        }
+
+      }else if (this.state.student_plan.plan_type == 'temporary') {
+        this.setState({ total: 0 });
+      } else {
+        this.setState({ total: 0 });
+        swal("Warning", 'Apart From Lateral no other option will be available for Edit', "warning");
+      }
+
+    }
+  };
+
+
+  handleChangParking = (e) => {
+    this.setState({ new_parking: e.target.value });
+    this.setState({ new_parking_type: "" });
+
+  };
+
+
+  handleChangParkingType = (e) => {
+
+    this.setState({ new_parking_type: e.target.value });
+
+
+  };
+
+  handleChangTransport = (e) => {
+
+    this.setState({ new_transport: e.target.value });
+
+  };
+
+
   submitRoom = (values, amount) => {
     swal({
       closeOnClickOutside: false,
@@ -224,14 +438,26 @@ class EditPlan extends Component {
   };
 
   handleEditRoomPlan = (values, amount) => {
+
     let postData = {
       student_id: decodeURIComponent(this.props.match.params.id),
       bed_type: values.bed_type,
       room_no: values.room_no,
-      to_pay: parseInt(amount),
-      plan_type: "RoomChange",
+      room_rent: this.state.new_get_roomrent.room_rent,
+      to_pay: amount,
+      total: amount,
+      normal_start_date: (this.state.student_plan.plan_id < 5) ? this.state.room_month_change : "",
+      normal_end_date: (this.state.student_plan.plan_id < 5) ? this.state.student_plan.normal_end_date : "",
+      lateral_start_date: (this.state.student_plan.plan_type == 'lateral') ? this.state.room_month_change : "",
+      lateral_end_date: (this.state.student_plan.plan_type == 'lateral') ? this.state.student_plan.lateral_end_date : "",
+      room_month_change: this.state.room_month_change,
+      plan_type: this.state.student_plan.plan_type,
+      plan_id: this.state.student_plan.plan_id,
+      term: this.state.student_plan.plan_id
     };
-    // return;
+
+
+
     API.post("/admin/secure/plan/edit_room_plan", postData)
       .then((response) => {
         if (response.data.status === 200) {
@@ -261,37 +487,29 @@ class EditPlan extends Component {
       }
     });
   };
-  submitTerm = (meal_price, laundry_price, meal_type, term_value) => {
-    swal({
-      closeOnClickOutside: false,
-      title: "Are you sure?",
-      text: "You want to update this student's term",
-      icon: "warning",
-      buttons: true,
-      dangerMode: true,
-    }).then((willSet) => {
-      if (willSet) {
-        this.handleEditTermPlan(
-          meal_price,
-          laundry_price,
-          meal_type,
-          term_value
-        );
-      }
-    });
-  };
 
-  handleEditTermPlan = (meal_price, laundry_price, meal_type, term_value) => {
+
+  handleEditMealPlan = (values, new_amount) => {
+
     let postData = {
       student_id: decodeURIComponent(this.props.match.params.id),
-      meal_type: meal_type,
-      plan_type: "TermChange",
-      to_pay: meal_price + laundry_price,
-      meal_price: meal_price,
-      laundry_price: laundry_price,
-      term: term_value,
+      meal_type: values.meal_type,
+      monthly_mess_fee: this.state.new_get_meals.mealPrice,
+      meal_month_change: this.state.meal_month_change,
+      to_pay: new_amount,
+      total: new_amount,
+      normal_start_date: (this.state.student_plan.plan_id < 5) ? this.state.meal_month_change : "",
+      normal_end_date: (this.state.student_plan.plan_id < 5) ? this.state.student_plan.normal_end_date : "",
+      lateral_start_date: (this.state.student_plan.plan_type == 'lateral') ? this.state.meal_month_change : "",
+      lateral_end_date: (this.state.student_plan.plan_type == 'lateral') ? this.state.student_plan.lateral_end_date : "",
+      plan_type: this.state.student_plan.plan_type,
+      plan_id: this.state.student_plan.plan_id,
+      term: this.state.student_plan.plan_id
     };
-    API.post("/admin/secure/plan/edit_term_plan", postData)
+
+
+
+    API.post("/admin/secure/plan/edit_meal_plan", postData)
       .then((response) => {
         if (response.data.status === 200) {
           swal("Success", response.data.message, "success");
@@ -305,15 +523,76 @@ class EditPlan extends Component {
         swal("Error", error, "warning");
       });
   };
-  handleEditMealPlan = (values, new_amount) => {
+
+  submitParking = (values, new_parking) => {
+    swal({
+      closeOnClickOutside: false,
+      title: "Are you sure?",
+      text: "You want to update this student's Parking",
+      icon: "warning",
+      buttons: true,
+      dangerMode: true,
+    }).then((willSet) => {
+      if (willSet) {
+        this.handleEditParkingPlan(values, new_parking);
+      }
+    });
+  };
+
+
+
+  handleEditParkingPlan = (values, new_parking) => {
+
     let postData = {
       student_id: decodeURIComponent(this.props.match.params.id),
-      meal_type: values.meal_type,
-      plan_type: "MealChange",
-      to_pay: parseInt(new_amount),
+      edit_type: values.edit_type,
+      parking: values.parking,
+      parking_type: values.parking_type,
+      //plan_id: this.state.student_plan[0].id,
+      //plan_type: "ParkingChange",
     };
 
-    API.post("/admin/secure/plan/edit_meal_plan", postData)
+    API.post("/admin/secure/plan/edit_parking_plan", postData)
+      .then((response) => {
+        if (response.data.status === 200) {
+          swal("Success", response.data.message, "success");
+          this.props.history.push("/admin/view_student/");
+        }
+        if (response.data.status === 401) {
+          swal("Warning", response.data.message, "warning");
+        }
+      })
+      .catch((error) => {
+        swal("Error", error, "warning");
+      });
+  };
+
+  submitTransport = (values, new_transport) => {
+    swal({
+      closeOnClickOutside: false,
+      title: "Are you sure?",
+      text: "You want to update this student's Transport",
+      icon: "warning",
+      buttons: true,
+      dangerMode: true,
+    }).then((willSet) => {
+      if (willSet) {
+        this.handleEditTransportPlan(values, new_transport);
+      }
+    });
+  };
+
+  handleEditTransportPlan = (values, new_transport) => {
+    let postData = {
+      student_id: decodeURIComponent(this.props.match.params.id),
+      edit_type: values.edit_type,
+      transportation: values.transportation,
+      //plan_type: "TransportChange",
+      //plan_id: this.state.student_plan[0].id,
+    };
+
+
+    API.post("/admin/secure/plan/edit_transport_plan", postData)
       .then((response) => {
         if (response.data.status === 200) {
           swal("Success", response.data.message, "success");
@@ -335,16 +614,20 @@ class EditPlan extends Component {
         is: "room",
         then: Yup.string().required("Please select room"),
       }),
+      room_month_change: Yup.string().when("edit_type", {
+        is: "room",
+        then: Yup.date().required("Please select Month"),
+      }),
       meal_type: Yup.string().when("edit_type", {
         is: "meal",
         then: Yup.string().required("Please select meal type"),
       }),
-      term: Yup.string().required("Term is required"),
-      term_value: Yup.string().when("edit_type", {
-        is: "term",
-        then: Yup.string().required("Please select term"),
+      meal_month_change: Yup.string().when("edit_type", {
+        is: "meal",
+        then: Yup.date().required("Please select Month"),
       }),
     });
+
 
     return (
       <Layout {...this.props}>
@@ -353,7 +636,7 @@ class EditPlan extends Component {
             <Formik
               initialValues={initialValues}
               validationSchema={validateRoom}
-              //onSubmit={this.handleSubmitEvent}
+            //onSubmit={this.handleSubmitEvent}
             >
               {({ errors, touched, setFieldValue, values }) => (
                 <Form>
@@ -391,13 +674,16 @@ class EditPlan extends Component {
                                   setFieldValue("edit_type", e.target.value);
                                   setFieldValue("room_no", "");
                                   setFieldValue("meal_type", "");
-                                  setFieldValue("term_value", "");
+                                  setFieldValue("parking", "");
+                                  setFieldValue("transport", "");
                                 }}
                               >
                                 <option value="">Default Select</option>
                                 <option value="room">Room</option>
                                 <option value="meal">Meal</option>
-                                <option value="term">Term</option>
+                                <option value="parking">Parking</option>
+                                <option value="transport">Transport</option>
+                                {/* <option value="term">Term</option> */}
                               </Field>
                               {errors.edit_type && touched.edit_type ? (
                                 <div className="text-danger">
@@ -409,7 +695,7 @@ class EditPlan extends Component {
                         </div>
 
                         {this.state.roomData.length > 0 &&
-                        values.edit_type == "room" ? (
+                          values.edit_type == "room" ? (
                           <>
                             <div className="row form-m-t">
                               <div className="form-group">
@@ -432,7 +718,7 @@ class EditPlan extends Component {
                                       Default Select
                                     </option>
                                     {this.state.roomData.map((item, i) => (
-                                      <option value={item.room_number} key={i}>
+                                      <option value={item.id} key={i}>
                                         Room No: {item.room_number} (Building:{" "}
                                         {item.building_name}, Toilet Type:{" "}
                                         {item.toilet_type}, Occupancy:{" "}
@@ -471,7 +757,7 @@ class EditPlan extends Component {
                                           "bed_type",
                                           e.target.value
                                         );
-                                        setFieldValue("room_month", "");
+                                        setFieldValue("room_month_change", "");
                                       }}
                                     >
                                       <option key="-1" value="">
@@ -482,8 +768,8 @@ class EditPlan extends Component {
                                           {bedtype.bed_type == "ub"
                                             ? "Upper Berth"
                                             : bedtype.bed_type == "lb"
-                                            ? "Lower Berth"
-                                            : null}
+                                              ? "Lower Berth"
+                                              : null}
                                         </option>
                                       ))}
                                     </Field>
@@ -499,157 +785,106 @@ class EditPlan extends Component {
                             ) : null}
                           </>
                         ) : null}
-                        <br></br>
-                        {this.state.student_plan.length > 0 &&
-                        values.room_no &&
-                        values.bed_type &&
-                        values.edit_type == "room" &&
-                        this.state.student_plan[0].total_one_time -
-                          this.state.plan_details.total <=
-                          0 ? (
+
+
+
+
+                        {this.state.student_plan &&
+                          values.bed_type &&
+                          values.edit_type == "room" ? (
                           <div className="row form-m-t">
                             <div className="form-group">
                               <div className="col-lg-2 ">
-                                <label htmlFor="room_month" style={{}}>
+                                <label htmlFor="room_month_change">
                                   Select after which month upgrading room
                                 </label>
                               </div>
                               <div className="col-lg-5">
-                                <Field
-                                  name="room_month"
-                                  component="select"
-                                  autoComplete="off"
+
+                                <DatePicker
+                                  selected={values.room_month_change}
+                                  dateFormat="dd/MM/yyyy"
+                                  placeholder="Start Date"
                                   className="form-control"
-                                  onChange={(e) => {
-                                    this.handleRoomMonthChange(
-                                      e,
-                                      this.state.student_plan[0].total_one_time,
-                                      this.state.plan_details.total
-                                    );
-                                    setFieldValue("room_month", e.target.value);
-                                    // setFieldValue("room_no", "");
-                                    // setFieldValue("meal_type", "");
+                                  name="room_month_change"
+                                  onChange={(room_month_change) => {
+                                    this.handleRoomMonthChange("room_month_change", room_month_change);
+                                    setFieldValue("room_month_change", room_month_change);
                                   }}
-                                >
-                                  <option value="">Default Select</option>
-                                  <option value="1">1</option>
-                                  <option value="2">2</option>
-                                  <option value="3">3</option>
-                                  <option value="4">4</option>
-                                  <option value="5">5</option>
-                                  <option value="6">6</option>
-                                  <option value="7">7</option>
-                                  <option value="8">8</option>
-                                  <option value="9">9</option>
-                                  <option value="10">10</option>
-                                  <option value="11">11</option>
-                                </Field>
-                                {errors.room_month && touched.room_month ? (
+                                />
+                                {errors.room_month_change && touched.room_month_change ? (
                                   <div className="text-danger">
-                                    {errors.room_month}
+                                    {errors.room_month_change}
                                   </div>
                                 ) : null}
                               </div>
                             </div>
                           </div>
                         ) : null}
-                        <table class="table table-bordered">
-                          {this.state.plan_details &&
-                          this.state.plan_details &&
-                          values.bed_type &&
-                          values.edit_type == "room" &&
-                          values.room_no ? (
+
+
+                        <table className="table table-bordered">
+                          {this.state.student_plan &&
+                            this.state.student_plan &&
+                            values.bed_type &&
+                            values.edit_type == "room" &&
+                            values.room_no ? (
                             <tbody>
-                              <td
-                                colSpan={2}
-                                style={{
-                                  fontWeight: "bold",
-                                  textAlign: "center",
-                                }}
-                              >
-                                One Time Payment
-                              </td>
+
                               <tr>
-                                <td>Admission Fee</td>
-                                <td>
-                                  {this.state.plan_details.addmission_fee &&
-                                    this.state.plan_details.addmission_fee.toLocaleString(
-                                      "en-IN",
-                                      {
-                                        maximumFractionDigits: 0,
-                                        style: "currency",
-                                        currency: "INR",
-                                      }
-                                    )}
+                                <td
+                                  colSpan={2}
+                                  style={{
+                                    fontWeight: "bold",
+                                    textAlign: "center",
+                                  }}
+                                >
+                                  <b>Student Details</b>
                                 </td>
                               </tr>
                               <tr>
-                                <td>Admisson Kit</td>
-                                <td>
-                                  {this.state.plan_details.admisson_kit &&
-                                    this.state.plan_details.admisson_kit.toLocaleString(
-                                      "en-IN",
-                                      {
-                                        maximumFractionDigits: 0,
-                                        style: "currency",
-                                        currency: "INR",
-                                      }
-                                    )}
+                                <td>Student Name</td>
+                                <td>{this.state.studentDetails.SFname}</td>
+                              </tr>
+                              <tr>
+                                <td>Student Phone No</td>
+                                <td>{this.state.studentDetails.SmobNo}</td>
+                              </tr>
+                              <tr>
+                                <td>Student Email</td>
+                                <td>{this.state.studentDetails.StudEmail}</td>
+                              </tr>
+                              <tr>
+                                <td>Room No</td>
+                                <td>{this.state.studentDetails.room_id}</td>
+                              </tr>
+
+                              {this.state.student_plan.plan_type != "temporary" ? ( 
+                                <>
+
+                              <tr>
+                                <td
+                                  colSpan={2}
+                                  style={{
+                                    fontWeight: "bold",
+                                    textAlign: "center",
+                                  }}
+                                >
+                                  Payment
                                 </td>
                               </tr>
 
-                              <tr>
-                                <td>Caution Deposit</td>
-                                <td>
-                                  {this.state.plan_details.caution_deposit &&
-                                    this.state.plan_details.caution_deposit.toLocaleString(
-                                      "en-IN",
-                                      {
-                                        maximumFractionDigits: 0,
-                                        style: "currency",
-                                        currency: "INR",
-                                      }
-                                    )}
-                                </td>
-                              </tr>
-                              <tr>
-                                <td>Cultural Fees</td>
-                                <td>
-                                  {this.state.plan_details.cultural_fees &&
-                                    this.state.plan_details.cultural_fees.toLocaleString(
-                                      "en-IN",
-                                      {
-                                        maximumFractionDigits: 0,
-                                        style: "currency",
-                                        currency: "INR",
-                                      }
-                                    )}
-                                </td>
-                              </tr>
-
-                              <tr>
-                                <td>Room Rent</td>
-                                <td>
-                                  {this.state.plan_details.room_rent &&
-                                    this.state.plan_details.room_rent.toLocaleString(
-                                      "en-IN",
-                                      {
-                                        maximumFractionDigits: 0,
-                                        style: "currency",
-                                        currency: "INR",
-                                      }
-                                    )}
-                                </td>
-                              </tr>
+                              
+                              
 
                               <tr>
                                 <td>
-                                  <b>New Total</b>
+                                  <b>New room rent</b>
                                 </td>
                                 <td>
                                   <b>
-                                    {this.state.plan_details.total &&
-                                      this.state.plan_details.total.toLocaleString(
+                                    {this.state.new_get_roomrent.room_rent &&
+                                      this.state.new_get_roomrent.room_rent.toLocaleString(
                                         "en-IN",
                                         {
                                           maximumFractionDigits: 0,
@@ -661,14 +896,15 @@ class EditPlan extends Component {
                                 </td>
                               </tr>
 
+
                               <tr>
                                 <td>
-                                  <b>Total Paid by Student</b>
+                                  <b>Old room rent</b>
                                 </td>
                                 <td>
                                   <b>
-                                    {this.state.student_plan.length > 0 &&
-                                      this.state.student_plan[0].total_one_time.toLocaleString(
+                                    {this.state.old_get_roomrent.room_rent &&
+                                      this.state.old_get_roomrent.room_rent.toLocaleString(
                                         "en-IN",
                                         {
                                           maximumFractionDigits: 0,
@@ -679,369 +915,662 @@ class EditPlan extends Component {
                                   </b>
                                 </td>
                               </tr>
-                              {this.state.student_plan.length > 0 &&
-                              values.room_no &&
-                              values.bed_type &&
-                              values.edit_type == "room" &&
-                              values.room_month &&
-                              this.state.student_plan[0].total_one_time -
-                                this.state.plan_details.total <=
-                                0 ? (
-                                <>
-                                  <tr>
-                                    <td>
-                                      <b>
-                                        Total amount need to pay by the student
-                                      </b>
-                                    </td>
-                                    <td>
-                                      <b>
-                                        {this.state.new_room_amount.toLocaleString(
-                                          "en-IN",
-                                          {
-                                            maximumFractionDigits: 0,
-                                            style: "currency",
-                                            currency: "INR",
-                                          }
-                                        )}
-                                      </b>
-                                    </td>
-                                  </tr>
-                                  <br></br>
+                             
+                              <tr>
+                                <td>
+                                  <b>
+                                    Total amount need to pay by the student
+                                  </b>
+                                </td>
+                                <td>
+                                  <b>
+                                    {this.state.amount_paid_by_student.toLocaleString(
+                                      "en-IN",
+                                      {
+                                        maximumFractionDigits: 0,
+                                        style: "currency",
+                                        currency: "INR",
+                                      }
+                                    )}
+                                  </b>
+                                </td>
+                              </tr>
 
-                                  <div style={{ marginLeft: "50%" }}>
-                                    <button
-                                      type="button"
-                                      onClick={(e) => {
-                                        this.submitRoom(
-                                          values,
-                                          this.state.new_room_amount
-                                        );
-                                      }}
-                                      style={{
-                                        padding: "8px 18px 8px 18px",
-                                        borderRadius: "0.375rem",
-
-                                        fontSize: "16px",
-                                        color: "#fff",
-                                        backgroundColor: "#883495",
-                                        borderColor: "#883495",
-                                        boxShadow:
-                                          "0 0.125rem 0.25rem 0 rgb(105 108 255 / 40%",
-                                      }}
-                                    >
-                                      Update Room
-                                    </button>
-                                  </div>
-                                </>
+                                </>        
                               ) : null}
-                              {this.state.student_plan.length > 0 &&
-                              this.state.student_plan[0].total_one_time -
-                                this.state.plan_details.total >=
-                                0 ? (
-                                <>
-                                  <tr>
-                                    <td>
-                                      <b>
-                                        Total amount need to pay by the student
-                                      </b>
-                                    </td>
-                                    <td>
-                                      <b>
-                                        {this.state.student_plan[0]
-                                          .total_one_time -
-                                          this.state.plan_details.total >=
-                                        0 ? (
-                                          <span>&#8377;0</span>
-                                        ) : (
-                                          (
-                                            this.state.plan_details.total -
-                                            this.state.student_plan[0]
-                                              .total_one_time
-                                          ).toLocaleString("en-IN", {
-                                            maximumFractionDigits: 0,
-                                            style: "currency",
-                                            currency: "INR",
-                                          })
-                                        )}
-                                      </b>
-                                    </td>
-                                  </tr>
-                                  <br></br>
-                                  <br></br>
-                                  <div style={{ marginLeft: "50%" }}>
-                                    <button
-                                      type="button"
-                                      onClick={(e) => {
-                                        this.submitRoom(values, 0);
-                                      }}
-                                      style={{
-                                        padding: "8px 18px 8px 18px",
-                                        borderRadius: "0.375rem",
 
-                                        fontSize: "16px",
-                                        color: "#fff",
-                                        backgroundColor: "#883495",
-                                        borderColor: "#883495",
-                                        boxShadow:
-                                          "0 0.125rem 0.25rem 0 rgb(105 108 255 / 40%",
-                                      }}
-                                    >
-                                      Update Room
-                                    </button>
-                                  </div>
-                                  <br />
-                                  <br /> <br />
-                                </>
-                              ) : null}
+
+
+                                <tr>
+                                  <td colSpan={2} style={{ fontWeight: "bold", textAlign: "center" }}>
+                                    <div style={{ marginLeft: "50%" }}>
+                                      <button
+                                        type="button"
+                                        onClick={(e) => {
+                                          this.submitRoom(
+                                            values,
+                                            this.state.amount_paid_by_student
+                                          );
+                                        }}
+                                        style={{
+                                          padding: "8px 18px 8px 18px",
+                                          borderRadius: "0.375rem",
+
+                                          fontSize: "16px",
+                                          color: "#fff",
+                                          backgroundColor: "#883495",
+                                          borderColor: "#883495",
+                                          boxShadow:
+                                            "0 0.125rem 0.25rem 0 rgb(105 108 255 / 40%",
+                                        }}
+                                      >
+                                        Update Room
+                                      </button>
+                                    </div>
+
+                                  </td>
+                                </tr>
+                              
+
                             </tbody>
                           ) : null}
                         </table>
 
-                        {this.state.mealData.length > 0 &&
-                        values.edit_type == "meal" ? (
-                          <>
-                            <div className="row form-m-t">
-                              <div className="form-group">
-                                <div className="col-lg-2">
-                                  <label htmlFor="meal_type">Select Meal</label>
-                                </div>
-                                <div className="col-lg-5">
-                                  <Field
-                                    component="select"
-                                    autoComplete="off"
-                                    name="meal_type"
-                                    className={"form-control"}
-                                    onChange={(e) => {
-                                      this.handleChangMeal(e);
-                                      setFieldValue(
-                                        "meal_type",
-                                        e.target.value
-                                      );
-                                      setFieldValue("meal_month", "");
-                                    }}
-                                  >
-                                    <option key="-1" value="">
-                                      Default Select
-                                    </option>
-                                    {this.state.mealData.map((item, i) => (
-                                      <option value={item.package} key={i}>
-                                        {item.package}
-                                      </option>
-                                    ))}
-                                  </Field>
-
-                                  {errors.meal_type && touched.meal_type ? (
-                                    <div className="text-danger">
-                                      {errors.meal_type}
-                                    </div>
-                                  ) : null}
-                                </div>
-                              </div>
-                            </div>
-                            {this.state.student_plan &&
-                            this.state.new_meal &&
-                            values.meal_type &&
-                            this.state.student_plan[0].meal -
-                              this.state.new_meal[0].price <=
-                              0 ? (
+                        {
+                          values.edit_type == "meal" ? (
+                            <>
                               <div className="row form-m-t">
                                 <div className="form-group">
-                                  <div className="col-lg-2 ">
-                                    <label htmlFor="meal_month" style={{}}>
-                                      Select after which month upgrading meal
-                                    </label>
+                                  <div className="col-lg-2">
+                                    <label htmlFor="meal_type">Select Meal </label>
                                   </div>
                                   <div className="col-lg-5">
                                     <Field
-                                      name="meal_month"
                                       component="select"
                                       autoComplete="off"
-                                      className="form-control"
+                                      name="meal_type"
+                                      className={"form-control"}
+
                                       onChange={(e) => {
-                                        this.handleMealMonthChange(
-                                          e,
-                                          this.state.student_plan[0].meal,
-                                          this.state.new_meal[0].price
-                                        );
+                                        this.handleChangMeal(e);
                                         setFieldValue(
-                                          "meal_month",
+                                          "meal_type",
                                           e.target.value
                                         );
-                                        // setFieldValue("room_no", "");
-                                        // setFieldValue("meal_type", "");
+
                                       }}
                                     >
-                                      <option value="">Default Select</option>
-                                      <option value="1">1</option>
-                                      <option value="2">2</option>
-                                      <option value="3">3</option>
-                                      <option value="4">4</option>
-                                      <option value="5">5</option>
-                                      {/*     <option value="6">6</option> */}
+                                      <option value="">
+                                        Default Select
+                                      </option>
+                                      <option value="Veg">Veg</option>
+                                      <option value="Eggeterian - 1">Veg + Egg (Plan 1) : Egg 3 Meals a week </option>
+                                      <option value="Eggeterian - 2">Veg + Egg (Plan 2) : Egg 5 Meals a week</option>
+                                      <option value="Non-Veg - 1">Non-veg 3 meals & Egg 3 Meals a week</option>
+                                      <option value="Non-Veg - 2">Non-veg 3 Meals & Egg 5 Meals a week ( No Days)</option>
+
                                     </Field>
-                                    {errors.meal_month && touched.meal_month ? (
+
+                                    {errors.meal_type && touched.meal_type ? (
                                       <div className="text-danger">
-                                        {errors.meal_month}
+                                        {errors.meal_type}
                                       </div>
                                     ) : null}
                                   </div>
                                 </div>
                               </div>
-                            ) : null}
-                            {values.meal_type &&
-                            this.state.new_meal.length > 0 ? (
-                              <table class="table table-bordered">
-                                <br></br>
-                                <br></br> <br></br>
-                                {values.meal_type &&
-                                this.state.new_meal.length > 0 &&
-                                values.edit_type == "meal" ? (
+
+
+                              {values.meal_type &&
+                                this.state.new_meal_type ? (
+                                <>
+
+                                  <div className="row form-m-t">
+                                    <div className="form-group">
+                                      <div className="col-lg-2 ">
+                                        <label htmlFor="meal_month_change">
+                                          Select after which month upgrading Meal
+                                        </label>
+                                      </div>
+                                      <div className="col-lg-5">
+
+
+                                        <DatePicker
+                                          selected={values.meal_month_change}
+                                          dateFormat="dd/MM/yyyy"
+                                          placeholder="Start Date"
+                                          className="form-control"
+                                          name="meal_month_change"
+                                          onChange={(meal_month_change) => {
+                                            this.handleMealMonthChange("meal_month_change", meal_month_change);
+                                            setFieldValue("meal_month_change", meal_month_change);
+                                          }}
+                                        />
+                                        {errors.meal_month_change && touched.meal_month_change ? (
+                                          <div className="text-danger">
+                                            {errors.meal_month_change}
+                                          </div>
+                                        ) : null}
+                                      </div>
+                                    </div>
+                                  </div>
+
+                                  <table className="table table-bordered">
+
+                                    {values.meal_type &&
+                                      values.edit_type == "meal" ? (
+                                      <tbody>
+
+                                        <tr>
+                                          <td colSpan={2} style={{ fontWeight: "bold", textAlign: "center" }}>
+                                            <b>Student Details</b>
+                                          </td>
+                                        </tr>
+                                        <tr>
+                                          <td>Student Name</td>
+                                          <td>{this.state.studentDetails.SFname}</td>
+                                        </tr>
+                                        <tr>
+                                          <td>Student Phone No</td>
+                                          <td>{this.state.studentDetails.SmobNo}</td>
+                                        </tr>
+                                        <tr>
+                                          <td>Student Email</td>
+                                          <td>{this.state.studentDetails.StudEmail}</td>
+                                        </tr>
+
+                                        <tr>
+                                          <td>Meal type</td>
+                                          <td>{this.state.studentDetails.food_preference}</td>
+                                        </tr>
+
+                                        <tr>
+                                          <td
+                                            colSpan={2}
+                                            style={{
+                                              fontWeight: "bold",
+                                              textAlign: "center",
+                                            }}
+                                          >
+                                            Payment
+                                          </td>
+                                        </tr>
+
+
+
+                                        {this.state.student_plan.plan_type != "temporary" ? ( 
+                                          <>
+                                          <tr>
+                                            <td>
+                                              <b>
+                                               Old Total Meal Fees (
+                                                {this.state.studentDetails.food_preference})
+                                              </b><br/>
+                                             
+
+                                             
+                                            </td>
+                                            <td>
+                                              <b>
+                                                { this.state.old_get_meals.mealPrice &&
+                                                this.state.old_get_meals.mealPrice.toLocaleString(
+                                                  "en-IN",
+                                                  {
+                                                    maximumFractionDigits: 0,
+                                                    style: "currency",
+                                                    currency: "INR",
+                                                  }
+                                                )}
+                                              </b>
+                                            </td>
+                                          </tr>
+                                         
+
+                                          <tr>
+                                            <td>
+                                              <b>
+                                                New Total Meal Fees (
+                                                {this.state.new_meal_type})
+                                              </b>
+                                            </td>
+                                            <td>
+                                              <b>
+
+                                                {this.state.new_get_meals.mealPrice &&
+                                                  this.state.new_get_meals.mealPrice.toLocaleString(
+                                                    "en-IN",
+                                                    {
+                                                      maximumFractionDigits: 0,
+                                                      style: "currency",
+                                                      currency: "INR",
+                                                    }
+                                                  )}
+
+                                              </b>
+                                            </td>
+                                          </tr>
+
+                                          <tr>
+                                            <td>
+                                              <b>
+                                                Total Paid by Student
+                                              </b>
+                                            </td>
+                                            <td>
+                                              <b>
+                                                {this.state.total &&
+                                                  this.state.total.toLocaleString(
+                                                    "en-IN",
+                                                    {
+                                                      maximumFractionDigits: 0,
+                                                      style: "currency",
+                                                      currency: "INR",
+                                                    }
+                                                  )}
+                                              </b>
+                                            </td>
+                                          </tr>
+                                          </>        
+                                        ) : null}
+
+                                        <tr>
+                                          <td
+                                            colSpan={2}
+                                            style={{
+                                              fontWeight: "bold",
+                                              textAlign: "center",
+                                            }}
+                                          >
+                                            {this.state.student_plan
+                                              ? (
+                                                <>
+
+
+                                                  <div style={{ marginLeft: "50%" }}>
+                                                    <button
+                                                      type="button"
+                                                      onClick={(e) => {
+                                                        this.submitMeal(values, this.state.total);
+                                                      }}
+                                                      style={{
+                                                        padding: "8px 18px 8px 18px",
+                                                        borderRadius: "0.375rem",
+
+                                                        fontSize: "16px",
+                                                        color: "#fff",
+                                                        backgroundColor: "#883495",
+                                                        borderColor: "#883495",
+                                                        boxShadow: "0 0.125rem 0.25rem 0 rgb(105 108 255 / 40%",
+                                                      }}
+                                                    >
+                                                      Update Meal
+                                                    </button>
+                                                  </div>
+                                                </>
+                                              ) : null}
+
+                                          </td>
+                                        </tr>
+
+                                      </tbody>
+                                    ) : null}
+                                  </table></>
+                              ) : null}
+                            </>
+                          ) : null}
+
+                        {
+                          values.edit_type == "parking" ? (
+                            <>
+
+                              <div className="row form-m-t">
+                                <div className="form-group">
+                                  <div className="col-lg-2">
+                                    <label htmlFor="transportation">Select Parking </label>
+                                  </div>
+                                  <div className="col-lg-5">
+                                    <Field
+                                      component="select"
+                                      autoComplete="off"
+                                      name="parking"
+                                      className={"form-control"}
+                                      onChange={(e) => {
+                                        this.handleChangParking(e);
+                                        setFieldValue(
+                                          "parking",
+                                          e.target.value
+                                        );
+
+                                      }}
+                                    >
+                                      <option key="-1" value="">
+                                        Default Select
+                                      </option>
+                                      {this.state.parkingData.map((item, i) => (
+                                        <option value={item.id} key={i}>
+                                          {item.parking}
+                                        </option>
+                                      ))}
+                                    </Field>
+
+                                    {errors.parking && touched.parking ? (
+                                      <div className="text-danger">
+                                        {errors.parking}
+                                      </div>
+                                    ) : null}
+                                  </div>
+                                </div>
+                              </div>
+
+
+                              {values.parking == 'Yes' ? (
+                                <div className="row form-m-t">
+                                  <div className="form-group">
+                                    <div className="col-lg-2">
+                                      <label htmlFor="parking_type">Select Parking Type </label>
+                                    </div>
+                                    <div className="col-lg-5">
+                                      <Field
+                                        component="select"
+                                        autoComplete="off"
+                                        name="parking_type"
+                                        className={"form-control"}
+                                        onChange={(e) => {
+                                          this.handleChangParkingType(e);
+                                          setFieldValue(
+                                            "parking_type",
+                                            e.target.value
+                                          );
+
+                                        }}
+                                      >
+                                        <option key="-1" value="">
+                                          Default Select
+                                        </option>
+                                        {this.state.parkingType.map((item, i) => (
+                                          <option value={item.id} key={i}>
+                                            {item.parking_type}
+                                          </option>
+                                        ))}
+                                      </Field>
+
+                                      {errors.parking_type && touched.parking_type ? (
+                                        <div className="text-danger">
+                                          {errors.parking_type}
+                                        </div>
+                                      ) : null}
+                                    </div>
+                                  </div>
+                                </div>
+                              ) : null}
+
+                              {values.parking ? (
+                                <table className="table table-bordered">
+
+                                  {values.parking ? (
+                                    <tbody>
+
+                                      <tr>
+                                        <td
+                                          colSpan={2}
+                                          style={{
+                                            fontWeight: "bold",
+                                            textAlign: "center",
+                                          }}
+                                        >
+                                          <b>Student Details</b>
+                                        </td>
+                                      </tr>
+                                      <tr>
+                                        <td>Student Name</td>
+                                        <td>{this.state.studentDetails.SFname}</td>
+                                      </tr>
+                                      <tr>
+                                        <td>Student Phone No</td>
+                                        <td>{this.state.studentDetails.SmobNo}</td>
+                                      </tr>
+                                      <tr>
+                                        <td>Student Email</td>
+                                        <td>{this.state.studentDetails.StudEmail}</td>
+                                      </tr>
+
+                                      <tr>
+                                        <td>Parking</td>
+                                        <td>{this.state.studentDetails.parking == 'Yes' ? "Yes" : "No"}</td>
+                                      </tr>
+
+                                      <tr>
+                                        <td>Parking Type</td>
+                                        <td> {this.state.studentDetails.parking_type === "2" ? "Two Wheeler" :
+                                          this.state.studentDetails.parking_type === "4" ? "Four Wheeler" :
+                                            "NA"}</td>
+                                      </tr>
+
+
+
+                                      <tr>
+                                        <td>  New Parking Detail   </td>
+
+                                        <td>
+                                          {this.state.new_parking == 'Yes' ? "Yes" : "No"}
+                                        </td>
+                                      </tr>
+
+
+
+                                      <tr>
+                                        <td>
+                                          <b>
+                                            Parking New Type
+
+                                          </b>
+                                        </td>
+                                        <td>
+                                          <b>
+                                            {this.state.new_parking_type === "2" ? "Two Wheeler" :
+                                              this.state.new_parking_type === "4" ? "Four Wheeler" :
+                                                "NA"}
+                                          </b>
+                                        </td>
+                                      </tr>
+
+
+
+                                      <tr>
+                                        <td
+                                          colSpan={2}
+                                          style={{
+                                            fontWeight: "bold",
+                                            textAlign: "center",
+                                          }}
+                                        >
+
+                                          {this.state.student_plan ? (
+                                            <>
+                                              <div>
+                                                <button
+                                                  type="button"
+                                                  onClick={(e) => {
+                                                    this.submitParking(values, this.state.new_parking);
+                                                  }}
+                                                  style={{
+                                                    padding: "8px 18px 8px 18px",
+                                                    borderRadius: "0.375rem",
+
+                                                    fontSize: "16px",
+                                                    color: "#fff",
+                                                    backgroundColor: "#883495",
+                                                    borderColor: "#883495",
+                                                    boxShadow:
+                                                      "0 0.125rem 0.25rem 0 rgb(105 108 255 / 40%",
+                                                  }}
+                                                >
+                                                  Update Parking
+                                                </button>
+                                              </div>
+                                            </>
+                                          ) : null}
+
+                                        </td>
+                                      </tr>
+
+
+
+                                    </tbody>
+                                  ) : null}
+                                </table>
+                              ) : null}
+                            </>
+                          ) : null}
+
+
+                        {/* Start transport */}
+                        {values.edit_type == "transport" ? (
+                          <>
+                            <div className="row form-m-t">
+                              <div className="form-group">
+                                <div className="col-lg-2">
+                                  <label htmlFor="transportation">Select Transport </label>
+                                </div>
+                                <div className="col-lg-5">
+                                  <Field
+                                    component="select"
+                                    autoComplete="off"
+                                    name="transportation"
+                                    className={"form-control"}
+                                    onChange={(e) => {
+                                      this.handleChangTransport(e);
+                                      setFieldValue(
+                                        "transportation",
+                                        e.target.value
+                                      );
+
+                                    }}
+                                  >
+                                    <option key="-1" value="">
+                                      Default Select
+                                    </option>
+                                    {this.state.transportData.map((item, i) => (
+                                      <option value={item.id} key={i}>
+                                        {item.transportation}
+                                      </option>
+                                    ))}
+                                  </Field>
+
+                                  {errors.transportation && touched.transportation ? (
+                                    <div className="text-danger">
+                                      {errors.transportation}
+                                    </div>
+                                  ) : null}
+                                </div>
+                              </div>
+                            </div>
+
+                            {values.transportation &&
+                              this.state.new_transport ? (
+                              <table className="table table-bordered">
+
+                                {values.transportation &&
+                                  this.state.new_transport ? (
                                   <tbody>
+
+                                    <tr>
+                                      <td
+                                        colSpan={2}
+                                        style={{
+                                          fontWeight: "bold",
+                                          textAlign: "center",
+                                        }}
+                                      >
+                                        <b>Student Details</b>
+                                      </td>
+                                    </tr>
+                                    <tr>
+                                      <td>Student Name</td>
+                                      <td>{this.state.studentDetails.SFname}</td>
+                                    </tr>
+                                    <tr>
+                                      <td>Student Phone No</td>
+                                      <td>{this.state.studentDetails.SmobNo}</td>
+                                    </tr>
+                                    <tr>
+                                      <td>Student Email</td>
+                                      <td>{this.state.studentDetails.StudEmail}</td>
+                                    </tr>
+
+                                    <tr>
+                                      <td>Transpotation</td>
+                                      <td>{this.state.studentDetails.transportation}</td>
+                                    </tr>
+
+                                    <tr>
+                                      <td
+                                        colSpan={2}
+                                        style={{
+                                          fontWeight: "bold",
+                                          textAlign: "center",
+                                        }}
+                                      >
+                                        <b>Update Plan</b>
+                                      </td>
+                                    </tr>
                                     <tr>
                                       <td>
                                         <b>
-                                          New Total Meal Fees (
-                                          {this.state.new_meal[0].package})
+                                          New Total Transpotation Fees
+
                                         </b>
                                       </td>
                                       <td>
                                         <b>
-                                          {this.state.new_meal &&
-                                            this.state.new_meal[0].price.toLocaleString(
-                                              "en-IN",
-                                              {
-                                                maximumFractionDigits: 0,
-                                                style: "currency",
-                                                currency: "INR",
-                                              }
-                                            )}
+
+                                          {this.state.new_transport}
                                         </b>
                                       </td>
                                     </tr>
 
                                     <tr>
-                                      <td>
-                                        <b>
-                                          Total Paid by Student (
-                                          {this.state.student_plan[0].meal_type}
-                                          )
-                                        </b>
-                                      </td>
-                                      <td>
-                                        <b>
-                                          {this.state.student_plan.length > 0 &&
-                                            this.state.student_plan[0].meal.toLocaleString(
-                                              "en-IN",
-                                              {
-                                                maximumFractionDigits: 0,
-                                                style: "currency",
-                                                currency: "INR",
-                                              }
-                                            )}
-                                        </b>
+
+                                      <td
+                                        colSpan={2}
+                                        style={{
+                                          fontWeight: "bold",
+                                          textAlign: "center",
+                                        }}
+                                      >
+
+                                        {this.state.student_plan ? (
+                                          <>
+
+                                            <div>
+                                              <button
+                                                type="button"
+                                                onClick={(e) => {
+                                                  this.submitTransport(values, this.state.new_transport);
+                                                }}
+                                                style={{
+                                                  padding: "8px 18px 8px 18px",
+                                                  borderRadius: "0.375rem",
+
+                                                  fontSize: "16px",
+                                                  color: "#fff",
+                                                  backgroundColor: "#883495",
+                                                  borderColor: "#883495",
+                                                  boxShadow:
+                                                    "0 0.125rem 0.25rem 0 rgb(105 108 255 / 40%",
+                                                }}
+                                              >
+                                                Update Transportation
+                                              </button>
+                                            </div>
+                                          </>
+                                        ) : null}
+
                                       </td>
                                     </tr>
-                                    {this.state.student_plan[0].meal -
-                                      this.state.new_meal[0].price >=
-                                    0 ? (
-                                      <>
-                                        <tr>
-                                          <td>
-                                            <b>
-                                              Total amount need to pay by the
-                                              student
-                                            </b>
-                                          </td>
-                                          <td>
-                                            <b>
-                                              <span>&#8377;0</span>
-                                            </b>
-                                          </td>
-                                        </tr>
-                                        <br></br>
 
-                                        <div style={{ marginLeft: "50%" }}>
-                                          <button
-                                            type="button"
-                                            onClick={(e) => {
-                                              this.submitMeal(values, 0);
-                                            }}
-                                            style={{
-                                              padding: "8px 18px 8px 18px",
-                                              borderRadius: "0.375rem",
 
-                                              fontSize: "16px",
-                                              color: "#fff",
-                                              backgroundColor: "#883495",
-                                              borderColor: "#883495",
-                                              boxShadow:
-                                                "0 0.125rem 0.25rem 0 rgb(105 108 255 / 40%",
-                                            }}
-                                          >
-                                            Update Meal
-                                          </button>
-                                        </div>
-                                      </>
-                                    ) : null}
 
-                                    {values.meal_month &&
-                                    this.state.student_plan[0].meal -
-                                      this.state.new_meal[0].price <=
-                                      0 ? (
-                                      <>
-                                        <tr>
-                                          <td>
-                                            <b>
-                                              Total amount need to pay by the
-                                              student
-                                            </b>
-                                          </td>
-                                          <td>
-                                            <b>
-                                              {this.state.new_meal_amount.toLocaleString(
-                                                "en-IN",
-                                                {
-                                                  maximumFractionDigits: 0,
-                                                  style: "currency",
-                                                  currency: "INR",
-                                                }
-                                              )}
-                                            </b>
-                                          </td>
-                                        </tr>
-                                        <br></br>
-
-                                        <div style={{ marginLeft: "50%" }}>
-                                          <button
-                                            type="button"
-                                            onClick={(e) => {
-                                              this.submitMeal(
-                                                values,
-                                                this.state.new_meal_amount
-                                              );
-                                            }}
-                                            style={{
-                                              padding: "8px 18px 8px 18px",
-                                              borderRadius: "0.375rem",
-
-                                              fontSize: "16px",
-                                              color: "#fff",
-                                              backgroundColor: "#883495",
-                                              borderColor: "#883495",
-                                              boxShadow:
-                                                "0 0.125rem 0.25rem 0 rgb(105 108 255 / 40%",
-                                            }}
-                                          >
-                                            Update Meal
-                                          </button>
-
-                                          {/*  <button type="submit" className="btn btn-primary">
-                        Submit
-                      </button> */}
-                                        </div>
-                                      </>
-                                    ) : null}
                                   </tbody>
                                 ) : null}
                               </table>
@@ -1049,199 +1578,6 @@ class EditPlan extends Component {
                           </>
                         ) : null}
 
-                        {this.state.termData.length > 0 &&
-                        values.edit_type == "term" ? (
-                          <>
-                            <div className="row form-m-t">
-                              <div className="form-group">
-                                <div className="col-lg-2">
-                                  <label htmlFor="term_value">
-                                    Select Term
-                                  </label>
-                                </div>
-                                <div className="col-lg-5">
-                                  <Field
-                                    component="select"
-                                    autoComplete="off"
-                                    name="term_value"
-                                    className={"form-control"}
-                                    onChange={(e) => {
-                                      this.handleChangeTermNew(e);
-                                      setFieldValue(
-                                        "term_value",
-                                        e.target.value
-                                      );
-                                      setFieldValue("meal_type", "");
-                                    }}
-                                  >
-                                    <option key="-1" value="">
-                                      Default Select
-                                    </option>
-                                    {this.state.termData.map((item, i) => (
-                                      <option value={item.value} key={i}>
-                                        {item.label}
-                                      </option>
-                                    ))}
-                                  </Field>
-
-                                  {errors.term_value && touched.term_value ? (
-                                    <div className="text-danger">
-                                      {errors.term_value}
-                                    </div>
-                                  ) : null}
-                                </div>
-                              </div>
-                            </div>
-                          </>
-                        ) : null}
-                        {this.state.termData.length > 0 &&
-                        this.state.mealDataNew.length > 0 &&
-                        values.edit_type == "term" &&
-                        values.term_value ? (
-                          <>
-                            <div className="row form-m-t">
-                              <div className="form-group">
-                                <div className="col-lg-2">
-                                  <label htmlFor="meal_type">Select Meal</label>
-                                </div>
-                                <div className="col-lg-5">
-                                  <Field
-                                    component="select"
-                                    autoComplete="off"
-                                    name="meal_type"
-                                    className={"form-control"}
-                                    onChange={(e) => {
-                                      this.handleChangeTerm(
-                                        e,
-                                        values.term_value
-                                      );
-                                      setFieldValue(
-                                        "meal_type",
-                                        e.target.value
-                                      );
-                                    }}
-                                  >
-                                    <option key="-1" value="">
-                                      Default Select
-                                    </option>
-                                    {this.state.mealDataNew.map((item, i) => (
-                                      <option value={item.package} key={i}>
-                                        {item.package}
-                                      </option>
-                                    ))}
-                                  </Field>
-
-                                  {errors.term_value && touched.term_value ? (
-                                    <div className="text-danger">
-                                      {errors.term_value}
-                                    </div>
-                                  ) : null}
-                                </div>
-                              </div>
-                            </div>
-                          </>
-                        ) : null}
-                        {this.state.termData.length > 0 &&
-                        values.edit_type == "term" &&
-                        values.term_value &&
-                        values.meal_type &&
-                        this.state.term_values != "" ? (
-                          <table class="table table-bordered">
-                            <br></br>
-                            <br></br> <br></br>
-                            <tbody>
-                              <tr>
-                                <td>
-                                  <b>
-                                    New Total Meal Fees ({values.meal_type})
-                                  </b>
-                                </td>
-                                <td>
-                                  <b>
-                                    {this.state.term_values &&
-                                      this.state.term_values.meal_plan[0].price.toLocaleString(
-                                        "en-IN",
-                                        {
-                                          maximumFractionDigits: 0,
-                                          style: "currency",
-                                          currency: "INR",
-                                        }
-                                      )}
-                                  </b>
-                                </td>
-                              </tr>
-                              <tr>
-                                <td>
-                                  <b>New Total Laundry Fees</b>
-                                </td>
-                                <td>
-                                  <b>
-                                    {this.state.term_values &&
-                                      this.state.term_values.laundry_plan[0].price.toLocaleString(
-                                        "en-IN",
-                                        {
-                                          maximumFractionDigits: 0,
-                                          style: "currency",
-                                          currency: "INR",
-                                        }
-                                      )}
-                                  </b>
-                                </td>
-                              </tr>
-
-                              <tr>
-                                <td>
-                                  <b>New fees need to pay by the student</b>
-                                </td>
-                                <td>
-                                  <b>
-                                    {(
-                                      this.state.term_values.laundry_plan[0]
-                                        .price +
-                                      this.state.term_values.meal_plan[0].price
-                                    ).toLocaleString("en-IN", {
-                                      maximumFractionDigits: 0,
-                                      style: "currency",
-                                      currency: "INR",
-                                    })}
-                                    {/*     {this.state.term_values &&
-                                      this.state.term_values.laundry_plan[0].price} */}
-                                  </b>
-                                </td>
-                              </tr>
-
-                              <br></br>
-
-                              <div style={{ marginLeft: "50%" }}>
-                                <button
-                                  type="button"
-                                  onClick={(e) => {
-                                    this.submitTerm(
-                                      this.state.term_values.meal_plan[0].price,
-                                      this.state.term_values.laundry_plan[0]
-                                        .price,
-                                      values.meal_type,
-                                      values.term_value
-                                    );
-                                  }}
-                                  style={{
-                                    padding: "8px 18px 8px 18px",
-                                    borderRadius: "0.375rem",
-
-                                    fontSize: "16px",
-                                    color: "#fff",
-                                    backgroundColor: "#883495",
-                                    borderColor: "#883495",
-                                    boxShadow:
-                                      "0 0.125rem 0.25rem 0 rgb(105 108 255 / 40%",
-                                  }}
-                                >
-                                  Update Term
-                                </button>
-                              </div>
-                            </tbody>
-                          </table>
-                        ) : null}
                       </div>
                     </div>
                   </>

@@ -2,13 +2,15 @@ import React, { Component } from "react";
 import Layout from "../layout/Layout";
 import API from "../../../shared/admin-axios";
 import swal from "sweetalert";
+import moment from "moment";
 class SetPlan extends Component {
   constructor(props) {
     super(props);
     this.state = {
       server_error: "",
       success: "",
-      plan_data: {},
+      plan_data: [],
+      studentDetails: {},
     };
   }
 
@@ -17,19 +19,27 @@ class SetPlan extends Component {
     API.get(`/admin/secure/student_plan/${id}`)
       .then((res) => {
         if (res.data.status === 200) {
+        
           this.setState({
-            plan_data: res.data.details,
+            studentDetails: res.data.student_details,
+            plan_data: res.data.student_plan,
           });
+
+
         } else {
+
           swal("Oops!", res.data.message, "error");
-          this.props.history.push("/admin/view_student");
+
         }
       })
       .catch((err) => {
+
         swal("Oops!", "Something went wrong!", "error");
-        this.props.history.push("/admin/view_student");
+        
       });
   }
+
+
 
   render() {
     return (
@@ -41,7 +51,7 @@ class SetPlan extends Component {
                 <h3 className="card-title">
                   <span className="sp1">Home /</span>
                   <span className="sp1"> Student /</span>
-                  <span className="sp2"> View Plan</span>
+                  <span className="sp2"> View Plan </span>
                 </h3>
               </div>
             </div>
@@ -57,404 +67,196 @@ class SetPlan extends Component {
                     >
               <div className="row">
                 <>
-                  <table class="table table-bordered">
-                    {this.state.plan_data && this.state.plan_data ? (
-                      <tbody>
-                        <tr>
-                          <td>Student Type</td>
-                          <td>
-                            {this.state.plan_data.student_type &&
-                              this.state.plan_data.student_type.toUpperCase()}
-                          </td>
-                        </tr>
-                        <tr>
-                          <td>Student Name</td>
-                          <td>{this.state.plan_data.student_name}</td>
-                        </tr>
-                        <tr>
-                          <td>Plan Id</td>
-                          <td>{this.state.plan_data.id}</td>
-                        </tr>
-                        <tr>
-                          <td>Room No</td>
-                          <td>{this.state.plan_data.room_no}</td>
-                        </tr>
-                        <tr>
-                          <td>Bed Type</td>
-                          <td>
-                            {" "}
-                            {this.state.plan_data.bed_type &&
-                            this.state.plan_data.bed_type == "ub"
-                              ? "Upper Berth"
-                              : "Lower Berth"}
-                          </td>
-                        </tr>
-                        {/*   <tr>
-                          <td>
-                            Meal Type
-                          </td>
-                          <td>
-                            
-                              {this.state.plan_data.meal_type &&
-                                this.state.plan_data.meal_type}
-                            
-                          </td>
-                        </tr> */}
-                        <tr>
-                          <td>Parking </td>
-                          <td>
-                            {this.state.plan_data.parking != 0 ? "YES" : "NA"}
-                          </td>
-                        </tr>
-                        <tr>
-                          <td>Parking Type</td>
-                          <td>
-                            {this.state.plan_data.parking_type != null
-                              ? this.state.plan_data.parking_type + " WHEELER"
-                              : "NA"}
-                          </td>
-                        </tr>
-                        { this.state.plan_data.monthly != 0 &&
-                        <>
-                        <td
-                          colSpan={2}
-                          style={{ fontWeight: "bold", textAlign: "center" }}
+                  <table className="table table-bordered">
+                    
+                    <tbody>
+                      <tr>
+                      <td
+                        colSpan={2}
+                        style={{
+                          fontWeight: "bold",
+                          textAlign: "center",
+                        }}
                         >
-                          Monthly
-                        </td>
-                        <tr>
-                          <td>Parking Fees</td>
-                          <td>
-                            {this.state.plan_data.parking &&
-                              Number(
-                                this.state.plan_data.parking
-                              ).toLocaleString("en-IN", {
-                                maximumFractionDigits: 0,
-                                style: "currency",
-                                currency: "INR",
-                              })}
-                          </td>
-                        </tr>
-                        <tr>
-                          <td>Transportation Fees</td>
-                          <td>
-                            {this.state.plan_data.transportation &&
-                              this.state.plan_data.transportation.toLocaleString(
-                                "en-IN",
-                                {
-                                  maximumFractionDigits: 0,
-                                  style: "currency",
-                                  currency: "INR",
-                                }
-                              )}
-                          </td>
-                        </tr>
-                        <td
-                          colSpan={2}
-                          style={{ fontWeight: "bold", textAlign: "center" }}
-                        >
-                          Term {this.state.plan_data.term}
-                        </td>
-                        <tr>
-                          <td>
-                            Meal (
-                            {this.state.plan_data.meal_type &&
-                              this.state.plan_data.meal_type}
-                            )
-                          </td>
-                          <td>
-                            {this.state.plan_data.meal &&
-                              this.state.plan_data.meal.toLocaleString(
-                                "en-IN",
-                                {
-                                  maximumFractionDigits: 0,
-                                  style: "currency",
-                                  currency: "INR",
-                                }
-                              )}
-                          </td>
-                        </tr>
-                        <tr>
-                          <td>Laundry</td>
-                          <td>
-                            {this.state.plan_data.laundry &&
-                              this.state.plan_data.laundry.toLocaleString(
-                                "en-IN",
-                                {
-                                  maximumFractionDigits: 0,
-                                  style: "currency",
-                                  currency: "INR",
-                                }
-                              )}
-                          </td>
-                        </tr>
-                        <td
-                          colSpan={2}
-                          style={{
-                            fontWeight: "bold",
-                            textAlign: "center",
-                          }}
-                        >
-                          One Time Payment
-                        </td>
-                        <tr>
-                          <td>Admission Fee</td>
-                          <td>
-                            {this.state.plan_data.addmission_fee &&
-                              this.state.plan_data.addmission_fee.toLocaleString(
-                                "en-IN",
-                                {
-                                  maximumFractionDigits: 0,
-                                  style: "currency",
-                                  currency: "INR",
-                                }
-                              )}
-                          </td>
-                        </tr>
-                        <tr>
-                          <td>Admisson Kit</td>
-                          <td>
-                            {this.state.plan_data.admisson_kit &&
-                              this.state.plan_data.admisson_kit.toLocaleString(
-                                "en-IN",
-                                {
-                                  maximumFractionDigits: 0,
-                                  style: "currency",
-                                  currency: "INR",
-                                }
-                              )}
-                          </td>
-                        </tr>
+                        Student Detail
+                      </td>
+                      </tr>
+                      <tr>
+                      <td>Student Name</td>
+                      <td>{this.state.studentDetails.SFname}</td>
+                      </tr>
 
-                        <tr>
-                          <td>Caution Deposit</td>
-                          <td>
-                            {this.state.plan_data.caution_deposit &&
-                              this.state.plan_data.caution_deposit.toLocaleString(
-                                "en-IN",
-                                {
-                                  maximumFractionDigits: 0,
-                                  style: "currency",
-                                  currency: "INR",
-                                }
-                              )}
-                          </td>
-                        </tr>
-                        <tr>
-                          <td>Cultural Fees</td>
-                          <td>
-                            {this.state.plan_data.cultural_fees &&
-                              this.state.plan_data.cultural_fees.toLocaleString(
-                                "en-IN",
-                                {
-                                  maximumFractionDigits: 0,
-                                  style: "currency",
-                                  currency: "INR",
-                                }
-                              )}
-                          </td>
-                        </tr>
+                      <tr>
+                      <td>Student Type</td>
+                      <td> {this.state.studentDetails.student_type &&
+                                    this.state.studentDetails.student_type.toUpperCase()}</td>
+                      </tr>
+                      
+                      <tr>
+                      <td>Student Phone No</td>
+                      <td>{this.state.studentDetails.SmobNo}</td>
+                      </tr>
 
-                        <tr>
-                          <td>Room Rent</td>
-                          <td>
-                            {this.state.plan_data.room_rent &&
-                              this.state.plan_data.room_rent.toLocaleString(
-                                "en-IN",
-                                {
-                                  maximumFractionDigits: 0,
-                                  style: "currency",
-                                  currency: "INR",
-                                }
-                              )}
-                          </td>
-                        </tr>
-                        </> }
-                        { this.state.plan_data.monthly == 0 && 
-                        <>
-                        <td
-                          colSpan={2}
-                          style={{ fontWeight: "bold", textAlign: "center" }}
-                        >
-                          Monthly
-                        </td>
-                         <tr>
-                          <td>Transportation Fee</td>
-                          <td>
-                          {this.state.plan_data.monthly_transportation_fee &&
-                              this.state.plan_data.monthly_transportation_fee.toLocaleString(
-                                "en-IN",
-                                {
-                                  maximumFractionDigits: 0,
-                                  style: "currency",
-                                  currency: "INR",
-                                }
-                              )}
-                          </td>
-                        </tr>
+                      <tr>
+                      <td>Student Email</td>
+                      <td>{this.state.studentDetails.StudEmail}</td>
+                      </tr>
 
-                        <tr>
-                          <td>Four wheeler Parking Fee</td>
-                          <td>
-                          {this.state.plan_data.monthly_four_wheeler_parking_fee &&
-                              this.state.plan_data.monthly_four_wheeler_parking_fee.toLocaleString(
-                                "en-IN",
-                                {
-                                  maximumFractionDigits: 0,
-                                  style: "currency",
-                                  currency: "INR",
-                                }
-                              )}
-                          </td>
-                        </tr>
+                      <tr>
+                      <td>Room No</td>
+                      <td>{this.state.studentDetails.roomNumber}</td>
+                      </tr>
 
-                        <tr>
-                          <td>Two wheeler Parking Fee</td>
-                          <td>
-                          {this.state.plan_data.monthly_two_wheeler_parking_fee &&
-                              this.state.plan_data.monthly_two_wheeler_parking_fee.toLocaleString(
-                                "en-IN",
-                                {
-                                  maximumFractionDigits: 0,
-                                  style: "currency",
-                                  currency: "INR",
-                                }
-                              )}
-                          </td>
-                        </tr>
+                      <tr>
+                      <td>Type of Room</td>
+                      <td>{this.state.studentDetails.room_type}</td>
+                      </tr>
 
-                        <tr>
-                          <td>Water Bill</td>
-                          <td>
-                          {this.state.plan_data.monthly_water_bill &&
-                              this.state.plan_data.monthly_water_bill.toLocaleString(
-                                "en-IN",
-                                {
-                                  maximumFractionDigits: 0,
-                                  style: "currency",
-                                  currency: "INR",
-                                }
-                              )}
-                          </td>
-                        </tr>
+                      <tr>
+                      <td>Type of Sharing</td>
+                      <td>{this.state.studentDetails.occupancy}</td>
+                      </tr>
 
-                        <tr>
-                          <td>Electricity Bill</td>
-                          <td>
-                          {this.state.plan_data.monthly_electricity_bill &&
-                              this.state.plan_data.monthly_electricity_bill.toLocaleString(
-                                "en-IN",
-                                {
-                                  maximumFractionDigits: 0,
-                                  style: "currency",
-                                  currency: "INR",
-                                }
-                              )}
-                          </td>
-                        </tr>
+                      <tr>
+                      <td>Toilet type</td>
+                      <td>{this.state.studentDetails.toilet_type}</td>
+                      </tr>
 
-                        <tr>
-                          <td>Mess Fee</td>
-                          <td>
-                          {this.state.plan_data.monthly_mess_fee &&
-                              this.state.plan_data.monthly_mess_fee.toLocaleString(
-                                "en-IN",
-                                {
-                                  maximumFractionDigits: 0,
-                                  style: "currency",
-                                  currency: "INR",
-                                }
-                              )}
-                          </td>
-                        </tr>
+                      <tr>
+                      <td>Bed Type</td>
+                      <td> 
+                                  {" "}
+                                  {this.state.studentDetails.bed_type &&
+                                  this.state.studentDetails.bed_type == "ub"
+                                    ? "Upper Berth"
+                                    : "Lower Berth"}
+                                </td>
+                      </tr>
 
-                        <tr>
-                          <td>Laundry Fee</td>
-                          <td>
-                          {this.state.plan_data.monthly_laundry_fee &&
-                              this.state.plan_data.monthly_laundry_fee.toLocaleString(
-                                "en-IN",
-                                {
-                                  maximumFractionDigits: 0,
-                                  style: "currency",
-                                  currency: "INR",
-                                }
-                              )}
-                          </td>
-                        </tr>
+                      <tr>
+                      <td> Meal Type</td>
+                      <td>{this.state.studentDetails.food_preference &&
+                                      this.state.studentDetails.food_preference}</td>
+                      </tr>
 
-                        <tr>
-                          <td>Room Rent</td>
-                          <td>
-                          {this.state.plan_data.monthly_room_rent &&
-                              this.state.plan_data.monthly_room_rent.toLocaleString(
-                                "en-IN",
-                                {
-                                  maximumFractionDigits: 0,
-                                  style: "currency",
-                                  currency: "INR",
-                                }
-                              )}
-                          </td>
-                        </tr>
+                      <tr>
+                      <td> Parking</td>
+                      <td>{this.state.studentDetails.parking != 0 ? "YES" : "NA"}</td>
+                      </tr>
 
-                        <tr>
-                          <td>Admission Fee</td>
-                          <td>
-                          {this.state.plan_data.monthly_admission_fee &&
-                              this.state.plan_data.monthly_admission_fee.toLocaleString(
-                                "en-IN",
-                                {
-                                  maximumFractionDigits: 0,
-                                  style: "currency",
-                                  currency: "INR",
-                                }
-                              )}
-                          </td>
-                        </tr>
+                      <tr>
+                      <td> Parking Type</td>
+                      <td> {this.state.studentDetails.parking_type != null
+                                    ? this.state.studentDetails.parking_type + " WHEELER"
+                                    : "NA"}</td>
+                      </tr>
 
-                        <tr>
-                          <td>Other Fees</td>
-                          <td>
-                          {this.state.plan_data.monthly_other_fees &&
-                              this.state.plan_data.monthly_other_fees.toLocaleString(
-                                "en-IN",
-                                {
-                                  maximumFractionDigits: 0,
-                                  style: "currency",
-                                  currency: "INR",
-                                }
-                              )}
-                          </td>
-                        </tr>
+                     {this.state.plan_data.length > 0 &&
+                      this.state.plan_data.map((plan, index) => (
+                        <React.Fragment key={index}>
+                          {/* Header */}
+                          <tr>
+                            <td colSpan={2} style={{ fontWeight: "bold", textAlign: "center" }}>
+                              {plan.plan_type}
+                            </td>
+                          </tr>
 
+                          {/* PLAN ID 1, 2, 3 → One Time Payment */}
+                          {(plan.plan_id === 1 || plan.plan_id === 2 || plan.plan_id === 3) && (
+                            <>
+                              <tr>
+                                <td colSpan={2} style={{ fontWeight: "bold", textAlign: "center" }}>
+                                  One Time Payment
+                                </td>
+                              </tr>
+                              <tr><td>Room Rent (including gst)</td><td>{Number(plan.room_rent).toLocaleString("en-IN",{style:"currency",currency:"INR"})}</td></tr>
+                              <tr><td>Cultural Fee (including gst)</td><td>{Number(plan.cultural_fees).toLocaleString("en-IN",{style:"currency",currency:"INR"})}</td></tr>
+                              <tr><td>Caution Deposit</td><td>{Number(plan.caution_deposit).toLocaleString("en-IN",{style:"currency",currency:"INR"})}</td></tr>
+                              <tr><td>Admission Fee (including gst)</td><td>{Number(plan.addmission_fee).toLocaleString("en-IN",{style:"currency",currency:"INR"})}</td></tr>
+                              <tr><td>Admission Kit (including gst)</td><td>{Number(plan.admisson_kit).toLocaleString("en-IN",{style:"currency",currency:"INR"})}</td></tr>
+                            </>
+                          )}
+
+                          {/* PLAN 1, 2 → Term I */}
+                          {(plan.plan_id === 1 || plan.plan_id === 2) && (
+                            <>
+                              <tr><td colSpan={2} style={{fontWeight:"bold",textAlign:"center"}}>Term I</td></tr>
+                              <tr><td>Meal Fees (including gst)</td><td>{Number(plan.meal_t1).toLocaleString("en-IN",{style:"currency",currency:"INR"})}</td></tr>
+                              <tr><td>Laundry (including gst)</td><td>{Number(plan.laundry_t1).toLocaleString("en-IN",{style:"currency",currency:"INR"})}</td></tr>
+                            </>
+                          )}
+
+                          {/* PLAN 1, 3, 4 → Term II */}
+                          {(plan.plan_id === 1 || plan.plan_id === 3 || plan.plan_id === 4) && (
+                            <>
+                              <tr><td colSpan={2} style={{fontWeight:"bold",textAlign:"center"}}>Term II</td></tr>
+                              <tr><td>Meal Fees (including gst)</td><td>{Number(plan.meal_t2).toLocaleString("en-IN",{style:"currency",currency:"INR"})}</td></tr>
+                              <tr><td>Laundry (including gst)</td><td>{Number(plan.laundry_t2).toLocaleString("en-IN",{style:"currency",currency:"INR"})}</td></tr>
+                            </>
+                          )}
+
+                          {/* PLAN 5 → Lateral / Temporary */}
+                          {plan.plan_id === 5 && (plan.plan_type === "lateral" || plan.plan_type === "temporary") && (
+                            <>
+                              <tr><td colSpan={2} style={{fontWeight:"bold",textAlign:"center"}}>One Time Payment</td></tr>
+                              <tr><td>Room Rent (including gst)</td><td>{Number(plan.room_rent).toLocaleString("en-IN",{style:"currency",currency:"INR"})}</td></tr>
+                              <tr><td>Cultural Fee (including gst)</td><td>{Number(plan.cultural_fees).toLocaleString("en-IN",{style:"currency",currency:"INR"})}</td></tr>
+                              <tr><td>Caution Deposit</td><td>{Number(plan.caution_deposit).toLocaleString("en-IN",{style:"currency",currency:"INR"})}</td></tr>
+                              <tr><td>Admission Fee (including gst)</td><td>{Number(plan.addmission_fee).toLocaleString("en-IN",{style:"currency",currency:"INR"})}</td></tr>
+                              <tr><td>Admission Kit (including gst)</td><td>{Number(plan.admisson_kit).toLocaleString("en-IN",{style:"currency",currency:"INR"})}</td></tr>
+                              <tr><td>Meal Fees (including gst)</td><td>{Number(plan.monthly_mess_fee).toLocaleString("en-IN",{style:"currency",currency:"INR"})}</td></tr>
+                              <tr><td>Laundry (including gst)</td><td>{Number(plan.monthly_laundry_fee).toLocaleString("en-IN",{style:"currency",currency:"INR"})}</td></tr>
+                            </>
+                          )}
+
+                          {/* PLAN 5 → Prepaid */}
+                          {plan.plan_id === 5 && plan.plan_type === "prepaid" && (
+                            <>
+                              <tr><td colSpan={2} style={{fontWeight:"bold",textAlign:"center"}}>Monthly</td></tr>
+                              <tr><td>Transportation Date</td><td>{plan.transport_start_date} - {plan.transport_end_date}</td></tr>
+                              <tr><td>Transportation Fee (including gst)</td><td>{Number(plan.transportation).toLocaleString("en-IN",{style:"currency",currency:"INR"})}</td></tr>
+                              <tr><td>Parking Date</td><td>{plan.parking_start_date} - {plan.parking_end_date}</td></tr>
+                              <tr><td>Parking Fee (including gst)</td><td>{Number(plan.parking).toLocaleString("en-IN",{style:"currency",currency:"INR"})}</td></tr>
+                            </>
+                          )}
+
+                          {/* PLAN 5 → Postpaid */}
+                          {plan.plan_id === 5 && plan.plan_type === "postpaid" && (
+                            <>
+                              <tr><td colSpan={2} style={{fontWeight:"bold",textAlign:"center"}}>Monthly</td></tr>
+                              <tr><td>Water Bill (including gst)</td><td>{Number(plan.monthly_water_bill).toLocaleString("en-IN",{style:"currency",currency:"INR"})}</td></tr>
+                              <tr><td>Electricity Bill (including gst)</td><td>{Number(plan.monthly_electricity_bill).toLocaleString("en-IN",{style:"currency",currency:"INR"})}</td></tr>
+                            </>
+                          )}
+
+                          {/* Common Footer for All */}
+                          <tr>
+                            <td>Monthly Other Fees</td>
+                            <td>{Number(plan.monthly_other_fees).toLocaleString("en-IN",{style:"currency",currency:"INR"})}</td>
+                          </tr>
+                          <tr>
+                            <td>Other Fees Remark</td>
+                            <td>{plan.monthly_other_fees_remark}</td>
+                          </tr>
+                          <tr>
+                            <td><b>Total (including gst)</b></td>
+                            <td><b>{Number(plan.to_pay).toLocaleString("en-IN",{style:"currency",currency:"INR"})}</b></td>
+                          </tr>
+                        </React.Fragment>
+                      ))}
+
+
+                      {this.state.plan_data.length === 0 && (
                         <tr>
-                          <td>Other Fees Remark</td>
-                          <td>
-                          {this.state.plan_data.monthly_other_fees_remark}
+                          <td colSpan="2" style={{ textAlign: "center", color: "gray" }}>
+                            No plan selected
                           </td>
                         </tr>
-                        </>}
-                        <tr>
-                          <td>
-                            <b>Total</b>
-                          </td>
-                          <td>
-                            <b>
-                              {this.state.plan_data.total &&
-                                this.state.plan_data.total.toLocaleString(
-                                  "en-IN",
-                                  {
-                                    maximumFractionDigits: 0,
-                                    style: "currency",
-                                    currency: "INR",
-                                  }
-                                )}
-                            </b>
-                          </td>
-                        </tr>
+                      )}
+
+
                       </tbody>
-                    ) : null}
+                 
                   </table>
                   <br />
                 </>

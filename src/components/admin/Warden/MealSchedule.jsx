@@ -57,6 +57,8 @@ class MealSchedule extends Component {
         this.setState({
           usermangment: res.data.result_data,
         });
+
+        //console.log('this.state.usermangment',this.state.usermangment);
       })
       .catch((err) => {
         console.log("err:", err);
@@ -96,6 +98,69 @@ class MealSchedule extends Component {
       return <>{moment(dateFormat).format("dddd")}</>;
     };
 
+
+    const formatBreakfast = () => (cell) => {
+
+      if (typeof cell !== 'object' || cell === null) return "";
+      
+        const veg = cell.veg ? `Veg: ${cell.veg.join(", ")}` : "";
+        const egg1 = cell.egg1 ? `Egg1: ${cell.egg1.join(", ")}` : "";
+        const egg2 = cell.egg2 ? `Egg2: ${cell.egg2.join(", ")}` : "";
+        const nonveg1 = cell.nonveg1 ? `Non-Veg1: ${cell.nonveg1.join(", ")}` : "";
+        const nonveg2 = cell.nonveg2 ? `Non-Veg2: ${cell.nonveg2.join(", ")}` : "";
+        const items = [veg, egg1, egg2, nonveg1, nonveg2].filter(Boolean).join(", ");
+
+        return items || "No items available"; 
+    };
+
+
+    const formatLunch = () => (cell) => {
+
+      if (typeof cell !== 'object' || cell === null) return "";
+      
+        const veg = cell.veg ? `Veg: ${cell.veg.join(", ")}` : "";
+        const egg1 = cell.egg1 ? `Egg1: ${cell.egg1.join(", ")}` : "";
+        const egg2 = cell.egg2 ? `Egg2: ${cell.egg2.join(", ")}` : "";
+        const nonveg1 = cell.nonveg1 ? `Non-Veg1: ${cell.nonveg1.join(", ")}` : "";
+        const nonveg2 = cell.nonveg2 ? `Non-Veg2: ${cell.nonveg2.join(", ")}` : "";
+        const items = [veg, egg1, egg2, nonveg1, nonveg2].filter(Boolean).join(", ");
+
+        return items || "No items available"; 
+    };
+
+
+    const formatSnacks = () => (cell) => {
+
+      if (typeof cell !== 'object' || cell === null) return "";
+      
+        const veg = cell.veg ? `Veg: ${cell.veg.join(", ")}` : "";
+        const egg1 = cell.egg1 ? `Egg1: ${cell.egg1.join(", ")}` : "";
+        const egg2 = cell.egg2 ? `Egg2: ${cell.egg2.join(", ")}` : "";
+        const nonveg1 = cell.nonveg1 ? `Non-Veg1: ${cell.nonveg1.join(", ")}` : "";
+        const nonveg2 = cell.nonveg2 ? `Non-Veg2: ${cell.nonveg2.join(", ")}` : "";
+        const items = [veg, egg1, egg2, nonveg1, nonveg2].filter(Boolean).join(", ");
+
+        return items || "No items available"; 
+    };
+
+
+
+    const formatDinner = () => (cell) => {
+
+      if (typeof cell !== 'object' || cell === null) return "";
+      
+        const veg = cell.veg ? `Veg: ${cell.veg.join(", ")}` : "";
+        const egg1 = cell.egg1 ? `Egg1: ${cell.egg1.join(", ")}` : "";
+        const egg2 = cell.egg2 ? `Egg2: ${cell.egg2.join(", ")}` : "";
+        const nonveg1 = cell.nonveg1 ? `Non-Veg1: ${cell.nonveg1.join(", ")}` : "";
+        const nonveg2 = cell.nonveg2 ? `Non-Veg2: ${cell.nonveg2.join(", ")}` : "";
+        const items = [veg, egg1, egg2, nonveg1, nonveg2].filter(Boolean).join(", ");
+
+        return items || "No items available"; 
+    };
+
+
+
     if (this.state.Invalid) return <Redirect to="/admin/dashboard" />;
     else {
       return (
@@ -117,7 +182,7 @@ class MealSchedule extends Component {
             </section>
             <section className="content">
               <div style={{ display: "flex", justifyContent: "end" }}>
-                <Link className="btn btn-primary" to="/admin/meal-schedule/add">
+                <Link className="btn btn-primary mb-10 mr-0" to="/admin/meal-schedule/add">
                   Add New Schedule
                 </Link>
               </div>
@@ -129,7 +194,7 @@ class MealSchedule extends Component {
                 }}
               >
                 <div className="box-body">
-                  <div>
+                  <div className="datepicker-mils">
                     <span>Date: &nbsp;&nbsp;&nbsp;</span>
                     <DatePicker
                       placeholder="date"
@@ -144,7 +209,7 @@ class MealSchedule extends Component {
                       className="form-control"
                     />
                   </div>
-                  {console.log("YYYYYYYYYYYYY", this.state.usermangment)}
+                 
                   {this.state.usermangment ? (
                     <BootstrapTable
                       data={this.state.usermangment}
@@ -189,6 +254,9 @@ class MealSchedule extends Component {
                         className={"text-uppercase text-secondary"}
                         width="180"
                         dataAlign="center"
+
+                        dataFormat={formatBreakfast(this)}
+                        
                       >
                         Breakfast
                       </TableHeaderColumn>
@@ -198,15 +266,29 @@ class MealSchedule extends Component {
                         className={"text-uppercase text-secondary"}
                         width="180"
                         dataAlign="center"
+                        dataFormat={formatLunch(this)}
                       >
                         Lunch
                       </TableHeaderColumn>
+
+                      <TableHeaderColumn
+                        dataField="snacks"
+                        dataSort={true}
+                        className={"text-uppercase text-secondary"}
+                        width="180"
+                        dataAlign="center"
+                        dataFormat={formatSnacks(this)}
+                      >
+                        Snacks
+                      </TableHeaderColumn>
+
                       <TableHeaderColumn
                         dataField="dinner"
                         dataSort={true}
                         className={"text-uppercase text-secondary"}
                         width="180"
                         dataAlign="center"
+                        dataFormat={formatDinner(this)}
                       >
                         Dinner
                       </TableHeaderColumn>

@@ -37,6 +37,7 @@ export const frontEndLogin = (request, onSuccess, setErrors) => {
 
 				localStorage.clear();
 				localStorage.setItem('token', response.data.token);
+				localStorage.setItem('username', email);
 
 				if (ot !== null) {
 					localStorage.setItem('ot', ot);

@@ -8,6 +8,7 @@ import "./masterdata.css";
 import { Redirect } from "react-router-dom";
 import { connect } from "react-redux";
 import { withRouter } from "react-router-dom";
+import userLog from "../Utils/Logadd";
 
 const initialValues = {
     meal_type: "",
@@ -53,6 +54,7 @@ class MealEdit extends Component {
                 swal("Success", "Meal Updated Successfully", "success");
                 resetForm(initialValues);
                 this.getMeal(id);
+                userLog('Edit Meal','Edit Meal');
             })
             .catch((err) => {
                 console.log("err", err);
@@ -141,9 +143,11 @@ class MealEdit extends Component {
                                                                     onChange={handleChange}
                                                                 >
                                                                     <option value="">Select Food Preference</option>
-                                                                    <option value="VEG">VEG</option>
-                                                                    <option value="NON VEG" >NON VEG</option>
-                                                                    <option value="EGGETERIAN" >EGGETERIAN</option>
+                                                                    <option value="Veg">Veg</option>
+                                                                    <option value="Eggeterian - 1">Veg + Egg (Plan 1) : Egg 3 Meals a week </option>
+                                                                    <option value="Eggeterian - 2">Veg + Egg (Plan 2) : Egg 5 Meals a week</option>
+                                                                    <option value="Non-Veg -1">Non-veg 3 meals & Egg 3 Meals a week</option>
+                                                                    <option value="Non-Veg -2">Non-veg 3 Meals & Egg 5 Meals a week ( No Days)</option>
                                                                 </select>
                                                                 {errors.food_preference &&
                                                                     touched.food_preference ? (

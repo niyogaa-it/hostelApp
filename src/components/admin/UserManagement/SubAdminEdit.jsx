@@ -4,12 +4,11 @@ import * as Yup from "yup";
 import { Button, FormGroup } from "react-bootstrap";
 
 import { Row, Col } from "react-bootstrap";
-
 import API from "../../../shared/admin-axios";
 import swal from "sweetalert";
-
 import Layout from "../layout/Layout";
 import whitelogo from "../../../assets/images/drreddylogo_white.png";
+import userLog from "../Utils/Logadd";
 
 const initialValues = {
   name: "",
@@ -68,8 +67,10 @@ class UpdatePassword extends Component {
           text: "Record updated successfully.",
           icon: "success",
         }).then(() => {
+          
           actions.setSubmitting(false);
           this.getAdmin(id);
+          userLog('Subadmin Details','Edit Subadmin Details');
         });
       })
       .catch((err) => {

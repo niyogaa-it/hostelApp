@@ -16,6 +16,8 @@ const initialValues = {
   SRaddress: "",
   StudEmail: "",
   StudDOB: "",
+  blood_grp:"",
+  studentType :"",
   NamofInstitute: "",
   AdrsodInstitute: "",
   CourEnrolled: "",
@@ -469,6 +471,8 @@ class Reg extends Component {
       SRaddress: student_details.SRaddress ? student_details.SRaddress : "",
       StudEmail: student_details.StudEmail ? student_details.StudEmail : "",
       StudDOB: student_details.StudDOB ? this.state.dob : "",
+      blood_grp: student_details.blood_grp ? student_details.blood_grp : "",
+      studentType: student_details.studentType ? student_details.studentType : "",
       NamofInstitute: student_details.NamofInstitute
         ? student_details.NamofInstitute
         : "",
@@ -637,12 +641,13 @@ class Reg extends Component {
         .required("Student Email is required"),
       StudDOB: Yup.date().required("Student DOB is required"),
       StudimagepathBase: Yup.string().notRequired(),
+      studentType: Yup.string().required("Student type is required"),
       NamofInstitute: Yup.string().required("Name of Institute is required"),
       AdrsodInstitute: Yup.string().required(
         "Address of Institute is required"
       ),
       CourEnrolled: Yup.string().required("Course Enrolled is required"),
-
+      blood_grp: Yup.string().required("Blood Group is required"),
       FatherName: Yup.string().required("Father Name is required"),
       FatherimagepathBase: Yup.string().notRequired(),
       MothersName: Yup.string().required("Mother Name is required"),
@@ -684,7 +689,7 @@ class Reg extends Component {
       occupancy: Yup.string().required("Occupancy is required"),
       room_type: Yup.string().required("Room Type is required"),
       toilet_type: Yup.string().required("Toilet Type is required"),
-      transportation: Yup.string().required("Transportation is required"),
+      //transportation: Yup.string().required("Transportation is required"),
       // check: Yup.string().required("Check is required"),
       StayConNo1: Yup.string().phone("IN", "Please enter a valid phone number"),
       StayConNo: Yup.string().phone("IN", "Please enter a valid phone number"),
@@ -734,7 +739,7 @@ class Reg extends Component {
                       <h1>Application Form</h1>
 
                       <div className="form">
-                        <form className="form-inline">
+                        <div className="form-inline">
                           <div className="row">
                             {/* Student's Details */}
 
@@ -794,6 +799,48 @@ class Reg extends Component {
                                   </div>
                                 </div>
                               </div>
+
+
+                               <div className="form-group">
+                                                              <div className="row">
+                                                                <div className="col-lg-4">
+                                                                  <label htmlFor="blood_grp">
+                                                                    Blood Group *
+                                                                  </label>
+                                                                </div>
+                                                                <div className="col-lg-8">
+                                                                  <Field
+                                                                    name="blood_grp"
+                                                                    component="select"
+                                                                    className={"form-control"}
+                                                                    autoComplete="off"
+                                                                  >
+                                                                    <option value="" >
+                                                                      Default select
+                                                                    </option>
+                                                                    <option value="A+">A+</option>
+                                                                    <option value="A-">A-</option>
+                                                                    <option value="B+">B+</option>
+                                                                    <option value="B-">B-</option>
+                                                                    <option value="AB+">AB+</option>
+                                                                    <option value="AB-">AB-</option>
+                                                                    <option value="O+">O+</option>
+                                                                    <option value="O-">O-</option>
+                                                                     <option value="Other">Any Other</option>
+                                                                  </Field>
+                                
+                                                                  {errors.blood_grp &&
+                                                                    touched.blood_grp ? (
+                                                                    <div className="error error text-left text-danger">
+                                                                      {errors.blood_grp}
+                                                                    </div>
+                                                                  ) : null}
+                                                                </div>
+                                                              </div>
+                                                            </div>
+
+
+
                               <div className="form-group">
                                 <div className="row">
                                   <div className="col-lg-4">
@@ -861,6 +908,8 @@ class Reg extends Component {
                                   </div>
                                 </div>
                               </div>
+
+
                               <div className="form-group">
                                 <div className="row">
                                   <div className="col-lg-4">
@@ -873,6 +922,7 @@ class Reg extends Component {
                                       type="text"
                                       name="CourEnrolled"
                                       className={"form-control"}
+                                      placeholder="B.E 1st year"
                                     />
                                     {errors.CourEnrolled &&
                                     touched.CourEnrolled ? (
@@ -883,6 +933,54 @@ class Reg extends Component {
                                   </div>
                                 </div>
                               </div>
+
+                                  <div className="form-group">
+                                    <div className="row align-items-center">
+                                      <div className="col-lg-4">
+                                        <label htmlFor="studentType" className="mb-0">Student Type *</label>
+                                      </div>
+                                      <div className="col-lg-8">
+                                          <div role="group" aria-labelledby="studentType" className="studenttypeclass d-flex">
+                                              <label className="mr-4 d-flex align-items-center">
+                                                  <Field
+                                                    name="studentType"
+                                                    type="radio"
+                                                    value="student"
+                                                    className="mr-1"
+                                                    checked={values.studentType === "student"}
+                                                  /> College Student
+                                                </label>
+
+
+                                                 <label class="mr-4 d-flex align-items-center">
+                                                    <Field
+                                                        name="studentType"
+                                                        type="radio"
+                                                        value="internship"
+                                                        className="mr-1"
+                                                        checked={values.studentType === "internship"}
+                                                      /> Internship
+                                                    
+                                                  </label>
+
+
+                                                <label className="mr-4 d-flex align-items-center">
+                                                  <Field
+                                                    name="studentType"
+                                                    type="radio"
+                                                    value="working_women"
+                                                    className="mr-1"
+                                                    checked={values.studentType === "working_women"}
+                                                  /> Working Women
+                                                </label>
+                                          </div>
+                                        {errors.studentType && touched.studentType ? (
+                                          <div className="error text-left text-danger">{errors.studentType}</div>
+                                        ) : null}
+                                      </div>
+                                    </div>
+                                  </div>
+
                             </div>
 
                             <div className="col-lg-6 col-md-6 txt-position">
@@ -2144,15 +2242,17 @@ class Reg extends Component {
                                     <Field
                                       name="food_preference"
                                       component="select"
-                                      className={"form-control"}
+                                      className="form-control"
                                       autoComplete="off"
+                                      defaultValue={this.state.student_details
+                                        .food_preference}
+                                      
                                     >
-                                       {this.state.package_data &&
-                                        this.state.package_data.map((packages, i) => (
-                                          <option value={packages.package} key={i}>
-                                            {packages.description}
-                                          </option>
-                                        ))} 
+                                      <option value="" >
+                                        Default select
+                                      </option>
+                                       <option value="Veg">Veg</option>
+                                      <option value="Non-Veg">Non-Veg</option>
                                     </Field>
                                     {errors.food_preference &&
                                     touched.food_preference ? (
@@ -2183,7 +2283,7 @@ class Reg extends Component {
                                         );
                                       }}
                                     >
-                                      <option value="" selected>
+                                      <option value="">
                                         Default select
                                       </option>
                                       <option value="Yes">Yes</option>
@@ -2214,7 +2314,7 @@ class Reg extends Component {
                                           );
                                         }}
                                       >
-                                        <option value="" selected>
+                                        <option value="" >
                                           Default select
                                         </option>
                                         <option value="2">
@@ -2249,7 +2349,7 @@ class Reg extends Component {
                                       className={"form-control"}
                                       autoComplete="off"
                                     >
-                                      <option value="" selected>
+                                      <option value="">
                                         Default select
                                       </option>
                                       <option value="2 in 1">2 in 1</option>
@@ -2367,7 +2467,7 @@ class Reg extends Component {
                                       className={"form-control"}
                                       autoComplete="off"
                                     >
-                                      <option value="" selected>
+                                      <option value="" >
                                         Default select
                                       </option>
                                       <option value="AC">AC</option>
@@ -2395,7 +2495,7 @@ class Reg extends Component {
                                       className={"form-control"}
                                       autoComplete="off"
                                     >
-                                      <option value="" selected>
+                                      <option value="" >
                                         Default select
                                       </option>
                                       <option value="Attached">Attached</option>
@@ -2410,7 +2510,9 @@ class Reg extends Component {
                                   </div>
                                 </div>
                               </div>
-                              <div className="form-group">
+
+
+                              {/* <div className="form-group">
                                 <div className="row">
                                   <div className="col-lg-4">
                                     <label htmlFor="transportation">
@@ -2424,7 +2526,7 @@ class Reg extends Component {
                                       component="select"
                                       className={"form-control"}
                                     >
-                                      <option value="" selected>
+                                      <option value="" >
                                         Default select
                                       </option>
                                       <option value="Yes">Yes</option>
@@ -2438,14 +2540,16 @@ class Reg extends Component {
                                     ) : null}
                                   </div>
                                 </div>
-                              </div>
+                              </div> */}
+
+
                             </div>
                           </div>
-                        </form>
+                        </div>
                       </div>
                       <div className="footer">
                         <div className="footer-button">
-                          <button type="submit" className="btn btn-primary">
+                          <button type="submit" className="btn btn-primary" disabled={(Object.keys(touched).length === 0 && touched.constructor === Object)}>
                             Update
                           </button>
                         </div>

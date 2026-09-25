@@ -8,6 +8,7 @@ import "./masterdata.css";
 import { Redirect } from "react-router-dom";
 import { connect } from "react-redux";
 import { withRouter } from "react-router-dom";
+import userLog from "../Utils/Logadd";
 
 let initialValues = {
   building_name: "",
@@ -59,6 +60,7 @@ class EditRomm extends Component {
   getRoom(id) {
     API.get(`/admin/secure/roomDetails/${id}`)
       .then((res) => {
+       
         this.setState({
           room_details: res.data.result[0],
         });
@@ -80,13 +82,16 @@ class EditRomm extends Component {
       .then((response) => {
         if (response.data.status === 201) {
           swal("Success", response.data.message, "success");
-          resetForm(initialValues);
+          
+          userLog('Edit room', 'Edit room');
           this.setState({ show_buliding: false });
           this.setState({ singel_building: [] });
           this.setState({ room_number_aloted: false });
+          this.props.history.push("/admin/room");
         }
         if (response.data.status === 401) {
           swal("Warning", response.data.message, "warning");
+          //resetForm(initialValues);
           this.setState({ room_number_aloted: true });
         }
       })
@@ -105,7 +110,7 @@ class EditRomm extends Component {
     this.getRoom(id);
   };
 
-  changeBlock = (e = null) => {
+ /* changeBlock = (e = null) => {
     let buildingValue = e
       ? e.target.value
       : this.state.room_details.building_id;
@@ -340,13 +345,13 @@ class EditRomm extends Component {
         },
       });
     }
-  };
+  };*/
 
   render() {
-    console.log(this.state.room_info);
+    
     const { room_details } = this.state;
     const newInitialValues = Object.assign(initialValues, {
-      building_name: room_details.building_id ? room_details.building_id : "",
+      building_name: room_details.building_id ? room_details.building_name : "",
       floor: room_details.floor ? room_details.floor : "",
       room_number: room_details.room_number ? room_details.room_number : "",
       room_type: room_details.room_type ? room_details.room_type : "",
@@ -394,42 +399,24 @@ class EditRomm extends Component {
                                 </div>
                                 <div className="col-lg-8">
                                   <Field
-                                    component="select"
+                                   type="text"
                                     autoComplete="off"
                                     name="building_name"
                                     className={"form-control"}
-                                    onChange={this.changeBlock}
+                                    readOnly
+                                    //onChange={this.changeBlock}
                                   >
-                                    <option key="-1" value="">
-                                      Default Select
-                                    </option>
-                                    {this.state.building_dta &&
-                                      this.state.building_dta.map(
-                                        (building, i) => (
-                                          <option value={building.id} key={i}>
-                                            {building.building_name}
-                                          </option>
-                                        )
-                                      )}
+                                    
                                   </Field>
 
                                   {errors.building_name &&
-                                  touched.building_name ? (
+                                    touched.building_name ? (
                                     <div className="text-danger">
                                       {errors.building_name}
                                     </div>
                                   ) : null}
                                 </div>
-                                <div className="col-lg-8">
-                                  {this.state.show_buliding ? (
-                                    <Field
-                                      name="building_id"
-                                      type="text"
-                                      className="form-control"
-                                      value={this.state.building_name}
-                                    />
-                                  ) : null}
-                                </div>
+                                
                               </div>
                             </div>
                             <div className="row form-m-t">
@@ -440,23 +427,13 @@ class EditRomm extends Component {
                                 <div className="col-lg-8">
                                   <Field
                                     name="floor"
-                                    component="select"
+                                    type="text"
                                     autoComplete="off"
                                     className="form-control"
-                                    onChange={this.changeFloor}
+                                    //onChange={this.changeFloor}
+                                    readOnly
                                   >
-                                    <option key="-1" value="">
-                                      Default Select
-                                    </option>
-                                    {this.state.floor_list &&
-                                      this.state.floor_list.map((floor, i) => (
-                                        <option
-                                          value={floor.floor_number}
-                                          key={i}
-                                        >
-                                          {floor.floor_number}
-                                        </option>
-                                      ))}
+                                    
                                   </Field>
                                   {errors.floor && touched.floor ? (
                                     <div className="text-danger">
@@ -466,6 +443,42 @@ class EditRomm extends Component {
                                 </div>
                               </div>
                             </div>
+
+                            <div className="row form-m-t">
+                              <div className="form-group">
+                                <div className="col-lg-4">
+                                  <label htmlFor="room_number">
+                                    Room Number
+                                  </label>
+                                </div>
+                                <div className="col-lg-8">
+                                  <div className="form-group">
+                                    <Field
+                                      name="room_number"
+                                      type="text"
+                                      autoComplete="off"
+                                      className="form-control"
+                                      //onChange={this.changeRoomNumber}
+                                      readOnly
+                                    >
+                                    
+                                    </Field>
+                                    {errors.room_number &&
+                                      touched.room_number ? (
+                                      <div className="text-danger">
+                                        {errors.room_number}
+                                      </div>
+                                    ) : null}
+                                    {/* {this.state.room_number_aloted ? (
+                                      <div className="text-danger">
+                                        Room Number Already Allotted
+                                      </div>
+                                    ) : null} */}
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+
                             <div className="row form-m-t">
                               <div className="form-group">
                                 <div className="col-lg-4">
@@ -477,15 +490,17 @@ class EditRomm extends Component {
                                     component="select"
                                     autoComplete="off"
                                     className="form-control"
-                                    onChange={this.changeRoomType}
+                                    //onChange={this.changeRoomType}
                                   >
                                     <option value="-1">Default Select</option>
-                                    {this.state.room_type &&
+                                    <option value="AC">AC</option>
+                                    <option value="Non-AC">Non-AC</option>
+                                    {/* {this.state.room_type &&
                                       this.state.room_type.map((item, i) => (
                                         <option value={item} key={i}>
                                           {item}
                                         </option>
-                                      ))}
+                                      ))} */}
                                   </Field>
                                   {errors.room_type && touched.room_type ? (
                                     <div className="text-danger">
@@ -507,17 +522,23 @@ class EditRomm extends Component {
                                     component="select"
                                     autoComplete="off"
                                     className="form-control"
-                                    onChange={this.changeOccupancy}
+                                    //onChange={this.changeOccupancy}
                                   >
                                     <option value="-1">Default Select</option>
-                                    {this.state.occupancy_lists &&
+                                    <option value="2 in 1">2 in 1</option>
+                                    <option value="3 in 1">3 in 1</option>
+                                    <option value="4 in 1">4 in 1</option>
+                                    <option value="5 in 1">5 in 1</option>
+                                    <option value="6 in 1">6 in 1</option>
+                                    <option value="7 in 1">7 in 1</option>
+                                    {/* {this.state.occupancy_lists &&
                                       this.state.occupancy_lists.map(
                                         (item, i) => (
                                           <option value={item} key={i}>
                                             {item}
                                           </option>
                                         )
-                                      )}
+                                      )} */}
                                   </Field>
                                   {errors.occupancy && touched.occupancy ? (
                                     <div className="text-danger">
@@ -539,65 +560,25 @@ class EditRomm extends Component {
                                     component="select"
                                     autoComplete="off"
                                     className="form-control"
-                                    onChange={this.changeToiletType}
+                                    //onChange={this.changeToiletType}
                                   >
                                     <option value="">Default Select</option>
-                                    {this.state.toilet_type_lists &&
+                                    <option value="Attached">Attached</option>
+                                    <option value="Common">Common</option>
+                                    {/* {this.state.toilet_type_lists &&
                                       this.state.toilet_type_lists.map(
                                         (item, i) => (
                                           <option value={item} key={i}>
                                             {item}
                                           </option>
                                         )
-                                      )}
+                                      )} */}
                                   </Field>
                                   {errors.toilet_type && touched.toilet_type ? (
                                     <div className="text-danger">
                                       {errors.toilet_type}
                                     </div>
                                   ) : null}
-                                </div>
-                              </div>
-                            </div>
-
-                            <div className="row form-m-t">
-                              <div className="form-group">
-                                <div className="col-lg-4">
-                                  <label htmlFor="room_number">
-                                    Room Number
-                                  </label>
-                                </div>
-                                <div className="col-lg-8">
-                                  <div className="form-group">
-                                    <Field
-                                      name="room_number"
-                                      component="select"
-                                      autoComplete="off"
-                                      className="form-control"
-                                      onChange={this.changeRoomNumber}
-                                    >
-                                      <option value="">Default Select</option>
-                                      {this.state.room_number_lists &&
-                                        this.state.room_number_lists.map(
-                                          (item, i) => (
-                                            <option value={item} key={i}>
-                                              {item}
-                                            </option>
-                                          )
-                                        )}
-                                    </Field>
-                                    {errors.room_number &&
-                                    touched.room_number ? (
-                                      <div className="text-danger">
-                                        {errors.room_number}
-                                      </div>
-                                    ) : null}
-                                    {this.state.room_number_aloted ? (
-                                      <div className="text-danger">
-                                        Room Number Already Allotted
-                                      </div>
-                                    ) : null}
-                                  </div>
                                 </div>
                               </div>
                             </div>
@@ -670,7 +651,7 @@ class EditRomm extends Component {
                                   }}
                                 >
                                   {" "}
-                                  Vacancy {this.state.room_info.total_occupancy}
+                                  Vacancy {this.state.room_info.vaccancy}
                                 </p>
                                 <p
                                   style={{

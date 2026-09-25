@@ -8,6 +8,7 @@ import "./masterdata.css";
 import { Redirect } from "react-router-dom";
 import { connect } from "react-redux";
 import { withRouter } from "react-router-dom";
+import userLog from "../Utils/Logadd";
 
 let initialValues = {
   building_name: "",
@@ -53,6 +54,7 @@ class AddRomm extends Component {
         if (response.data.status === 201) {
           swal("Success", response.data.message, "success");
           resetForm(initialValues);
+          userLog('Add room','Add room');
           this.setState({ show_buliding: false });
           this.setState({ singel_building: [] });
           this.setState({ room_number_aloted: false });

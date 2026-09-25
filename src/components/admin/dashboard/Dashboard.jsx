@@ -510,7 +510,7 @@ class Dashboard extends Component {
 													Student Id
 												</TableHeaderColumn>
 												<TableHeaderColumn
-													dataField="student_name"
+													dataField="SFname"
 													dataSort={true}
 													dataAlign="center"
 													className={"text-uppercase"}
@@ -557,7 +557,7 @@ class Dashboard extends Component {
 												</TableHeaderColumn>
 											</BootstrapTable>
 											<div style={{ display: 'flex', justifyContent: 'end', marginTop: '15px' }}>
-												<Link className="btn btn-primary" to="/admin/payment_activities">View All</Link>
+												<Link className="btn btn-primary" to="/admin/payment_history">View All</Link>
 											</div>
 										</div>
 									</div>

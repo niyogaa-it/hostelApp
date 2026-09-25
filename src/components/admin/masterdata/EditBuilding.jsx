@@ -8,6 +8,7 @@ import { Redirect } from "react-router-dom";
 import { connect } from "react-redux";
 import { withRouter } from "react-router-dom";
 import {useParams }  from "react-router-dom";
+import userLog from "../Utils/Logadd";
 
 let initialValues = {
   building_name: "",
@@ -61,7 +62,10 @@ class EditBuilding extends Component {
           }).then(() => {
             actions.setSubmitting(false);
             this.getBuilding(id);
+            userLog('Edit Building','Edit building');
+            this.props.history.push("/admin/building");
           });
+
         } else {
           swal("Warning", res.data.message, "warning");
           actions.setSubmitting(false);
@@ -97,7 +101,7 @@ class EditBuilding extends Component {
                 <h3 className="card-title">
                   <span className="sp1">Home /</span>
                   <span className="sp1"> Master Data /</span>
-                  <span className="sp2"> Create Building</span>
+                  <span className="sp2"> Edit Building</span>
                 </h3>
                 <div className="col-lg-10 card card-m-l pty-30">
                   <Formik

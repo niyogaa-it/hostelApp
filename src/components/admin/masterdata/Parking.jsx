@@ -50,7 +50,15 @@ class Region extends Component {
   }
   clickParking = (parking) => {
     this.props.history.push({
-      pathname: "/admin/parking/sloat" + "/" + parking,
+      pathname: "/admin/parking/sloat/" + parking,
+      state: { parking: parking },
+    });
+  };
+
+
+  editParking = (parking) => {
+    this.props.history.push({
+      pathname: "/admin/parking/edit/" + parking,
       state: { parking: parking },
     });
   };
@@ -83,19 +91,35 @@ class Region extends Component {
   render() {
     const statusAction = () => (parking) => {
       return (
-        <button
-          onClick={() => this.clickParking(parking)}
-          style={{
-            padding: "0.5rem",
-            borderRadius: "5px",
-            backgroundColor: "#d7f5fc",
-            color: "#03c3ec",
-            fontWeight: "bold",
-            border:"none"
-          }}
-        >
-          View Parking Slot
-        </button>
+        <div>
+          <button
+            onClick={() => this.editParking(parking)}
+            style={{
+              padding: "0.5rem",
+              borderRadius: "5px",
+              backgroundColor: "#d7f5fc",
+              color: "#03c3ec",
+              fontWeight: "bold",
+              border:"none"
+            }}
+          >
+            Edit
+          </button>
+
+          <button
+            onClick={() => this.clickParking(parking)}
+            style={{
+              padding: "0.5rem",
+              borderRadius: "5px",
+              backgroundColor: "#d7f5fc",
+              color: "#03c3ec",
+              fontWeight: "bold",
+              border:"none"
+            }}
+            >
+            View Parking Slot
+          </button>
+        </div>
       );
     };
     if (this.state.Invalid) return <Redirect to="/admin/dashboard" />
@@ -127,16 +151,28 @@ class Region extends Component {
                     Parking ID
                   </TableHeaderColumn>
                   <TableHeaderColumn
-                    dataField="parking_name"
+                    dataField="building_name"
                     dataAlign="center"
                     dataSort
                     // dataFormat={custContent(this)}
                   >
                     Building Name
                   </TableHeaderColumn>
+                  {/* <TableHeaderColumn dataField="no_of_slot_two" dataAlign="center"   dataSort>
+                    No of Parking Slot (Two Wheeler)
+                  </TableHeaderColumn>
+
+                  <TableHeaderColumn dataField="no_of_slot_four" dataAlign="center"   dataSort>
+                    No of Parking Slot (Four Wheeler)
+                  </TableHeaderColumn>
+                  <TableHeaderColumn dataField="no_of_slot" dataAlign="center"   dataSort>
+                    No of Parking Slot
+                  </TableHeaderColumn> */}
+
                   <TableHeaderColumn dataField="no_of_slot" dataAlign="center"   dataSort>
                     No of Parking Slot
                   </TableHeaderColumn>
+
                   <TableHeaderColumn
                     dataField="id"
                     dataAlign="center" 

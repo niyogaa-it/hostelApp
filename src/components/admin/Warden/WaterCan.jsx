@@ -15,7 +15,7 @@ import { Link } from "react-router-dom";
 import { Formik, Field, Form } from "formik";
 import swal from "sweetalert";
 import * as Yup from "yup";
-
+import userLog from "../Utils/Logadd";
 import Layout from "../layout/Layout";
 import API from "../../../shared/admin-axios";
 import { connect } from "react-redux";
@@ -56,6 +56,7 @@ class Region extends Component {
       API.post(`/admin/secure/water/delivered`, { id: id, status: action })
         .then((response) => {
           this.setState({ data: response.data, isLoading: false });
+          userLog('Water Can','Water Can Reject');
           this.componentDidMount();
         })
         .catch((err) => {

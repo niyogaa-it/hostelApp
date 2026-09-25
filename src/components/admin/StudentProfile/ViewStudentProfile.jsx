@@ -6,14 +6,16 @@ import API from "../../../shared/admin-axios";
 import logo from "../../../assets/images/hostel-logo.png";
 import swal from "sweetalert";
 import "yup-phone-lite";
-import Moment from 'moment';
+import moment from "moment";
 
 const initialValues = {
   SFname: "",
   SmobNo: "",
   SRaddress: "",
   StudEmail: "",
+  blood_grp: "",
   StudDOB: "",
+  studentType :"",
   NamofInstitute: "",
   AdrsodInstitute: "",
   CourEnrolled: "",
@@ -76,6 +78,9 @@ const initialValues = {
   ImgFeMaleApp1Base: "",
   ImgFeMaleApp2Base: "",
   ImgFeMaleApp3Base: "",
+  registrationDate: "",
+  approveDate: "",
+  deactivateDate: "",
 };
 
 export default class ViewStudentProfile extends Component {
@@ -114,7 +119,7 @@ export default class ViewStudentProfile extends Component {
     let student_id = decodeURIComponent(this.props.match.params.id);
     API.get(`/admin/secure/per/student/${student_id}`)
       .then((res) => {
-        console.log("res", res);
+        
         if (res.data.status === 200) {
           this.setState({
             student_details: res.data.details[0],
@@ -147,16 +152,17 @@ export default class ViewStudentProfile extends Component {
     if(student_details.StudDOB) {
       let rev_dob_list = student_details.StudDOB.split('/');
       this.state.dob = rev_dob_list[2]+'-'+rev_dob_list[0]+'-'+rev_dob_list[1];
-      console.log(this.state.dob);
-      console.log("testing");
+   
     }
 
     const newInitialValues = Object.assign(initialValues, {
       SFname: student_details.SFname ? student_details.SFname : "",
       SmobNo: student_details.SmobNo ? student_details.SmobNo : "",
+      blood_grp: student_details.blood_grp ? student_details.blood_grp : "",
       SRaddress: student_details.SRaddress ? student_details.SRaddress : "",
       StudEmail: student_details.StudEmail ? student_details.StudEmail : "",
       StudDOB: student_details.StudDOB ? this.state.dob : "",
+      studentType: student_details.studentType ? student_details.studentType : "",
       NamofInstitute: student_details.NamofInstitute
         ? student_details.NamofInstitute
         : "",
@@ -288,8 +294,14 @@ export default class ViewStudentProfile extends Component {
       parking_type: student_details.parking_type
         ? student_details.parking_type
         : "",
+      registrationDate: this.state.student_details.created_at ? moment(this.state.student_details.created_at).format("DD/MM/YYYY, h:mm:ss a") : "",
+      approveDate: this.state.student_details.approve_date ? moment(this.state.student_details.approve_date).format("DD/MM/YYYY, h:mm:ss a") : "",
+      deactivateDate:  this.state.student_details.deactivate_date ? moment(this.state.student_details.deactivate_date).format("DD/MM/YYYY, h:mm:ss a") : "",
     });
 
+
+ 
+    
     return (
       <div>
         <section className="register-panel">
@@ -309,7 +321,7 @@ export default class ViewStudentProfile extends Component {
           </div>
           <div className="reg-content">
             <div className="cont-header">
-              {console.log("newInitialValues>>>", newInitialValues)}
+              
               <Formik initialValues={newInitialValues}>
                 {({ values, errors, touched }) => (
                   <Form>
@@ -317,7 +329,7 @@ export default class ViewStudentProfile extends Component {
                       <h1>Application Form</h1>
 
                       <div className="form">
-                        <form className="form-inline">
+                        <div className="form-inline">
                           <div className="row">
                             {/* Student's Details */}
 
@@ -361,6 +373,27 @@ export default class ViewStudentProfile extends Component {
                                   </div>
                                 </div>
                               </div>
+
+
+                              <div className="form-group">
+                                <div className="row">
+                                  <div className="col-lg-4">
+                                    <label htmlFor="blood_grp">
+                                      Blood Group. 
+                                    </label>
+                                  </div>
+                                  <div className="col-lg-8">
+                                    <Field
+                                      disabled
+                                      type="text"
+                                      name="blood_grp"
+                                      className={"form-control"}
+                                    />
+                                  </div>
+                                </div>
+                              </div>
+
+
                               <div className="form-group">
                                 <div className="row">
                                   <div className="col-lg-4">
@@ -397,6 +430,7 @@ export default class ViewStudentProfile extends Component {
                                   </div>
                                 </div>
                               </div>
+
                               <div className="form-group">
                                 <div className="row">
                                   <div className="col-lg-4">
@@ -414,6 +448,55 @@ export default class ViewStudentProfile extends Component {
                                   </div>
                                 </div>
                               </div>
+                                
+                                <div className="form-group">
+                                  <div className="row align-items-center">
+                                    <div className="col-lg-4">
+                                      <label htmlFor="studentType" className="mb-0">Student Type *</label>
+                                    </div>
+                                    <div className="col-lg-8">
+                                        <div role="group" aria-labelledby="studentType" className="studenttypeclass d-flex">
+                                            <label className="mr-4 d-flex align-items-center">
+                                              <Field
+                                                name="studentType"
+                                                type="radio"
+                                                value="student"
+                                                className="mr-1"
+                                                checked={values.studentType === "student"}
+                                                disabled
+                                              /> College Student
+                                            </label>
+
+
+                                            <label className="mr-4 d-flex align-items-center">
+                                              <Field
+                                                name="studentType"
+                                                type="radio"
+                                                value="student"
+                                                className="mr-1"
+                                                checked={values.studentType === "internship"}
+                                                disabled
+                                              /> Internship
+                                            </label>
+
+                                            <label className="mr-4 d-flex align-items-center">
+                                              <Field
+                                                name="studentType"
+                                                type="radio"
+                                                value="working_women"
+                                                className="mr-1"
+                                                checked={values.studentType === "working_women"}
+                                                disabled
+                                              /> Working Women
+                                            </label>
+                                        </div>
+                                      {errors.studentType && touched.studentType ? (
+                                        <div className="error text-left text-danger">{errors.studentType}</div>
+                                      ) : null}
+                                    </div>
+                                  </div>
+                                </div>
+
                             </div>
 
                             <div className="col-lg-6 col-md-6 txt-position">
@@ -1425,7 +1508,7 @@ export default class ViewStudentProfile extends Component {
                                       className={"form-control"}
                                       autoComplete="off"
                                     >
-                                      <option value="" selected>
+                                      <option value="" >
                                         Default select
                                       </option>
                                       <option value="Yes">Yes</option>
@@ -1445,7 +1528,7 @@ export default class ViewStudentProfile extends Component {
                                         // autoComplete="off"
                                         style={{ marginTop: "10px" }}
                                       >
-                                        <option value="" selected>
+                                        <option value="" >
                                           Default select
                                         </option>
                                         <option value="2">
@@ -1459,7 +1542,7 @@ export default class ViewStudentProfile extends Component {
                                   </div>
                                 </div>
                               </div>
-                              {/* <div className="form-group">
+                             <div className="form-group">
                                 <div className="row">
                                   <div className="col-lg-4">
                                     <label htmlFor="occupancy">
@@ -1474,7 +1557,7 @@ export default class ViewStudentProfile extends Component {
                                       className={"form-control"}
                                       autoComplete="off"
                                     >
-                                      <option value="" selected>
+                                      <option value="">
                                         Default select
                                       </option>
                                       <option value="2 in 1">2 in 1</option>
@@ -1486,7 +1569,7 @@ export default class ViewStudentProfile extends Component {
                                     </Field>
                                   </div>
                                 </div>
-                              </div> */}
+                              </div> 
                             </div>
                             <div className="col-lg-6 txt-position">
                               <div className="form-group">
@@ -1569,7 +1652,7 @@ export default class ViewStudentProfile extends Component {
                                   </div>
                                 </div>
                               </div>
-                              {/* <div className="form-group">
+                              <div className="form-group">
                                 <div className="row">
                                   <div className="col-lg-4">
                                     <label htmlFor="name">Room Type *</label>
@@ -1582,7 +1665,7 @@ export default class ViewStudentProfile extends Component {
                                       className={"form-control"}
                                       autoComplete="off"
                                     >
-                                      <option value="" selected>
+                                      <option value="" >
                                         Default select
                                       </option>
                                       <option value="AC">AC</option>
@@ -1590,8 +1673,8 @@ export default class ViewStudentProfile extends Component {
                                     </Field>
                                   </div>
                                 </div>
-                              </div> */}
-                              {/* <div className="form-group">
+                              </div> 
+                             <div className="form-group">
                                 <div className="row">
                                   <div className="col-lg-4">
                                     <label htmlFor="toilet_type">
@@ -1606,7 +1689,7 @@ export default class ViewStudentProfile extends Component {
                                       className={"form-control"}
                                       autoComplete="off"
                                     >
-                                      <option value="" selected>
+                                      <option value="">
                                         Default select
                                       </option>
                                       <option value="Attached">Attached</option>
@@ -1614,8 +1697,8 @@ export default class ViewStudentProfile extends Component {
                                     </Field>
                                   </div>
                                 </div>
-                              </div> */}
-                              <div className="form-group">
+                              </div>
+                              {/* <div className="form-group">
                                 <div className="row">
                                   <div className="col-lg-4">
                                     <label htmlFor="transportation">
@@ -1630,7 +1713,7 @@ export default class ViewStudentProfile extends Component {
                                       component="select"
                                       className={"form-control"}
                                     >
-                                      <option value="" selected>
+                                      <option value="">
                                         Default select
                                       </option>
                                       <option value="Yes">Yes</option>
@@ -1638,10 +1721,78 @@ export default class ViewStudentProfile extends Component {
                                     </Field>
                                   </div>
                                 </div>
+                              </div> */}
+
+
+
+                              <div className="form-group">
+                                <div className="row">
+                                  <div className="col-lg-4">
+                                    <label
+                                      htmlFor="registrationDate"
+                                      style={{ color: "#333333" }}
+                                    >
+                                      Registration Date:
+                                    </label>
+                                  </div>
+                                  <div className="col-lg-8">
+                                    <Field
+                                      disabled
+                                      type="text"
+                                      name="registrationDate"
+                                      className={"form-control"}
+                                    />
+                                  </div>
+                                </div>
                               </div>
+
+
+                              <div className="form-group">
+                                <div className="row">
+                                  <div className="col-lg-4">
+                                    <label
+                                      htmlFor="approveDate"
+                                      style={{ color: "#333333" }}
+                                    >
+                                    Approved Date:
+                                    </label>
+                                  </div>
+                                  <div className="col-lg-8">
+                                    <Field
+                                      disabled
+                                      type="text"
+                                      name="approveDate"
+                                      className={"form-control"}
+                                    />
+                                  </div>
+                                </div>
+                              </div>
+
+
+                              <div className="form-group">
+                                <div className="row">
+                                  <div className="col-lg-4">
+                                    <label
+                                      htmlFor="deactivateDate"
+                                      style={{ color: "#333333" }}
+                                    >
+                                      Deactive Date.:
+                                    </label>
+                                  </div>
+                                  <div className="col-lg-8">
+                                    <Field
+                                      disabled
+                                      type="text"
+                                      name="deactivateDate"
+                                      className={"form-control"}
+                                    />
+                                  </div>
+                                </div>
+                              </div>
+
                             </div>
                           </div>
-                        </form>
+                        </div>
                       </div>
                       <div className="footer">
                         <span>

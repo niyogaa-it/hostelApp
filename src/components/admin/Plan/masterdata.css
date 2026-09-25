@@ -49,3 +49,6 @@
 .bg-red{
     background-color: #dd4b39;
 }
+.row div[class^="col-sm"]:not(:nth-child(-n+3)) {
+    margin-top: 8px;
+}

@@ -1,6 +1,6 @@
 import React, { Component } from "react";
 import { Formik, Field, Form } from "formik";
-
+import moment from "moment";
 import Layout from "../layout/Layout";
 //import Reg from "../Register/RegisterNew";
 import * as Yup from "yup";
@@ -14,13 +14,17 @@ import { connect } from "react-redux";
 import { withRouter } from "react-router-dom";
 
 const initialValues = {
+  AcademicYear:"",
   SFname: "",
   SmobNo: "",
   SRaddress: "",
   StudEmail: "",
   StudDOB: "",
+  blood_grp:"",
   NamofInstitute: "",
   AdrsodInstitute: "",
+  studentType: "",
+  //CourEnrolled: moment().year()+"-"+ (moment().year() + 1),
   CourEnrolled: "",
   FatherName: "",
   MothersName: "",
@@ -112,8 +116,9 @@ class AddStudent extends Component {
       parking_type_wheller: "",
       download_mode: false,
       student_id: "",
-      showTransaction: false,
+      showTransaction: true,
       paymentoption: "",
+      academicList: []
     };
     this.fileChangedHandler = this.fileChangedHandler.bind(this);
     this.fileCheckImageType = this.fileCheckImageType.bind(this);
@@ -123,12 +128,28 @@ class AddStudent extends Component {
   componentDidMount() {
     API.get(`admin/secure/plan/get_package`)
       .then((response) => {
+       
         this.setState({
           package_data: response.data.package_data,
         });
+
+     
       })
       .catch((error) => {
         console.log(error);
+      });
+
+
+      API.get(`/admin/secure/student/academic_year_list`)
+      .then((res) => {
+        this.setState({
+          academicList: res.data.result_data,
+
+        });
+      })
+      .catch((err) => {
+        console.log("err:", err);
+        
       });
   }
 
@@ -141,102 +162,67 @@ class AddStudent extends Component {
     }
   };
 
-  handleSubmitEvent = (values, { resetForm }) => {
-    API.post("/admin/un/secure/create/profile/check_validation", values)
-      .then((res) => {
-        if (res.data.status === 200) {
-          API.post("/admin/un/secure/create/profile", values)
-            .then((res) => {
-              console.log("res", res);
-              if (res.data.status === 200) {
-                swal("Success", res.data.message, "success");
-                // reload page
-                window.location.reload();
-              } else {
-                // swal warning
+  handleSubmitEvent = async (values, { resetForm }) => {
+    // API.post("/admin/un/secure/create/profile/check_validation", values)
+    //   .then((res) => {
+    //     if (res.data.status === 200) {
+    //       API.post("/admin/un/secure/create/profile", values)
+    //         .then((res) => {
+    //           console.log("res", res);
+    //           if (res.data.status === 200) {
+    //             swal("Success", res.data.message, "success");
 
-                swal("Warning", res.data.message, "warning");
-              }
-            })
-            .catch((err) => {
-              swal("Error", err.message, "error");
-            });
-          const options = {
-            //key: "rzp_test_IRmV5lo58NFlHA", // Enter the Key ID generated from the Dashboard //TEST KEY
-            key: "rzp_live_btcHlfmCQZz7pq", // Enter the Key ID generated from the Dashboard
+    //             window.location.reload();
+    //           } else {
+               
 
-            amount: "100", // Amount is in currency subunits. Default currency is INR. Hence, 50000 refers to 50000 paise
-            currency: "INR",
-            name: "Rani Meyyammai",
-            description: "Test Transaction",
-            image: "http://3.110.86.116:3000/assets/img/favicon/favicon.ico",
-            handler: function (response) {
-              // ---- Move Authorized to Captured
-              API.post("/admin/un/secure/move_authorized_captured", {
-                payment_id: response.razorpay_payment_id,
-                amount: 100,
-              })
-                .then((res) => {
-                  console.log("res", res);
-                })
-                .catch((err) => {
-                  console.log("Error", err.message);
-                });
-              values.payment_id = response.razorpay_payment_id;
-              values.payment_response = JSON.stringify(response);
-              values.payment_amount = 1;
-              API.post("/admin/un/secure/create/profile", values)
-                .then((res) => {
-                  console.log("res", res);
-                  if (res.data.status === 200) {
-                    swal("Success", res.data.message, "success");
-                    // reload page
-                    window.location.reload();
-                  } else {
-                    // swal warning
+    //             swal("Warning", res.data.message, "warning");
+    //           }
+    //         })
+    //         .catch((err) => {
+    //           swal("Error", err.message, "error");
+    //         });
+          
+    //     } else {
+    //       swal({
+    //         title: "Warning",
+    //         text: res.data.message,
+    //         icon: "warning",
+    //         button: "Ok",
+    //       });
+    //     }
+    //   })
+    //   .catch((err) => {
+    //     console.log("err", err);
+    //     swal({
+    //       title: "Error",
+    //       text: "Registration Failed",
+    //       icon: "error",
+    //       button: "Ok",
+    //     });
+    //   });
 
-                    swal("Warning", res.data.message, "warning");
-                  }
-                })
-                .catch((err) => {
-                  swal("Error", err.message, "error");
-                });
-              //alert(response.razorpay_payment_id);
-              // alert(response.razorpay_order_id);
-              //alert(response.razorpay_signature)
-            },
-            prefill: {},
-            notes: {
-              address: "Razorpay Corporate Office",
-            },
-            theme: {
-              color: "#3399cc",
-            },
-          };
-          //const rzp1 = new window.Razorpay(options);
-          //rzp1.on("payment.failed", function (response) {
-          // alert(response.error.code);
-          // });
-          //rzp1.open();
-          // integartion of razorpay
-        } else {
-          swal({
-            title: "Warning",
-            text: res.data.message,
-            icon: "warning",
-            button: "Ok",
-          });
+
+    try {
+
+       // Step 1: Check validation
+        const validationRes = await API.post("/admin/un/secure/create/profile/check_validation", values);
+        if (validationRes.data.status !== 200) {
+          return swal("Warning", validationRes.data.message, "warning");
         }
-      })
-      .catch((err) => {
-        console.log("err", err);
-        swal({
-          title: "Error",
-          text: "Registration Failed",
-          icon: "error",
-          button: "Ok",
-        });
-      });
+
+        // Step 2: Create profile
+        const profileRes = await API.post("/admin/un/secure/create/profile", values);
+        if (profileRes.data.status !== 200) {
+          return swal("Warning", profileRes.data.message, "warning");
+        }else{
+            swal("Success", profileRes.data.message, "success");
+        }
+
+      
+    } catch (error) {
+      swal("Error", error.message || "Unexpected error occurred.", "error");
+    }
   };
 
   checkDate = (event, setFieldTouched, setFieldValue, setErrors) => {
@@ -544,15 +530,18 @@ class AddStudent extends Component {
     // check only number regex
     const onlyNumberRegex = /^[0-9\b]+$/;
     const validationReg = Yup.object().shape({
+      AcademicYear: Yup.string().required("Academic Year is required"),
       SFname: Yup.string().required("Student Name is required"),
       SmobNo: Yup.string()
         .phone("IN", "Please enter a valid phone number")
         .required("Mobile Number is required"),
+      blood_grp: Yup.string().required("Blood Group is required"),
       SRaddress: Yup.string().required("Student Address is required"),
       StudEmail: Yup.string()
         .email("Please enter a valid email")
         .required("Student Email is required"),
       StudDOB: Yup.string().required("Student DOB is required"),
+      studentType: Yup.string().required("Student Type is required"),
       StudimagepathBase: Yup.string().required("Student Image is required"),
       NamofInstitute: Yup.string().required("Name of Institute is required"),
       AdrsodInstitute: Yup.string().required(
@@ -601,7 +590,7 @@ class AddStudent extends Component {
       occupancy: Yup.string().required("Occupancy is required"),
       room_type: Yup.string().required("Room Type is required"),
       toilet_type: Yup.string().required("Toilet Type is required"),
-      transportation: Yup.string().required("Transportation is required"),
+      //transportation: Yup.string().required("Transportation is required"),
       check: Yup.string().required("Check is required"),
       StayConNo1: Yup.string().phone("IN", "Please enter a valid phone number"),
       StayConNo: Yup.string().phone("IN", "Please enter a valid phone number"),
@@ -649,9 +638,43 @@ class AddStudent extends Component {
                             <h1>Application Form</h1>
 
                             <div className="form">
-                              <form className="form-inline">
+                            
                                 <div className="row">
-                                  {/* Student's Details */}
+                                  
+                                  <div className="form-group">
+                                    <div className="row">
+                                        <div className="col-lg-2">
+                                          <label htmlFor="AcademicYear">
+                                            Admission For *
+                                          </label>
+                                        </div>
+                                        <div className="col-lg-4">
+                                          <Field
+                                            name="AcademicYear"
+                                            component="select"
+                                            className={"form-control"}
+                                            autoComplete="off"
+                                          >
+                                            <option value="" >
+                                                Default Academic Year
+                                              </option>
+                                              {this.state.academicList &&
+                                              this.state.academicList.map((academicYear, i) => (
+                                                <option value={academicYear.year} key={i}>
+                                                  {academicYear.display_value}
+                                                </option>
+                                              ))} 
+                                            
+                                          </Field>
+                                          {errors.AcademicYear &&
+                                          touched.AcademicYear ? (
+                                            <div className="error error text-left text-danger">
+                                              {errors.AcademicYear}
+                                            </div>
+                                          ) : null}
+                                        </div>
+                                    </div>
+                                  </div>
 
                                   <div className="col-lg-12">
                                     <div className="form-heading">
@@ -709,6 +732,50 @@ class AddStudent extends Component {
                                         </div>
                                       </div>
                                     </div>
+
+
+                                    <div className="form-group">
+                                      <div className="row">
+                                        <div className="col-lg-4">
+                                          <label htmlFor="blood_grp">
+                                            Blood Group *
+                                          </label>
+                                        </div>
+                                        <div className="col-lg-8">
+                                          <Field
+                                            name="blood_grp"
+                                            component="select"
+                                            className={"form-control"}
+                                            autoComplete="off"
+                                          >
+                                            <option value="" >
+                                              Default select
+                                            </option>
+                                            <option value="A+">A+</option>
+                                            <option value="A-">A-</option>
+                                            <option value="B+">B+</option>
+                                            <option value="B-">B-</option>
+                                            <option value="AB+">AB+</option>
+                                            <option value="AB-">AB-</option>
+                                            <option value="O+">O+</option>
+                                            <option value="O-">O-</option>
+                                             <option value="Other">Any Other</option>
+                                          </Field>
+        
+                                          {errors.blood_grp &&
+                                            touched.blood_grp ? (
+                                            <div className="error error text-left text-danger">
+                                              {errors.blood_grp}
+                                            </div>
+                                          ) : null}
+                                        </div>
+                                      </div>
+                                    </div>
+
+
+
+
+
                                     <div className="form-group">
                                       <div className="row">
                                         <div className="col-lg-4">
@@ -780,10 +847,11 @@ class AddStudent extends Component {
                                           </label>
                                         </div>
                                         <div className="col-lg-8">
-                                          <Field
+                                          <Field 
                                             type="text"
                                             name="CourEnrolled"
                                             className={"form-control"}
+                                            placeholder="B.E 1st year"
                                           />
                                           {errors.CourEnrolled &&
                                           touched.CourEnrolled ? (
@@ -794,6 +862,47 @@ class AddStudent extends Component {
                                         </div>
                                       </div>
                                     </div>
+
+                                     <div className="form-group">
+                                      <div className="row align-items-center">
+                                        <div className="col-lg-4">
+                                          <label htmlFor="studentType" class="mb-0">Student Type *</label>
+                                        </div>
+                                        <div className="col-lg-8">
+                                            <div role="group" aria-labelledby="studentType" class="studenttypeclass d-flex">
+                                               <label className="mr-4 d-flex align-items-center">
+                                                  <Field
+                                                    name="studentType"
+                                                    type="radio"
+                                                    value="student"
+                                                    className="mr-1"
+                                                  /> College Student
+                                                </label>
+
+                                                 <label className="mr-4 d-flex align-items-center">
+                                                  <Field
+                                                    name="studentType"
+                                                    type="radio"
+                                                    value="internship"
+                                                    className="mr-1"
+                                                  /> Internship
+                                                </label>
+                                                <label className="mr-4 d-flex align-items-center">
+                                                  <Field
+                                                    name="studentType"
+                                                    type="radio"
+                                                    value="working_women"
+                                                    className="mr-1"
+                                                  /> Working Women
+                                                </label>
+                                            </div>
+                                          {errors.studentType && touched.studentType ? (
+                                            <div className="error text-left text-danger">{errors.studentType}</div>
+                                          ) : null}
+                                        </div>
+                                      </div>
+                                    </div>
+
                                   </div>
 
                                   <div className="col-lg-6 col-md-6 txt-position">
@@ -2041,24 +2150,35 @@ class AddStudent extends Component {
                                           </label>
                                         </div>
                                         <div className="col-lg-8">
-                                          <Field
-                                            name="food_preference"
-                                            component="select"
-                                            className={"form-control"}
-                                            autoComplete="off"
-                                          >
-                                            {this.state.package_data &&
-                                              this.state.package_data.map(
-                                                (packages, i) => (
-                                                  <option
-                                                    value={packages.package}
-                                                    key={i}
-                                                  >
-                                                    {packages.description}
-                                                  </option>
-                                                )
-                                              )}
-                                          </Field>
+                                        <Field
+                                          name="food_preference"
+                                          component="select"
+                                          className={"form-control"}
+                                          autoComplete="off"
+                                        >
+                                          <option value="" >
+                                            Default select
+                                          </option>
+
+                                          <option value="Veg">Veg</option>
+                                          <option value="Non-Veg">Non-Veg</option>
+                                          {/* <option value="Veg">Veg</option>
+                                          <option value="Eggeterian - 1">
+                                            Veg + Egg (Plan 1) : Egg 3 Meals a week
+                                          </option>
+                                          <option value="Eggeterian - 2">
+                                            Veg + Egg (Plan 2) : Egg 5 Meals a week
+                                          </option>
+                                          <option value="Non-Veg - 1">
+                                            Non-Veg (Plan 1) : Non-veg 3 meals & Egg
+                                            3 Meals a week
+                                          </option>
+                                          <option value="Non-Veg - 2">
+                                            Non-Veg (Plan 2) : Non-veg 3 Meals & Egg
+                                            5 Meals a week
+                                          </option> */}
+                                        </Field>
+
                                           {errors.food_preference &&
                                           touched.food_preference ? (
                                             <div className="error error text-left text-danger">
@@ -2090,7 +2210,7 @@ class AddStudent extends Component {
                                               );
                                             }}
                                           >
-                                            <option value="" selected>
+                                            <option value="" >
                                               Default select
                                             </option>
                                             <option value="Yes">Yes</option>
@@ -2124,7 +2244,7 @@ class AddStudent extends Component {
                                                 );
                                               }}
                                             >
-                                              <option value="" selected>
+                                              <option value="" >
                                                 Default select
                                               </option>
                                               <option value="2">
@@ -2159,7 +2279,7 @@ class AddStudent extends Component {
                                             className={"form-control"}
                                             autoComplete="off"
                                           >
-                                            <option value="" selected>
+                                            <option value="" >
                                               Default select
                                             </option>
                                             <option value="2 in 1">
@@ -2294,7 +2414,7 @@ class AddStudent extends Component {
                                             className={"form-control"}
                                             autoComplete="off"
                                           >
-                                            <option value="" selected>
+                                            <option value="" >
                                               Default select
                                             </option>
                                             <option value="AC">AC</option>
@@ -2325,7 +2445,7 @@ class AddStudent extends Component {
                                             className={"form-control"}
                                             autoComplete="off"
                                           >
-                                            <option value="" selected>
+                                            <option value="" >
                                               Default select
                                             </option>
                                             <option value="Attached">
@@ -2344,7 +2464,10 @@ class AddStudent extends Component {
                                         </div>
                                       </div>
                                     </div>
-                                    <div className="form-group">
+
+
+
+                                    {/* <div className="form-group">
                                       <div className="row">
                                         <div className="col-lg-4">
                                           <label htmlFor="transportation">
@@ -2358,7 +2481,7 @@ class AddStudent extends Component {
                                             component="select"
                                             className={"form-control"}
                                           >
-                                            <option value="" selected>
+                                            <option value="" >
                                               Default select
                                             </option>
                                             <option value="Yes">Yes</option>
@@ -2372,7 +2495,10 @@ class AddStudent extends Component {
                                           ) : null}
                                         </div>
                                       </div>
-                                    </div>
+                                    </div> */}
+
+
+
                                     <div className="form-group">
                                       <div className="row">
                                         <div className="col-lg-4">
@@ -2387,9 +2513,9 @@ class AddStudent extends Component {
                                             className={"form-control"}
                                             onClick={this.changePaymentOption}
                                           >
-                                            <option value="" selected>
+                                            {/* <option value="" >
                                               Default select
-                                            </option>
+                                            </option> */}
                                             <option value="Online">
                                               Online
                                             </option>
@@ -2500,7 +2626,7 @@ class AddStudent extends Component {
                                     ) : null}
                                   </div>
                                 </div>
-                              </form>
+                             
                             </div>
                             <div className="footer">
                               {errors.check && touched.check ? (
@@ -2514,7 +2640,7 @@ class AddStudent extends Component {
                                 value="checked"
                               />
 
-                              <label for="checkbox">We understand that</label>
+                              <label htmlFor="checkbox">We understand that</label>
                               <p>- Room allocation is based on availability.</p>
                               <p>
                                 - The decision of the President, Secretary and /

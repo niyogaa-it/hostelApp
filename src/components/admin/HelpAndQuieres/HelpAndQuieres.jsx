@@ -191,6 +191,9 @@ class Region extends Component {
     };
 
     const dateFormatting = () => (date) => {
+      if (!date) {
+        return "N/A";
+      }
       return moment(date).format("dddd, DD/MM/YYYY");
     };
 

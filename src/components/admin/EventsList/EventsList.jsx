@@ -28,7 +28,7 @@ const descriptionlinebreak = (item) => {
 const imageShow = () => (img) => {
   return (
     <>
-      <img style={{ width: "100%" }} src={img} alt="" />
+      <img style={{ width: "100px" }} src={img} alt="" />
     </>
   );
 };
@@ -186,6 +186,7 @@ class EventsList extends Component {
                         dataField="id"
                         dataSort={true}
                         dataAlign="center"
+                        width="170"
                       >
                         ID
                       </TableHeaderColumn>
@@ -193,6 +194,7 @@ class EventsList extends Component {
                         dataField="image_url"
                         dataFormat={imageShow(this)}
                         dataAlign="center"
+                        width="170"
                       >
                         EVENT IMAGE
                       </TableHeaderColumn>
@@ -201,6 +203,7 @@ class EventsList extends Component {
                         dataSort={true}
                         dataAlign="center"
                         dataFormat={descriptionlinebreak}
+                        width="170"
                       >
                         EVENT NAME
                       </TableHeaderColumn>
@@ -209,6 +212,7 @@ class EventsList extends Component {
                         dataFormat={dateFormatting(this)}
                         dataSort={true}
                         dataAlign="center"
+                        width="170"
                       >
                         EVENT START TIME
                       </TableHeaderColumn>
@@ -217,21 +221,16 @@ class EventsList extends Component {
                         dataFormat={dateFormatting(this)}
                         dataSort={true}
                         dataAlign="center"
+                        width="170"
                       >
                         EVENT END TIME
                       </TableHeaderColumn>
-                      <TableHeaderColumn
-                        dataField="des"
-                        dataSort={true}
-                        dataAlign="center"
-                        dataFormat={descriptionlinebreak}
-                      >
-                        DESCRIPTION
-                      </TableHeaderColumn>
+                      
                       <TableHeaderColumn
                         dataField="id"
                         dataAlign="center"
                         dataFormat={actionFormatter(this)}
+                        width="170"
                       >
                         ACTION
                       </TableHeaderColumn>

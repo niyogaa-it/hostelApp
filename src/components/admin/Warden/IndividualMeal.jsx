@@ -1,0 +1,196 @@
+import React, { Component } from "react";
+import moment from "moment";
+import { BootstrapTable, TableHeaderColumn } from "react-bootstrap-table";
+import Layout from "../layout/Layout";
+import API from "../../../shared/admin-axios";
+import { connect } from "react-redux";
+import { withRouter } from "react-router-dom";
+import { Redirect } from "react-router-dom";
+import {
+    Row,
+    Col,
+    ButtonToolbar,
+    Button,
+    Tooltip,
+    OverlayTrigger,
+    Modal,
+} from "react-bootstrap";
+import { Link } from "react-router-dom";
+import swal from "sweetalert";
+
+class IndividualMeal extends Component {
+    constructor(props) {
+        super(props);
+        this.state = {
+            isLoading: false,
+            get_access_data: false,
+            showModal: false,
+            remove_search: false,
+            showModalLoader: false,
+            Invalid: false,
+            usermangment: [],
+            userconut: 0,
+        };
+    }
+
+    componentDidMount() {
+        if (
+            this.props.auth.userToken.permissions.warden_management == 0 ||
+            this.props.auth.userToken.user_details.role == "admin"
+        ) {
+            API.get(`/admin/secure/individualmeal/list`)
+                .then((res) => {
+                    this.setState({
+                        usermangment: res.data.result_data
+                    });
+                })
+                .catch((err) => {
+                    console.log("err:", err);
+                });
+        } else {
+            this.setState({
+                Invalid: true,
+            });
+        }
+    }
+
+  
+    handleEditMeal = (event, id) => {
+        window.location.href = `/admin/individual_meal/edit/${id}`;
+    };
+
+    render() {
+        const dateFormatting = () => (date) => {
+            return moment(date).format("DD/MM/YYYY, h:mm:ss a");
+        };
+        const actionFormatter = (refObj) => (cell, id) => {
+            return (
+                <>
+                <button
+                onClick={(e) => this.handleEditMeal(e, cell)}
+                style={{
+                padding: "0.5rem",
+                borderRadius: "5px",
+                backgroundColor: "#d7f5fc",
+                color: "#883495",
+                fontWeight: "bold",
+                border: "none",
+                margin: "3%"
+                }}
+                >
+                EDIT
+                </button></>
+            );
+        };
+
+
+
+        if (this.state.Invalid) return <Redirect to="/admin/dashboard" />;
+        else {
+            return (
+                <Layout {...this.props}>
+                    <div className="content-wrapper">
+                        <section
+                            className="content-header"
+                            style={{ padding: "30px 15px 15px 15px" }}
+                        >
+                            <div className="row">
+                                <div className="col-lg-12 col-sm-12 col-xs-12">
+                                    <h1 style={{ color: "#a1acb8" }}>
+                                        Home / Warden /{" "}
+                                        <b style={{ color: "#566a7f" }}>Individual Meal List</b>
+                                        <small />
+                                    </h1>
+                                </div>
+                            </div>
+                        </section>
+                        <section className="content">
+                            <div style={{ display:'flex',justifyContent: 'end' }}>
+                                
+                                <Link className="btn btn-primary" to="/admin/individual_meal/add">Add Meal</Link>
+                            </div>
+                            <div
+                                className="box"
+                                style={{
+                                    borderRadius: "0.5rem",
+                                    boxShadow: "0 2px 6px 0 rgb(67 89 113 / 12%)",
+                                }}
+                            >
+                                <div className="box-body">
+                                    <BootstrapTable
+                                        data={this.state.usermangment}
+                                        //exportCSV
+                                        search={true}
+                                        pagination
+                                    >
+                                        <TableHeaderColumn
+                                            isKey
+                                            dataField="id"
+                                            dataSort={true}
+                                            className={"text-uppercase"}
+                                            width="4%"
+                                            dataAlign="center"
+                                        >
+                                            Id
+                                        </TableHeaderColumn>
+                                        
+                                       
+                                        <TableHeaderColumn
+                                            dataField="meal_name"
+                                            dataSort={true}
+                                            className={"text-uppercase text-secondary"}
+                                            width="16.66%"
+                                            dataAlign="center"
+                                        >
+                                            Food Name
+                                        </TableHeaderColumn>
+
+
+                                        <TableHeaderColumn
+                                            dataField="quantity"
+                                            dataSort={true}
+                                            className={"text-uppercase text-secondary"}
+                                            width="16.66%"
+                                            dataAlign="center"
+                                        >
+                                           Quantity
+                                        </TableHeaderColumn>
+
+
+                                        <TableHeaderColumn
+                                            dataField="unit_price"
+                                            dataSort={true}
+                                            className={"text-uppercase text-secondary"}
+                                            width="16.66%"
+                                            dataAlign="center"
+                                        >
+                                           Price
+                                        </TableHeaderColumn>
+
+
+                                     
+
+                                        <TableHeaderColumn
+                                            dataField="id"
+                                            dataFormat={actionFormatter(this)}
+                                            dataAlign="center" 
+                                            width="16.66%"
+                                        >
+                                            Actions
+                                        </TableHeaderColumn>
+                                    </BootstrapTable>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+                </Layout>
+            );
+        }
+    }
+}
+const mapStateToProps = (state) => {
+    return {
+        ...state,
+    };
+};
+export default withRouter(connect(mapStateToProps)(IndividualMeal));

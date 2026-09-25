@@ -170,8 +170,8 @@ class MonthlyPlan extends Component {
 
       monthly_electricity_bill: this.state.studentDetails.monthly_electricity_bill ? this.state.studentDetails.monthly_electricity_bill : 0,
       monthly_mess_fee: this.state.studentDetails.monthly_mess_fee ? this.state.studentDetails.monthly_mess_fee : 0,
-      monthly_room_rent: this.state.studentDetails.monthly_laundry_fee ? this.state.studentDetails.monthly_laundry_fee : 0,
-      monthly_laundry_fee: this.state.studentDetails.monthly_room_rent ? this.state.studentDetails.monthly_room_rent : 0,
+      monthly_room_rent: this.state.studentDetails.monthly_room_rent ? this.state.studentDetails.monthly_room_rent : 0,
+      monthly_laundry_fee: this.state.studentDetails.monthly_laundry_fee ? this.state.studentDetails.monthly_laundry_fee : 0,
       monthly_admission_fee: this.state.studentDetails.monthly_admission_fee ? this.state.studentDetails.monthly_admission_fee : 0,
       monthly_other_fees: this.state.studentDetails.monthly_other_fees ? this.state.studentDetails.monthly_other_fees : 0,
       monthly_other_fees_remark: this.state.studentDetails.monthly_other_fees_remark,

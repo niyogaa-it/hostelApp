@@ -7,6 +7,7 @@ import * as Yup from "yup";
 import { Redirect } from "react-router-dom";
 import { connect } from "react-redux";
 import { withRouter } from "react-router-dom";
+import userLog from "../Utils/Logadd";
 
 let initialValues = {
   building_name: "",
@@ -31,6 +32,7 @@ class AddBuilding extends Component {
       .then((response) => {
         if (response.data.status === 201) {
           swal("Success", response.data.message, "success");
+          userLog('Create Building','Add building');
           resetForm(initialValues);
         }
         if (response.data.status === 401) {
